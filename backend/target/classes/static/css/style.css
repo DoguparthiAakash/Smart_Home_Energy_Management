@@ -1,0 +1,138 @@
+/* Global Reset */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+
+body {
+    background-color: #F2F2F7;
+    color: #000;
+    display: flex;
+    justify-content: center;
+    min-height: 100vh;
+}
+
+/* Login Styles */
+.login-body {
+    align-items: center;
+}
+
+.login-container {
+    width: 100%;
+    max-width: 400px;
+    padding: 2rem;
+    text-align: left;
+}
+
+h1 {
+    font-size: 34px;
+    font-weight: 700;
+    margin-bottom: 8px;
+}
+
+.subtitle {
+    font-size: 17px;
+    color: #8E8E93;
+    margin-bottom: 48px;
+}
+
+.input-field {
+    width: 100%;
+    padding: 16px;
+    margin-bottom: 16px;
+    background-color: #E5E5EA;
+    border: none;
+    border-radius: 12px;
+    font-size: 17px;
+    outline: none;
+}
+
+.btn-primary {
+    width: 100%;
+    padding: 16px;
+    background-color: #007AFF;
+    color: white;
+    border: none;
+    border-radius: 12px;
+    font-size: 17px;
+    font-weight: 600;
+    cursor: pointer;
+    margin-top: 16px;
+}
+
+/* Dashboard Styles */
+.dashboard-body {
+    flex-direction: column;
+    padding: 40px 20px;
+    max-width: 800px;
+    width: 100%;
+}
+
+.header {
+    margin-bottom: 30px;
+}
+
+.grid-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    gap: 16px;
+}
+
+.card {
+    background: white;
+    border-radius: 20px;
+    padding: 16px;
+    aspect-ratio: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    cursor: pointer;
+    transition: transform 0.1s;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+}
+
+.card:active {
+    transform: scale(0.98);
+}
+
+.icon-container {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+}
+
+.icon-container svg {
+    width: 32px;
+    height: 32px;
+}
+
+.icon-container.on {
+    color: #FFCC00;
+    text-shadow: 0 0 10px rgba(255, 204, 0, 0.5);
+}
+
+.icon-container.off {
+    color: #8E8E93;
+}
+
+h3 {
+    font-size: 16px;
+    font-weight: 600;
+    margin-top: auto;
+    margin-bottom: 4px;
+}
+
+.status-on {
+    font-size: 14px;
+    color: #FFCC00; /* Use distinct color or gray */
+    font-weight: 500;
+}
+
+.status-off {
+    font-size: 14px;
+    color: #8E8E93;
+}

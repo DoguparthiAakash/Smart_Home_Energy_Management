@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <title>My Home</title>
+    <link rel="stylesheet" href="/css/style.css">
+    <script>
+        async function toggleDevice(id) {
+            await fetch('/api/devices/' + id + '/status', { method: 'PUT' });
+            location.reload();
+        }
+    </script>
+</head>
+
+<body class="dashboard-body">
+    <div class="header">
+        <h1>My Home</h1>
+        <p class="subtitle">Active Devices: <span th:text="${devices.size()}">0</span> · 24°C</p>
+    </div>
+
+    <div class="grid-container">
+        <div th:each="device : ${devices}" class="card" th:onclick="'toggleDevice(' + ${device.id} + ')'">
+            <div class="icon-container" th:classappend="${device.status} ? 'on' : 'off'">
+                <!-- Simple SVG Icon Placeholder -->
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="currentColor">
+                    <path
+                        d="M12,2A7,7 0 0,0 5,9C5,12.86 8,15.64 8,19A2,2 0 0,0 10,21H14A2,2 0 0,0 16,19C16,15.64 19,12.86 19,9A7,7 0 0,0 12,2M12,4A5,5 0 0,1 17,9C17,11.5 15,13.75 14.5,16H9.5C9,13.75 7,11.5 7,9A5,5 0 0,1 12,4M9,22H15V23H9V22Z" />
+                </svg>
+            </div>
+            <h3 th:text="${device.name}">Device Name</h3>
+            <p th:text="${device.status} ? 'On' : 'Off'" th:class="${device.status} ? 'status-on' : 'status-off'">Status
+            </p>
+        </div>
+    </div>
+
+    <div class="chart-container" style="margin-top: 40px; background: white; padding: 20px; border-radius: 20px;">
+        <h2>Energy Usage (kWh)</h2>
+        <canvas id="energyChart"></canvas>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        const ctx = document.getElementById('energyChart').getContext('2d');
+        new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+                datasets: [{
+                    label: 'Energy (kWh)',
+                    data: [12, 19, 3, 5, 2, 3, 10], // Mock data
+                    backgroundColor: '#007AFF',
+                    borderRadius: 8
+                }]
+            },
+            options: {
+                scales: {
+                    y: { beginAtZero: true }
+                }
+            }
+        });
+    </script>
+
+</body>
+
+</html>

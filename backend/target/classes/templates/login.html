@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Smart Home - Login</title>
+    <link rel="stylesheet" href="/css/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=SF+Pro+Display:wght@400;600;700&display=swap" rel="stylesheet">
+</head>
+<body class="login-body">
+    <div class="login-container">
+        <h1>Welcome Home</h1>
+        <p class="subtitle">Sign in to control your house.</p>
+        
+        <form action="/dashboard" method="get">
+            <input type="email" placeholder="Email" class="input-field" required>
+            <input type="password" placeholder="Password" class="input-field" required>
+            <button type="submit" class="btn-primary">Sign In</button>
+        </form>
+    </div>
+</body>
+</html>
