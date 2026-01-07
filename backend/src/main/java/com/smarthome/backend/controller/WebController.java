@@ -14,10 +14,7 @@ import com.smarthome.backend.dto.DeviceDTO; // Added import
 @Controller
 public class WebController {
 
-    @Autowired
-    private DeviceService deviceService;
-
-    @GetMapping("/")
+    @GetMapping("/login")
     public String login() {
         return "login";
     }
@@ -27,16 +24,18 @@ public class WebController {
         return "register";
     }
 
-    @GetMapping("/schedule")
-    public String schedule() {
-        return "schedule";
+    @GetMapping("/verify-2fa")
+    public String verify2fa() {
+        return "verify_2fa";
+    }
+
+    @GetMapping("/admin/dashboard")
+    public String adminDashboard() {
+        return "admin_dashboard";
     }
 
     @GetMapping("/dashboard")
-    public String dashboard(@RequestParam(required = false) String token, Model model) {
-        // Mock user session for demo
-        List<DeviceDTO> devices = deviceService.getDevicesForUser("user@smarthome.com");
-        model.addAttribute("devices", devices);
+    public String dashboard() {
         return "dashboard";
     }
 }

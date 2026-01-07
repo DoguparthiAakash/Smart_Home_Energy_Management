@@ -1,20 +1,72 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
+
 <head>
     <title>Smart Home - Login</title>
     <link rel="stylesheet" href="/css/style.css">
     <link href="https://fonts.googleapis.com/css2?family=SF+Pro+Display:wght@400;600;700&display=swap" rel="stylesheet">
 </head>
+
 <body class="login-body">
-    <div class="login-container">
-        <h1>Welcome Home</h1>
-        <p class="subtitle">Sign in to control your house.</p>
-        
-        <form action="/dashboard" method="get">
-            <input type="email" placeholder="Email" class="input-field" required>
-            <input type="password" placeholder="Password" class="input-field" required>
-            <button type="submit" class="btn-primary">Sign In</button>
+    <div class="card" style="width: 320px; padding: 40px;">
+        <h1 style="text-align: center; margin-bottom: 10px;">Welcome Home</h1>
+        <p class="subtitle" style="text-align: center; margin-bottom: 30px;">Sign in to control your house.</p>
+
+        <form onsubmit="handleLogin(event)">
+            <input type="email" id="email" placeholder="Email" class="input-field" required>
+            <input type="password" id="password" placeholder="Password" class="input-field" required>
+
+            <select id="role" class="input-field" style="background: white; margin-bottom: 20px;">
+                <option value="HOMEOWNER">Home Owner</option>
+                <option value="TECHNICIAN">Technician</option>
+                <option value="ADMIN">Admin</option>
+            </select>
+
+            <button type="submit" class="btn-primary" style="width: 100%;">Sign In</button>
         </form>
+
+        <div style="margin-top: 20px; text-align: center;">
+            <a href="/register" style="color: #007AFF; text-decoration: none;">Create an Account</a>
+        </div>
     </div>
+    </div>
+
+    <script>
+        async function handleLogin(e) {
+            e.preventDefault();
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            const role = document.getElementById('role').value;
+
+            const response = await fetch('/api/auth/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email, password, role })
+            });
+
+            if (response.status === 202) {
+                // 2FA Required
+                localStorage.setItem('pending_email', email);
+                window.location.href = '/verify-2fa';
+                return;
+            }
+
+            if (response.ok) {
+                const data = await response.json();
+                localStorage.setItem('token', data.jwt);
+                localStorage.setItem('role', data.role);
+
+                if (data.role === 'ADMIN') {
+                    window.location.href = '/admin/dashboard';
+                } else {
+                    window.location.href = '/dashboard';
+                }
+            } else {
+                const error = await response.text();
+                alert(error || 'Login failed');
+            }
+        }
+    </script>
 </body>
+
 </html>

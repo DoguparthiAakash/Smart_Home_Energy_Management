@@ -24,6 +24,10 @@ public class User {
     @Column(nullable = false)
     private Role role;
 
+    private String twoFactorSecret;
+    private String idDocumentPath;
+    private boolean isApproved = true; // Default to true, Technician will be false
+
     public enum Role {
         ADMIN,
         HOMEOWNER,
