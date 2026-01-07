@@ -4,69 +4,84 @@ import com.smarthome.backend.model.Device;
 import com.smarthome.backend.model.User;
 import com.smarthome.backend.repository.DeviceRepository;
 import com.smarthome.backend.repository.UserRepository;
+import com.smarthome.backend.service.TotpService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
-import java.util.Arrays;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.util.List;
 
 @Configuration
 public class DataSeeder {
 
+    @Autowired
+    private UserRepository userRepository;
+    @Autowired
+    private DeviceRepository deviceRepository;
+    @Autowired
+    private TotpService totpService;
+    @Autowired
+    private PasswordEncoder passwordEncoder;
+
     @Bean
-    public CommandLineRunner loadData(UserRepository userRepository, DeviceRepository deviceRepository,
-            PasswordEncoder passwordEncoder) {
+    public CommandLineRunner loadData() {
         return args -> {
+            // Create uploads directory
+            Files.createDirectories(Paths.get("uploads"));
+
             if (userRepository.count() == 0) {
-                // Create Admin User
+                // Admin with TOTP
                 User admin = new User();
                 admin.setName("Admin User");
                 admin.setEmail("admin@smarthome.com");
-                admin.setPassword(passwordEncoder.encode("admin123"));
+                admin.setPassword(passwordEncoder.encode("password"));
                 admin.setRole(User.Role.ADMIN);
+
+                // Generate Secret
+                String secret = totpService.generateSecret().getKey();
+                admin.setTwoFactorSecret(secret);
+
                 userRepository.save(admin);
 
-                // Create Regular User
-                User user = new User();
-                user.setName("Home Owner");
-                user.setEmail("user@smarthome.com");
-                user.setPassword(passwordEncoder.encode("password"));
-                user.setRole(User.Role.HOMEOWNER);
-                User savedUser = userRepository.save(user);
+                System.out.println("==========================================");
+                System.out.println("ADMIN ACCOUNT CREATED");
+                System.out.println("Email: admin@smarthome.com");
+                System.out.println("Password: password");
+                System.out.println("TOTP SECRET: " + secret);
+                System.out.println("==========================================");
 
-                // Create Devices for Homeowner
-                Device d1 = new Device();
-                d1.setName("Living Room AC");
-                d1.setType("AC");
-                d1.setPowerRating(1500.0);
-                d1.setStatus(false);
-                d1.setUser(savedUser);
+                // Homeowner
+                User homeowner = new User();
+                homeowner.setName("Home Owner");
+                homeowner.setEmail("user@smarthome.com");
+                homeowner.setPassword(passwordEncoder.encode("password"));
+                homeowner.setRole(User.Role.HOMEOWNER);
+                userRepository.save(homeowner);
 
-                Device d2 = new Device();
-                d2.setName("Smart Fridge");
-                d2.setType("FRIDGE");
-                d2.setPowerRating(200.0);
-                d2.setStatus(true);
-                d2.setUser(savedUser);
+                // Devices for Homeowner
+                List<Device> devices = List.of(
+                        createDevice(homeowner, "Living Room AC", "AC", 1500.0, true),
+                        createDevice(homeowner, "Smart Fridge", "FRIDGE", 200.0, true),
+                        createDevice(homeowner, "Bedroom Light", "LIGHT", 10.0, false),
+                        createDevice(homeowner, "Water Heater", "HEATER", 3000.0, true));
+                deviceRepository.saveAll(devices);
 
-                Device d3 = new Device();
-                d3.setName("Bedroom Light");
-                d3.setType("LIGHT");
-                d3.setPowerRating(15.0);
-                d3.setStatus(false);
-                d3.setUser(savedUser);
-
-                Device d4 = new Device();
-                d4.setName("Water Heater");
-                d4.setType("HEATER");
-                d4.setPowerRating(2000.0);
-                d4.setStatus(false);
-                d4.setUser(savedUser);
-
-                deviceRepository.saveAll(Arrays.asList(d1, d2, d3, d4));
-                System.out.println("Data Seeding Completed: Created 2 users and 4 devices.");
+                System.out.println("Data Seeding Completed: Created users and devices.");
             }
         };
+    }
+
+    private Device createDevice(User user, String name, String type, Double power, Boolean status) {
+        Device device = new Device();
+        device.setUser(user);
+        device.setName(name);
+        device.setType(type);
+        device.setPowerRating(power);
+        device.setStatus(status);
+        return device;
     }
 }

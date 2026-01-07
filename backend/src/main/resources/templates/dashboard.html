@@ -4,68 +4,17 @@
 <head>
     <title>My Home</title>
     <link rel="stylesheet" href="/css/style.css">
-    <script>
-        async function toggleDevice(id) {
-            await fetch('/api/devices/' + id + '/status', { method: 'PUT' });
-            location.reload();
-        }
 
-        async function fetchEnergyData() {
-            try {
-                // Fetch Summary
-                const summaryRes = await fetch('/api/energy/summary');
-                const summary = await summaryRes.json();
-                document.getElementById('energyUsage').innerText = summary.usage;
-                document.getElementById('costValue').innerText = summary.currency + summary.cost;
-
-                // Fetch History
-                const historyRes = await fetch('/api/energy/history');
-                const history = await historyRes.json();
-                updateChart(history.labels, history.data);
-            } catch (e) {
-                console.error("Failed to fetch energy data", e);
-            }
-        }
-
-        let energyChart;
-        function updateChart(labels, data) {
-            const ctx = document.getElementById('energyChart').getContext('2d');
-            if (energyChart) {
-                energyChart.destroy();
-            }
-            energyChart = new Chart(ctx, {
-                type: 'bar',
-                data: {
-                    labels: labels,
-                    datasets: [{
-                        label: 'Energy (kWh)',
-                        data: data,
-                        backgroundColor: '#007AFF',
-                        borderRadius: 8
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    scales: {
-                        y: { beginAtZero: true, grid: { display: false } },
-                        x: { grid: { display: false } }
-                    },
-                    plugins: {
-                        legend: { display: false }
-                    }
-                }
-            });
-        }
-
-        window.onload = fetchEnergyData;
-    </script>
 </head>
 
 <body class="dashboard-body">
     <div class="header">
         <h1>My Home</h1>
-        <p class="subtitle">Active Devices: <span th:text="${devices.size()}">0</span> · 24°C</p>
+        <div style="display: flex; align-items: center; gap: 10px;">
+            <p class="subtitle" style="margin: 0;">Active Devices: <span id="activeCount">0</span> · 24°C</p>
+            <button onclick="logout()"
+                style="background: white; color: #FF3B30; padding: 6px 12px; border-radius: 12px; border: none; font-weight: 600; cursor: pointer; font-size: 12px;">Logout</button>
+        </div>
     </div>
 
     <!-- Summary Cards -->
@@ -95,36 +44,8 @@
             Add Device</button>
     </div>
 
-    <div class="grid-container">
-        <div th:each="device : ${devices}" class="card">
-            <!-- Delete Button (Top Right) -->
-            <div style="position: absolute; top: 10px; right: 10px; color: #FF3B30; cursor: pointer; padding: 5px;"
-                th:onclick="'deleteDevice(event, ' + ${device.id} + ')'">✕</div>
-
-            <!-- Main Click Area for Toggle -->
-            <div style="height: 100%; display: flex; flex-direction: column; justify-content: space-between;"
-                th:onclick="'toggleDevice(' + ${device.id} + ')'">
-                <div class="icon-container" th:classappend="${device.status} ? 'on' : 'off'">
-                    <svg th:if="${device.type == 'LIGHT'}" width="32" height="32" viewBox="0 0 24 24"
-                        fill="currentColor">
-                        <path
-                            d="M12,2A7,7 0 0,0 5,9C5,12.86 8,15.64 8,19A2,2 0 0,0 10,21H14A2,2 0 0,0 16,19C16,15.64 19,12.86 19,9A7,7 0 0,0 12,2M12,4A5,5 0 0,1 17,9C17,11.5 15,13.75 14.5,16H9.5C9,13.75 7,11.5 7,9A5,5 0 0,1 12,4M9,22H15V23H9V22Z" />
-                    </svg>
-                    <svg th:if="${device.type == 'AC'}" width="32" height="32" viewBox="0 0 24 24" fill="currentColor">
-                        <path
-                            d="M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2M12,4A8,8 0 0,1 20,12A8,8 0 0,1 12,20A8,8 0 0,1 4,12A8,8 0 0,1 12,4M12,6V12L16,16L17.41,14.59L14,11V6H12Z" />
-                    </svg>
-                    <svg th:if="${device.type != 'LIGHT' && device.type != 'AC'}" width="32" height="32"
-                        viewBox="0 0 24 24" fill="currentColor">
-                        <path
-                            d="M5,3H19A2,2 0 0,1 21,5V19A2,2 0 0,1 19,21H5A2,2 0 0,1 3,19V5A2,2 0 0,1 5,3M5,5V19H19V5H5Z" />
-                    </svg>
-                </div>
-                <h3 th:text="${device.name}">Device Name</h3>
-                <p th:text="${device.status} ? 'On' : 'Off'" th:class="${device.status} ? 'status-on' : 'status-off'">
-                    Status</p>
-            </div>
-        </div>
+    <div class="grid-container" id="deviceGrid">
+        <!-- Devices rendered via JS -->
     </div>
 
     <!-- Chart -->
@@ -192,19 +113,127 @@
 
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
-        // Existing chart logic...
-        // ... (keep chart init code)
+        // Check Auth
+        const token = localStorage.getItem('token');
+        if (!token) window.location.href = '/login';
+
+        async function fetchDevices() {
+            const res = await fetch('/api/devices', {
+                headers: { 'Authorization': 'Bearer ' + token }
+            });
+            if (res.ok) {
+                const devices = await res.json();
+                document.getElementById('activeCount').innerText = devices.filter(d => d.status).length;
+                const grid = document.getElementById('deviceGrid');
+                grid.innerHTML = '';
+
+                devices.forEach(device => {
+                    const isAc = device.type === 'AC';
+                    const isLight = device.type === 'LIGHT';
+                    const icon = isAc ?
+                        `<path d="M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2M12,4A8,8 0 0,1 20,12A8,8 0 0,1 12,20A8,8 0 0,1 4,12A8,8 0 0,1 12,4M12,6V12L16,16L17.41,14.59L14,11V6H12Z" />` :
+                        (isLight ? `<path d="M12,2A7,7 0 0,0 5,9C5,12.86 8,15.64 8,19A2,2 0 0,0 10,21H14A2,2 0 0,0 16,19C16,15.64 19,12.86 19,9A7,7 0 0,0 12,2M12,4A5,5 0 0,1 17,9C17,11.5 15,13.75 14.5,16H9.5C9,13.75 7,11.5 7,9A5,5 0 0,1 12,4M9,22H15V23H9V22Z" />` :
+                            `<path d="M5,3H19A2,2 0 0,1 21,5V19A2,2 0 0,1 19,21H5A2,2 0 0,1 3,19V5A2,2 0 0,1 5,3M5,5V19H19V5H5Z" />`);
+
+                    const card = document.createElement('div');
+                    card.className = 'card';
+                    card.innerHTML = `
+                        <div style="position: absolute; top: 10px; right: 10px; color: #FF3B30; cursor: pointer; padding: 5px;" onclick="deleteDevice(event, ${device.id})">✕</div>
+                        <div style="height: 100%; display: flex; flex-direction: column; justify-content: space-between;" onclick="toggleDevice(${device.id})">
+                            <div class="icon-container ${device.status ? 'on' : 'off'}">
+                                <svg width="32" height="32" viewBox="0 0 24 24" fill="currentColor">${icon}</svg>
+                            </div>
+                            <h3>${device.name}</h3>
+                            <p class="${device.status ? 'status-on' : 'status-off'}">${device.status ? 'On' : 'Off'}</p>
+                        </div>
+                     `;
+                    grid.appendChild(card);
+                });
+            }
+        }
+
+        async function toggleDevice(id) {
+            await fetch('/api/devices/' + id + '/status', {
+                method: 'PUT',
+                headers: { 'Authorization': 'Bearer ' + token }
+            });
+            fetchDevices();
+            fetchEnergyData();
+        }
+
+        async function fetchEnergyData() {
+            try {
+                const headers = { 'Authorization': 'Bearer ' + token };
+                // Fetch Summary
+                const summaryRes = await fetch('/api/energy/summary', { headers });
+                if (summaryRes.ok) {
+                    const summary = await summaryRes.json();
+                    document.getElementById('energyUsage').innerText = summary.usage;
+                    document.getElementById('costValue').innerText = summary.currency + summary.cost;
+                }
+
+                // Fetch History
+                const historyRes = await fetch('/api/energy/history', { headers });
+                if (historyRes.ok) {
+                    const history = await historyRes.json();
+                    updateChart(history.labels, history.data);
+                }
+            } catch (e) {
+                console.error("Failed to fetch energy data", e);
+            }
+        }
+
+        let energyChart;
+        function updateChart(labels, data) {
+            const ctx = document.getElementById('energyChart').getContext('2d');
+            if (energyChart) {
+                energyChart.destroy();
+            }
+            energyChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Energy (kWh)',
+                        data: data,
+                        backgroundColor: '#007AFF',
+                        borderRadius: 8
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: { beginAtZero: true, grid: { display: false } },
+                        x: { grid: { display: false } }
+                    },
+                    plugins: {
+                        legend: { display: false }
+                    }
+                }
+            });
+        }
 
         async function deleteDevice(event, id) {
             event.stopPropagation();
             if (!confirm('Delete this device?')) return;
-            await fetch('/api/devices/' + id, { method: 'DELETE' });
-            location.reload();
+            await fetch('/api/devices/' + id, {
+                method: 'DELETE',
+                headers: { 'Authorization': 'Bearer ' + token }
+            });
+            fetchDevices();
         }
 
+        function logout() {
+            localStorage.removeItem('token');
+            localStorage.removeItem('role');
+            window.location.href = '/login';
+        }
+
+        // Modal functions
         function openModal() {
             document.getElementById('addDeviceModal').style.display = 'flex';
-            switchTab('manual'); // Ensure manual tab is active when opening
+            switchTab('manual');
         }
 
         function closeModal() {
@@ -221,7 +250,6 @@
                 document.querySelectorAll('.tab')[1].classList.add('active');
                 document.getElementById('manualTab').style.display = 'none';
                 document.getElementById('pairTab').style.display = 'block';
-                // Reset Pairing State
                 document.getElementById('scanBox').style.display = 'flex';
                 document.getElementById('pairCode').style.display = 'none';
                 document.getElementById('scanText').innerText = "Looking for devices...";
@@ -231,11 +259,9 @@
         }
 
         function startPairing() {
-            // Switch to input mode
             document.getElementById('scanBox').style.display = 'none';
             document.getElementById('pairCode').style.display = 'block';
             document.getElementById('scanText').innerText = "Enter the setup code found on your device.";
-
             const btn = document.getElementById('pairBtn');
             btn.innerText = "Connect";
             btn.onclick = async () => await addDevice('pair');
@@ -243,7 +269,6 @@
 
         async function addDevice(mode) {
             let name, type, power;
-
             if (mode === 'manual') {
                 name = document.getElementById('devName').value;
                 type = document.getElementById('devType').value;
@@ -251,13 +276,10 @@
             } else {
                 const code = document.getElementById('pairCode').value;
                 if (!code) return alert('Enter a code');
-
-                // SIMULATE Discovery
                 document.getElementById('scanText').innerText = "Connecting...";
-                await new Promise(r => setTimeout(r, 1500)); // Fake delay
-
+                await new Promise(r => setTimeout(r, 1500));
                 name = "Smart Device " + code;
-                type = "LIGHT"; // Default for pairing
+                type = "LIGHT";
                 power = 10.0;
                 alert("Found device: " + name);
             }
@@ -266,11 +288,20 @@
 
             await fetch('/api/devices', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': 'Bearer ' + token
+                },
                 body: JSON.stringify({ name, type, powerRating: parseFloat(power || 10), status: false })
             });
-            location.reload();
+            closeModal();
+            fetchDevices();
         }
+
+        window.onload = () => {
+            fetchEnergyData();
+            fetchDevices();
+        };
     </script>
 </body>
 

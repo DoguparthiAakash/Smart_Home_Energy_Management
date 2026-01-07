@@ -1,5 +1,7 @@
+/home/aakash/Downloads/Smart_Home_Energy_Management/backend/src/main/java/com/smarthome/backend/controller/AdminController.java
 /home/aakash/Downloads/Smart_Home_Energy_Management/backend/src/main/java/com/smarthome/backend/config/SecurityConfig.java
 /home/aakash/Downloads/Smart_Home_Energy_Management/backend/src/main/java/com/smarthome/backend/repository/UsageLogRepository.java
+/home/aakash/Downloads/Smart_Home_Energy_Management/backend/src/main/java/com/smarthome/backend/service/TotpService.java
 /home/aakash/Downloads/Smart_Home_Energy_Management/backend/src/main/java/com/smarthome/backend/service/DeviceService.java
 /home/aakash/Downloads/Smart_Home_Energy_Management/backend/src/main/java/com/smarthome/backend/dto/AuthResponse.java
 /home/aakash/Downloads/Smart_Home_Energy_Management/backend/src/main/java/com/smarthome/backend/repository/ScheduleRepository.java

@@ -1,3 +1,4 @@
+com/smarthome/backend/service/TotpService.class
 com/smarthome/backend/model/Device.class
 com/smarthome/backend/security/JwtFilter.class
 com/smarthome/backend/dto/AuthRequest.class
@@ -9,6 +10,7 @@ com/smarthome/backend/service/CustomUserDetailsService.class
 com/smarthome/backend/service/UsageLogService.class
 com/smarthome/backend/model/User.class
 com/smarthome/backend/config/SecurityConfig.class
+com/smarthome/backend/controller/AdminController.class
 com/smarthome/backend/repository/UserRepository.class
 com/smarthome/backend/controller/DeviceController.class
 com/smarthome/backend/model/UsageLog.class
@@ -20,3 +22,7 @@ com/smarthome/backend/model/User$Role.class
 com/smarthome/backend/repository/ScheduleRepository.class
 com/smarthome/backend/repository/UsageLogRepository.class
 com/smarthome/backend/dto/DeviceDTO.class
+com/smarthome/backend/controller/EnergyController.class
+com/smarthome/backend/controller/WebController.class
+com/smarthome/backend/config/MqttConfig.class
+com/smarthome/backend/config/DataSeeder.class
