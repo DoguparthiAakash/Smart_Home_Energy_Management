@@ -58,4 +58,8 @@ public class DeviceService {
         dto.setStatus(device.getStatus());
         return dto;
     }
+
+    public List<Device> getDevicesByUserId(Long userId) {
+        return deviceRepository.findByUserId(userId);
+    }
 }

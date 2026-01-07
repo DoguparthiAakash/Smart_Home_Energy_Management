@@ -90,7 +90,7 @@ h1 {
     justify-content: space-between;
     cursor: pointer;
     transition: transform 0.1s;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
 }
 
 .card:active {
@@ -128,11 +128,137 @@ h3 {
 
 .status-on {
     font-size: 14px;
-    color: #FFCC00; /* Use distinct color or gray */
+    color: #FFCC00;
+    /* Use distinct color or gray */
     font-weight: 500;
 }
 
 .status-off {
     font-size: 14px;
     color: #8E8E93;
+}
+
+/* Summary Cards */
+.summary-container {
+    display: flex;
+    gap: 16px;
+    margin-bottom: 30px;
+}
+
+.summary-card {
+    background: white;
+    border-radius: 20px;
+    padding: 20px;
+    flex: 1;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
+}
+
+.summary-label {
+    font-size: 14px;
+    color: #8E8E93;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 8px;
+}
+
+.summary-value {
+    font-size: 32px;
+    font-weight: 700;
+    color: #000;
+}
+
+.summary-unit {
+    font-size: 16px;
+    color: #8E8E93;
+    margin-left: 4px;
+}
+
+/* Modal Tabs */
+.tab-container {
+    display: flex;
+    margin-bottom: 20px;
+    background: #E5E5EA;
+    border-radius: 12px;
+    padding: 4px;
+}
+
+.tab {
+    flex: 1;
+    padding: 10px;
+    text-align: center;
+    cursor: pointer;
+    border-radius: 10px;
+    font-weight: 500;
+    color: #8E8E93;
+    transition: all 0.2s;
+}
+
+.tab.active {
+    background: white;
+    color: #000;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Scanning Animation */
+.scan-box {
+    width: 200px;
+    height: 200px;
+    border: 2px dashed #007AFF;
+    border-radius: 20px;
+    margin: 0 auto 20px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: relative;
+    background: #F2F2F7;
+    overflow: hidden;
+}
+
+.scan-line {
+    position: absolute;
+    width: 100%;
+    height: 2px;
+    background: #007AFF;
+    box-shadow: 0 0 4px #007AFF;
+    top: 10px;
+    animation: scan 2s infinite linear;
+}
+
+@keyframes scan {
+    0% {
+        top: 10px;
+        opacity: 1;
+    }
+
+    50% {
+        top: 190px;
+        opacity: 1;
+    }
+
+    51% {
+        top: 190px;
+        opacity: 0;
+    }
+
+    52% {
+        top: 10px;
+        opacity: 0;
+    }
+
+    53% {
+        top: 10px;
+        opacity: 1;
+    }
+
+    100% {
+        top: 10px;
+        opacity: 1;
+    }
+}
+
+.scan-text {
+    font-size: 14px;
+    color: #8E8E93;
+    text-align: center;
 }

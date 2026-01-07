@@ -9,6 +9,56 @@
             await fetch('/api/devices/' + id + '/status', { method: 'PUT' });
             location.reload();
         }
+
+        async function fetchEnergyData() {
+            try {
+                // Fetch Summary
+                const summaryRes = await fetch('/api/energy/summary');
+                const summary = await summaryRes.json();
+                document.getElementById('energyUsage').innerText = summary.usage;
+                document.getElementById('costValue').innerText = summary.currency + summary.cost;
+
+                // Fetch History
+                const historyRes = await fetch('/api/energy/history');
+                const history = await historyRes.json();
+                updateChart(history.labels, history.data);
+            } catch (e) {
+                console.error("Failed to fetch energy data", e);
+            }
+        }
+
+        let energyChart;
+        function updateChart(labels, data) {
+            const ctx = document.getElementById('energyChart').getContext('2d');
+            if (energyChart) {
+                energyChart.destroy();
+            }
+            energyChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Energy (kWh)',
+                        data: data,
+                        backgroundColor: '#007AFF',
+                        borderRadius: 8
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: { beginAtZero: true, grid: { display: false } },
+                        x: { grid: { display: false } }
+                    },
+                    plugins: {
+                        legend: { display: false }
+                    }
+                }
+            });
+        }
+
+        window.onload = fetchEnergyData;
     </script>
 </head>
 
@@ -18,48 +68,210 @@
         <p class="subtitle">Active Devices: <span th:text="${devices.size()}">0</span> · 24°C</p>
     </div>
 
-    <div class="grid-container">
-        <div th:each="device : ${devices}" class="card" th:onclick="'toggleDevice(' + ${device.id} + ')'">
-            <div class="icon-container" th:classappend="${device.status} ? 'on' : 'off'">
-                <!-- Simple SVG Icon Placeholder -->
-                <svg width="32" height="32" viewBox="0 0 24 24" fill="currentColor">
-                    <path
-                        d="M12,2A7,7 0 0,0 5,9C5,12.86 8,15.64 8,19A2,2 0 0,0 10,21H14A2,2 0 0,0 16,19C16,15.64 19,12.86 19,9A7,7 0 0,0 12,2M12,4A5,5 0 0,1 17,9C17,11.5 15,13.75 14.5,16H9.5C9,13.75 7,11.5 7,9A5,5 0 0,1 12,4M9,22H15V23H9V22Z" />
-                </svg>
-            </div>
-            <h3 th:text="${device.name}">Device Name</h3>
-            <p th:text="${device.status} ? 'On' : 'Off'" th:class="${device.status} ? 'status-on' : 'status-off'">Status
-            </p>
+    <!-- Summary Cards -->
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+        <h2 style="font-size: 20px; margin: 0;">Energy Overview</h2>
+        <button onclick="fetchEnergyData()"
+            style="background: white; border: 1px solid #007AFF; color: #007AFF; padding: 6px 12px; border-radius: 16px; cursor: pointer;">↻
+            Refresh</button>
+    </div>
+    <div class="summary-container">
+        <div class="summary-card">
+            <div class="summary-label">Today's Usage</div>
+            <div class="summary-value"><span id="energyUsage">--</span> <span class="summary-unit">kWh</span></div>
+        </div>
+        <div class="summary-card">
+            <div class="summary-label">Estimated Cost</div>
+            <div class="summary-value"><span id="costValue">--</span></div>
         </div>
     </div>
 
-    <div class="chart-container" style="margin-top: 40px; background: white; padding: 20px; border-radius: 20px;">
-        <h2>Energy Usage (kWh)</h2>
+    <!-- Devices Header & Add Button -->
+    <div
+        style="display: flex; justify-content: space-between; align-items: center; margin-top: 30px; margin-bottom: 16px;">
+        <h3 style="font-size: 20px; margin: 0;">Devices</h3>
+        <button onclick="openModal()"
+            style="background: #007AFF; color: white; border: none; padding: 8px 16px; border-radius: 20px; font-weight: 600; cursor: pointer;">+
+            Add Device</button>
+    </div>
+
+    <div class="grid-container">
+        <div th:each="device : ${devices}" class="card">
+            <!-- Delete Button (Top Right) -->
+            <div style="position: absolute; top: 10px; right: 10px; color: #FF3B30; cursor: pointer; padding: 5px;"
+                th:onclick="'deleteDevice(event, ' + ${device.id} + ')'">✕</div>
+
+            <!-- Main Click Area for Toggle -->
+            <div style="height: 100%; display: flex; flex-direction: column; justify-content: space-between;"
+                th:onclick="'toggleDevice(' + ${device.id} + ')'">
+                <div class="icon-container" th:classappend="${device.status} ? 'on' : 'off'">
+                    <svg th:if="${device.type == 'LIGHT'}" width="32" height="32" viewBox="0 0 24 24"
+                        fill="currentColor">
+                        <path
+                            d="M12,2A7,7 0 0,0 5,9C5,12.86 8,15.64 8,19A2,2 0 0,0 10,21H14A2,2 0 0,0 16,19C16,15.64 19,12.86 19,9A7,7 0 0,0 12,2M12,4A5,5 0 0,1 17,9C17,11.5 15,13.75 14.5,16H9.5C9,13.75 7,11.5 7,9A5,5 0 0,1 12,4M9,22H15V23H9V22Z" />
+                    </svg>
+                    <svg th:if="${device.type == 'AC'}" width="32" height="32" viewBox="0 0 24 24" fill="currentColor">
+                        <path
+                            d="M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2M12,4A8,8 0 0,1 20,12A8,8 0 0,1 12,20A8,8 0 0,1 4,12A8,8 0 0,1 12,4M12,6V12L16,16L17.41,14.59L14,11V6H12Z" />
+                    </svg>
+                    <svg th:if="${device.type != 'LIGHT' && device.type != 'AC'}" width="32" height="32"
+                        viewBox="0 0 24 24" fill="currentColor">
+                        <path
+                            d="M5,3H19A2,2 0 0,1 21,5V19A2,2 0 0,1 19,21H5A2,2 0 0,1 3,19V5A2,2 0 0,1 5,3M5,5V19H19V5H5Z" />
+                    </svg>
+                </div>
+                <h3 th:text="${device.name}">Device Name</h3>
+                <p th:text="${device.status} ? 'On' : 'Off'" th:class="${device.status} ? 'status-on' : 'status-off'">
+                    Status</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Chart -->
+    <div class="chart-container"
+        style="margin-top: 30px; background: white; padding: 20px; border-radius: 20px; height: 300px;">
+        <h2 style="font-size: 20px; margin-bottom: 20px;">Weekly Usage</h2>
         <canvas id="energyChart"></canvas>
+    </div>
+
+    <!-- Add Device Modal -->
+    <div id="addDeviceModal"
+        style="display:none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; justify-content: center; align-items: center;">
+        <div style="background: white; padding: 24px; border-radius: 20px; width: 320px;">
+            <h2 style="margin-bottom: 16px;">Add Device</h2>
+
+            <div class="tab-container">
+                <div class="tab active" onclick="switchTab('manual')">Manual</div>
+                <div class="tab" onclick="switchTab('pair')">Scan / Pair</div>
+            </div>
+
+            <!-- Manual Tab -->
+            <div id="manualTab">
+                <input type="text" id="devName" placeholder="Device Name" class="input-field"
+                    style="margin-bottom: 12px;">
+                <select id="devType" class="input-field" style="margin-bottom: 12px; background: #E5E5EA;">
+                    <option value="LIGHT">Light</option>
+                    <option value="AC">AC</option>
+                    <option value="FAN">Fan</option>
+                    <option value="HEATER">Heater</option>
+                    <option value="FRIDGE">Fridge</option>
+                </select>
+                <input type="number" id="devPower" placeholder="Power (Watts)" class="input-field"
+                    style="margin-bottom: 20px;">
+                <div style="display: flex; gap: 8px;">
+                    <button onclick="closeModal()"
+                        style="flex:1; padding: 12px; border: none; background: #E5E5EA; border-radius: 12px; font-weight: 600; cursor: pointer;">Cancel</button>
+                    <button onclick="addDevice('manual')"
+                        style="flex:1; padding: 12px; border: none; background: #007AFF; color: white; border-radius: 12px; font-weight: 600; cursor: pointer;">Add</button>
+                </div>
+            </div>
+
+            <!-- Pair Tab -->
+            <div id="pairTab" style="display: none;">
+                <div class="scan-box" id="scanBox">
+                    <div class="scan-line"></div>
+                    <svg width="64" height="64" viewBox="0 0 24 24" fill="#8E8E93">
+                        <path
+                            d="M4,4H10V10H4V4M20,4V10H14V4H20M14,14H20V20H14V14M4,14H10V20H4V14M2,2V12H12V2H2M14,2V12H22V2H14M2,14V24H12V14H2M14,14V24H22V14H14Z" />
+                    </svg>
+                </div>
+                <p class="scan-text" id="scanText" style="margin-bottom: 16px;">Looking for devices...</p>
+                <input type="text" id="pairCode" placeholder="Enter Setup Code (e.g. 1234)" class="input-field"
+                    style="margin-bottom: 20px; display: none;">
+
+                <div style="display: flex; gap: 8px;">
+                    <button onclick="closeModal()"
+                        style="flex:1; padding: 12px; border: none; background: #E5E5EA; border-radius: 12px; font-weight: 600; cursor: pointer;">Cancel</button>
+                    <button onclick="startPairing()" id="pairBtn"
+                        style="flex:1; padding: 12px; border: none; background: #007AFF; color: white; border-radius: 12px; font-weight: 600; cursor: pointer;">Enter
+                        Code</button>
+                </div>
+            </div>
+        </div>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
-        const ctx = document.getElementById('energyChart').getContext('2d');
-        new Chart(ctx, {
-            type: 'bar',
-            data: {
-                labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
-                datasets: [{
-                    label: 'Energy (kWh)',
-                    data: [12, 19, 3, 5, 2, 3, 10], // Mock data
-                    backgroundColor: '#007AFF',
-                    borderRadius: 8
-                }]
-            },
-            options: {
-                scales: {
-                    y: { beginAtZero: true }
-                }
-            }
-        });
-    </script>
+        // Existing chart logic...
+        // ... (keep chart init code)
 
+        async function deleteDevice(event, id) {
+            event.stopPropagation();
+            if (!confirm('Delete this device?')) return;
+            await fetch('/api/devices/' + id, { method: 'DELETE' });
+            location.reload();
+        }
+
+        function openModal() {
+            document.getElementById('addDeviceModal').style.display = 'flex';
+            switchTab('manual'); // Ensure manual tab is active when opening
+        }
+
+        function closeModal() {
+            document.getElementById('addDeviceModal').style.display = 'none';
+        }
+
+        function switchTab(tab) {
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            if (tab === 'manual') {
+                document.querySelectorAll('.tab')[0].classList.add('active');
+                document.getElementById('manualTab').style.display = 'block';
+                document.getElementById('pairTab').style.display = 'none';
+            } else {
+                document.querySelectorAll('.tab')[1].classList.add('active');
+                document.getElementById('manualTab').style.display = 'none';
+                document.getElementById('pairTab').style.display = 'block';
+                // Reset Pairing State
+                document.getElementById('scanBox').style.display = 'flex';
+                document.getElementById('pairCode').style.display = 'none';
+                document.getElementById('scanText').innerText = "Looking for devices...";
+                document.getElementById('pairBtn').innerText = "Enter Code";
+                document.getElementById('pairBtn').onclick = startPairing;
+            }
+        }
+
+        function startPairing() {
+            // Switch to input mode
+            document.getElementById('scanBox').style.display = 'none';
+            document.getElementById('pairCode').style.display = 'block';
+            document.getElementById('scanText').innerText = "Enter the setup code found on your device.";
+
+            const btn = document.getElementById('pairBtn');
+            btn.innerText = "Connect";
+            btn.onclick = async () => await addDevice('pair');
+        }
+
+        async function addDevice(mode) {
+            let name, type, power;
+
+            if (mode === 'manual') {
+                name = document.getElementById('devName').value;
+                type = document.getElementById('devType').value;
+                power = document.getElementById('devPower').value;
+            } else {
+                const code = document.getElementById('pairCode').value;
+                if (!code) return alert('Enter a code');
+
+                // SIMULATE Discovery
+                document.getElementById('scanText').innerText = "Connecting...";
+                await new Promise(r => setTimeout(r, 1500)); // Fake delay
+
+                name = "Smart Device " + code;
+                type = "LIGHT"; // Default for pairing
+                power = 10.0;
+                alert("Found device: " + name);
+            }
+
+            if (!name || (!power && mode === 'manual')) return alert('Fill all fields');
+
+            await fetch('/api/devices', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name, type, powerRating: parseFloat(power || 10), status: false })
+            });
+            location.reload();
+        }
+    </script>
 </body>
 
 </html>
