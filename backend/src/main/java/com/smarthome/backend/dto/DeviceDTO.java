@@ -9,4 +9,5 @@ public class DeviceDTO {
     private String type;
     private Double powerRating;
     private Boolean status;
+    private String priority; // HIGH, MEDIUM, LOW
 }

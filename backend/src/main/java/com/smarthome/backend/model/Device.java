@@ -26,4 +26,14 @@ public class Device {
 
     @Column(nullable = false)
     private Boolean status = false; // false = OFF, true = ON
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private Priority priority = Priority.LOW;
+
+    public enum Priority {
+        HIGH,
+        MEDIUM,
+        LOW
+    }
 }

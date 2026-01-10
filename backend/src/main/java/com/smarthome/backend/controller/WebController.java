@@ -1,15 +1,9 @@
 package com.smarthome.backend.controller;
 
-import com.smarthome.backend.service.DeviceService;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-
-import java.util.List;
-
-import com.smarthome.backend.dto.DeviceDTO; // Added import
+import org.springframework.security.core.Authentication;
 
 @Controller
 public class WebController {
@@ -19,23 +13,17 @@ public class WebController {
         return "login";
     }
 
-    @GetMapping("/register")
-    public String register() {
-        return "register";
+    @GetMapping({ "/", "/home", "/dashboard", "/admin" })
+    public String home(Model model, Authentication authentication) {
+        if (authentication != null) {
+            String role = authentication.getAuthorities().toString();
+            model.addAttribute("userRole", role);
+        }
+        return "home";
     }
 
-    @GetMapping("/verify-2fa")
-    public String verify2fa() {
-        return "verify_2fa";
-    }
-
-    @GetMapping("/admin/dashboard")
-    public String adminDashboard() {
-        return "admin_dashboard";
-    }
-
-    @GetMapping("/dashboard")
-    public String dashboard() {
-        return "dashboard";
+    @GetMapping("/usage")
+    public String usage() {
+        return "usage";
     }
 }

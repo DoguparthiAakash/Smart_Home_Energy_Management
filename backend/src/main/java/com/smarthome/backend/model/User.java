@@ -28,9 +28,12 @@ public class User {
     private String idDocumentPath;
     private boolean isApproved = true; // Default to true, Technician will be false
 
+    private Double maxWattage = 5000.0; // Default limit per user home
+
     public enum Role {
         ADMIN,
         HOMEOWNER,
-        TECHNICIAN
+        TECHNICIAN,
+        GUEST
     }
 }

@@ -1,0 +1,540 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <title>My Home</title>
+    <link rel="stylesheet" href="/css/style.css">
+    <style>
+        /* Dev Console Styles */
+        #devConsole {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 300px;
+            background: #1e1e1e;
+            color: #00ff00;
+            font-family: 'Courier New', monospace;
+            z-index: 9999;
+            display: none;
+            flex-direction: column;
+            border-top: 2px solid #333;
+            box-shadow: 0 -4px 10px rgba(0, 0, 0, 0.5);
+        }
+
+        #devConsole.active {
+            display: flex;
+        }
+
+        .console-header {
+            background: #333;
+            padding: 8px 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 14px;
+            font-weight: bold;
+            color: #fff;
+        }
+
+        .console-body {
+            flex: 1;
+            display: flex;
+            overflow: hidden;
+        }
+
+        .console-logs {
+            flex: 2;
+            padding: 10px;
+            overflow-y: auto;
+            border-right: 1px solid #333;
+            font-size: 12px;
+        }
+
+        .console-sidebar {
+            flex: 1;
+            background: #252526;
+            padding: 10px;
+            overflow-y: auto;
+            font-size: 12px;
+        }
+
+        .log-entry {
+            margin-bottom: 4px;
+            border-bottom: 1px solid #333;
+            padding-bottom: 2px;
+        }
+
+        .log-time {
+            color: #888;
+            margin-right: 8px;
+        }
+
+        .debug-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 255, 0, 0.1);
+            border: 2px dashed #00ff00;
+            pointer-events: none;
+            display: none;
+            z-index: 10;
+        }
+
+        .debug-overlay.active {
+            display: block;
+        }
+
+        .debug-label {
+            position: absolute;
+            top: 5px;
+            left: 5px;
+            background: #00ff00;
+            color: black;
+            font-size: 10px;
+            padding: 2px 4px;
+            font-weight: bold;
+        }
+
+        .dev-toggle-container {
+            display: flex;
+            align-items: center;
+            margin-left: 15px;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 4px 8px;
+            border-radius: 12px;
+        }
+
+        .toggle-switch {
+            position: relative;
+            display: inline-block;
+            width: 34px;
+            height: 20px;
+            margin-left: 8px;
+        }
+
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+            border-radius: 34px;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 14px;
+            width: 14px;
+            left: 3px;
+            bottom: 3px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+
+        input:checked+.slider {
+            background-color: #2196F3;
+        }
+
+        input:checked+.slider:before {
+            transform: translateX(14px);
+        }
+
+        .priority-badge {
+            position: absolute;
+            bottom: 10px;
+            right: 10px;
+            font-size: 10px;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-weight: bold;
+            color: white;
+        }
+
+        .priority-HIGH {
+            background-color: #FF3B30;
+        }
+
+        .priority-MEDIUM {
+            background-color: #FF9500;
+        }
+
+        .priority-LOW {
+            background-color: #34C759;
+        }
+    </style>
+</head>
+
+<body class="dashboard-body">
+    <div class="header">
+        <h1>My Home</h1>
+        <div style="display: flex; align-items: center; gap: 10px;">
+            <p class="subtitle" style="margin: 0;">Load: <span id="currentLoad">0</span>W / <span
+                    id="maxLoad">3000</span>W</p>
+
+            <!-- Admin Dev Mode Toggle -->
+            <div th:if="${userRole != null and userRole.contains('ADMIN')}" class="dev-toggle-container">
+                <span style="font-size: 12px; font-weight: 600; color: #333;">DEV MODE</span>
+                <label class="toggle-switch">
+                    <input type="checkbox" id="devModeToggle" onchange="toggleDevMode()">
+                    <span class="slider"></span>
+                </label>
+            </div>
+
+            <form th:action="@{/logout}" method="post" style="display: inline;">
+                <button type="submit"
+                    style="background: white; color: #FF3B30; padding: 6px 12px; border-radius: 12px; border: none; font-weight: 600; cursor: pointer; font-size: 12px;">Logout</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Devices Header & Add Button (Hidden for GUEST) -->
+    <div
+        style="display: flex; justify-content: space-between; align-items: center; margin-top: 10px; margin-bottom: 16px;">
+        <h3 style="font-size: 20px; margin: 0;">Devices</h3>
+        <button th:if="${!userRole.contains('GUEST')}" onclick="openModal()"
+            style="background: #007AFF; color: white; border: none; padding: 8px 16px; border-radius: 20px; font-weight: 600; cursor: pointer;">+
+            Add</button>
+    </div>
+
+    <div class="grid-container" id="deviceGrid">
+        <!-- Devices rendered via JS -->
+    </div>
+
+    <!-- Bottom Navigation Dock -->
+    <div class="dock-container">
+        <a href="/home" class="dock-item active">
+            <svg class="dock-icon" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M10,20V14H14V20H19V12H22L12,3L2,12H5V20H10Z" />
+            </svg>
+            <span class="dock-label">Home</span>
+        </a>
+
+        <!-- Usage Link (Hidden for GUEST) -->
+        <a th:if="${!userRole.contains('GUEST')}" href="/usage" class="dock-item">
+            <svg class="dock-icon" viewBox="0 0 24 24" fill="currentColor">
+                <path
+                    d="M16 6L18.29 8.29L13.41 13.17L9.41 9.17L2 16.59L3.41 18L9.41 12L13.41 16L19.71 9.71L22 12V6H16Z" />
+            </svg>
+            <span class="dock-label">Usage</span>
+        </a>
+    </div>
+
+    <!-- Add Device Modal -->
+    <div id="addDeviceModal"
+        style="display:none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; justify-content: center; align-items: center;">
+        <div style="background: white; padding: 24px; border-radius: 20px; width: 320px;">
+            <h2 style="margin-bottom: 16px;">Add Device</h2>
+
+            <div class="tab-container">
+                <div class="tab active" onclick="switchTab('manual')">Manual</div>
+                <div class="tab" onclick="switchTab('pair')">Scan / Pair</div>
+            </div>
+
+            <!-- Manual Tab -->
+            <div id="manualTab">
+                <input type="text" id="devName" placeholder="Device Name" class="input-field"
+                    style="margin-bottom: 12px;">
+                <select id="devType" class="input-field" style="margin-bottom: 12px; background: #E5E5EA;">
+                    <option value="LIGHT">Light</option>
+                    <option value="AC">AC</option>
+                    <option value="FAN">Fan</option>
+                    <option value="HEATER">Heater</option>
+                    <option value="FRIDGE">Fridge</option>
+                </select>
+                <select id="devPriority" class="input-field" style="margin-bottom: 12px; background: #E5E5EA;">
+                    <option value="LOW">Low Priority (Auto-Off)</option>
+                    <option value="MEDIUM">Medium Priority</option>
+                    <option value="HIGH">High Priority (Always On)</option>
+                </select>
+                <input type="number" id="devPower" placeholder="Power (Watts)" class="input-field"
+                    style="margin-bottom: 20px;">
+                <div style="display: flex; gap: 8px;">
+                    <button onclick="closeModal()"
+                        style="flex:1; padding: 12px; border: none; background: #E5E5EA; border-radius: 12px; font-weight: 600; cursor: pointer;">Cancel</button>
+                    <button onclick="addDevice('manual')"
+                        style="flex:1; padding: 12px; border: none; background: #007AFF; color: white; border-radius: 12px; font-weight: 600; cursor: pointer;">Add</button>
+                </div>
+            </div>
+
+            <!-- Pair Tab -->
+            <div id="pairTab" style="display: none;">
+                <div class="scan-box" id="scanBox">
+                    <div class="scan-line"></div>
+                    <svg width="64" height="64" viewBox="0 0 24 24" fill="#8E8E93">
+                        <path
+                            d="M4,4H10V10H4V4M20,4V10H14V4H20M14,14H20V20H14V14M4,14H10V20H4V14M2,2V12H12V2H2M14,2V12H22V2H14M2,14V24H12V14H2M14,14V24H22V14H14Z" />
+                    </svg>
+                </div>
+                <p class="scan-text" id="scanText" style="margin-bottom: 16px;">Looking for devices...</p>
+                <input type="text" id="pairCode" placeholder="Enter Setup Code (e.g. 1234)" class="input-field"
+                    style="margin-bottom: 20px; display: none;">
+
+                <div style="display: flex; gap: 8px;">
+                    <button onclick="closeModal()"
+                        style="flex:1; padding: 12px; border: none; background: #E5E5EA; border-radius: 12px; font-weight: 600; cursor: pointer;">Cancel</button>
+                    <button onclick="startPairing()" id="pairBtn"
+                        style="flex:1; padding: 12px; border: none; background: #007AFF; color: white; border-radius: 12px; font-weight: 600; cursor: pointer;">Enter
+                        Code</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Developer Console Panel -->
+    <div id="devConsole">
+        <div class="console-header">
+            <span>DEVELOPER CONSOLE [ADMIN ACCESS]</span>
+            <div style="display: flex; gap: 10px;">
+                <input type="text" placeholder="exec command..."
+                    style="background: #000; border: 1px solid #444; color: #00ff00; padding: 2px 5px;"
+                    onkeypress="handleConsoleCmd(event)">
+                <span style="cursor: pointer;" onclick="toggleDevMode()">[X]</span>
+            </div>
+        </div>
+        <div class="console-body">
+            <div class="console-logs" id="sysLogs">
+                <div class="log-entry"><span class="log-time">SYSTEM</span> Console Initialized...</div>
+            </div>
+            <div class="console-sidebar" id="jsonViewer">
+                <div style="color: #666; text-align: center; margin-top: 20px;">select object to inspect</div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script th:inline="javascript">
+        // Inject User Role
+        const userRole = /*[[${userRole}]]*/ 'ROLE_USER';
+        const isGuest = userRole.includes("GUEST");
+        console.log("Current User Role:", userRole, "Is Guest:", isGuest);
+
+        // Hide Dev Mode for everyone initially (Thymeleaf already handled visibility of toggle)
+
+        let isDevMode = false;
+        let systemLogs = [];
+
+        function toggleDevMode() {
+            const toggle = document.getElementById('devModeToggle');
+            isDevMode = toggle ? toggle.checked : false;
+
+            const consoleDiv = document.getElementById('devConsole');
+            if (isDevMode) {
+                consoleDiv.classList.add('active');
+                log("Dev Mode ENABLED. Debug overlays active.");
+            } else {
+                consoleDiv.classList.remove('active');
+                log("Dev Mode DISABLED.");
+            }
+            renderDevices(currentDevices);
+        }
+
+        function log(msg) {
+            const time = new Date().toLocaleTimeString();
+            const logDiv = document.getElementById('sysLogs');
+            const entry = document.createElement('div');
+            entry.className = 'log-entry';
+            entry.innerHTML = `<span class="log-time">${time}</span> ${msg}`;
+            logDiv.appendChild(entry);
+            logDiv.scrollTop = logDiv.scrollHeight;
+        }
+
+        function handleConsoleCmd(e) {
+            if (e.key === 'Enter') {
+                const cmd = e.target.value;
+                log("> " + cmd);
+                if (cmd === 'clear') document.getElementById('sysLogs').innerHTML = '';
+                else if (cmd === 'help') log("Available: clear, status, inspect <id>");
+                else if (cmd === 'status') log("System Clean. Active Connections: 1");
+                else log("Unknown command.");
+                e.target.value = '';
+            }
+        }
+
+        function showJson(data) {
+            document.getElementById('jsonViewer').innerHTML = '<pre>' + JSON.stringify(data, null, 2) + '</pre>';
+        }
+
+        // Standard App Logic
+        let currentDevices = [];
+
+        async function fetchDevices() {
+            // For simplicity, Max Wattage is hardcoded in UI for now, logic is Server side
+            // In a real app we'd fetch settings endpoint
+            const res = await fetch('/api/devices');
+            if (res.ok) {
+                const devices = await res.json();
+                currentDevices = devices;
+
+                // Calc Load
+                const currentLoad = devices.filter(d => d.status).reduce((acc, d) => acc + d.powerRating, 0);
+                document.getElementById('currentLoad').innerText = currentLoad;
+                // document.getElementById('maxLoad').innerText = "3000"; // Default
+
+                renderDevices(devices);
+            }
+        }
+
+        function renderDevices(devices) {
+            const grid = document.getElementById('deviceGrid');
+            grid.innerHTML = '';
+
+            devices.forEach(device => {
+                const isAc = device.type === 'AC';
+                const isLight = device.type === 'LIGHT';
+                const icon = isAc ?
+                    `<path d="M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2M12,4A8,8 0 0,1 20,12A8,8 0 0,1 12,20A8,8 0 0,1 4,12A8,8 0 0,1 12,4M12,6V12L16,16L17.41,14.59L14,11V6H12Z" />` :
+                    (isLight ? `<path d="M12,2A7,7 0 0,0 5,9C5,12.86 8,15.64 8,19A2,2 0 0,0 10,21H14A2,2 0 0,0 16,19C16,15.64 19,12.86 19,9A7,7 0 0,0 12,2M12,4A5,5 0 0,1 17,9C17,11.5 15,13.75 14.5,16H9.5C9,13.75 7,11.5 7,9A5,5 0 0,1 12,4M9,22H15V23H9V22Z" />` :
+                        `<path d="M5,3H19A2,2 0 0,1 21,5V19A2,2 0 0,1 19,21H5A2,2 0 0,1 3,19V5A2,2 0 0,1 5,3M5,5V19H19V5H5Z" />`);
+
+                const debugHtml = isDevMode ? `
+                    <div class="debug-overlay active" onclick="event.stopPropagation(); showJson(currentDevices.find(d => d.id === ${device.id})); log('Inspected Device ${device.id}');">
+                        <div class="debug-label">ID: ${device.id} (RAW)</div>
+                    </div>` : '';
+
+                // GUEST Check: If Guest, no delete button, no click toggle
+                const deleteBtn = !isGuest ?
+                    `<div style="position: absolute; top: 10px; right: 10px; color: #FF3B30; cursor: pointer; padding: 5px; z-index: 5;" onclick="deleteDevice(event, ${device.id})">✕</div>`
+                    : '';
+
+                const clickAction = !isGuest ? `onclick="toggleDevice(${device.id})"` : '';
+                const cursorStyle = !isGuest ? 'cursor: pointer;' : 'cursor: default;';
+
+                const priorityBadge = device.priority ? `<div class="priority-badge priority-${device.priority}">${device.priority}</div>` : '';
+
+                const card = document.createElement('div');
+                card.className = 'card';
+                card.style = `position: relative; ${cursorStyle}`;
+                card.innerHTML = `
+                        ${debugHtml}
+                        ${deleteBtn}
+                        <div style="height: 100%; display: flex; flex-direction: column; justify-content: space-between;" ${clickAction}>
+                            <div class="icon-container ${device.status ? 'on' : 'off'}">
+                                <svg width="32" height="32" viewBox="0 0 24 24" fill="currentColor">${icon}</svg>
+                            </div>
+                            <h3>${device.name}</h3>
+                            <p class="${device.status ? 'status-on' : 'status-off'}">${device.status ? 'On' : 'Off'}</p>
+                            ${priorityBadge}
+                        </div>
+                     `;
+                grid.appendChild(card);
+            });
+        }
+
+        async function toggleDevice(id) {
+            if (isGuest) return; // Client-side guard
+            log(`Toggling Device ${id}`);
+            try {
+                const res = await fetch('/api/devices/' + id + '/status', { method: 'PUT' });
+                if (!res.ok) {
+                    alert('Cannot turn ON: Max Wattage Exceeded (and Load Shedding failed)');
+                }
+            } catch (e) {
+                console.error(e);
+            }
+            fetchDevices(); // Refresh logic handles state update
+        }
+
+        async function deleteDevice(event, id) {
+            if (isGuest) return; // Client-side guard
+            event.stopPropagation();
+            if (!confirm('Delete this device?')) return;
+            log(`Deleting Device ${id}`);
+            await fetch('/api/devices/' + id, {
+                method: 'DELETE'
+            });
+            fetchDevices();
+        }
+
+        // Modal functions
+        function openModal() {
+            document.getElementById('addDeviceModal').style.display = 'flex';
+            switchTab('manual');
+        }
+
+        function closeModal() {
+            document.getElementById('addDeviceModal').style.display = 'none';
+        }
+
+        function switchTab(tab) {
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            if (tab === 'manual') {
+                document.querySelectorAll('.tab')[0].classList.add('active');
+                document.getElementById('manualTab').style.display = 'block';
+                document.getElementById('pairTab').style.display = 'none';
+            } else {
+                document.querySelectorAll('.tab')[1].classList.add('active');
+                document.getElementById('manualTab').style.display = 'none';
+                document.getElementById('pairTab').style.display = 'block';
+                document.getElementById('scanBox').style.display = 'flex';
+                document.getElementById('pairCode').style.display = 'none';
+                document.getElementById('scanText').innerText = "Looking for devices...";
+                document.getElementById('pairBtn').innerText = "Enter Code";
+                document.getElementById('pairBtn').onclick = startPairing;
+            }
+        }
+
+        function startPairing() {
+            document.getElementById('scanBox').style.display = 'none';
+            document.getElementById('pairCode').style.display = 'block';
+            document.getElementById('scanText').innerText = "Enter the setup code found on your device.";
+            const btn = document.getElementById('pairBtn');
+            btn.innerText = "Connect";
+            btn.onclick = async () => await addDevice('pair');
+        }
+
+        async function addDevice(mode) {
+            let name, type, power, priority;
+            if (mode === 'manual') {
+                name = document.getElementById('devName').value;
+                type = document.getElementById('devType').value;
+                power = document.getElementById('devPower').value;
+                priority = document.getElementById('devPriority').value;
+            } else {
+                const code = document.getElementById('pairCode').value;
+                if (!code) return alert('Enter a code');
+                document.getElementById('scanText').innerText = "Connecting...";
+                await new Promise(r => setTimeout(r, 1500));
+                name = "Smart Device " + code;
+                type = "LIGHT";
+                power = 10.0;
+                priority = "LOW";
+                alert("Found device: " + name);
+            }
+
+            if (!name || (!power && mode === 'manual')) return alert('Fill all fields');
+
+            log(`Adding Device: ${name}`);
+            await fetch('/api/devices', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ name, type, powerRating: parseFloat(power || 10), status: false, priority: priority })
+            });
+            closeModal();
+            fetchDevices();
+        }
+
+        window.onload = () => {
+            // No Energy Data Fetching here - handled in Usage page
+            fetchDevices();
+            log("Application Loaded.");
+        };
+    </script>
+</body>
+
+</html>

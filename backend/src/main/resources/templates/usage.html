@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <title>Energy Usage</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+
+<body class="dashboard-body">
+    <div class="header">
+        <h1>Energy</h1>
+        <p class="subtitle">Usage & Analytics</p>
+    </div>
+
+    <!-- Summary Cards -->
+    <div class="summary-container" style="flex-direction: column; gap: 16px;">
+        <div style="display: flex; gap: 16px;">
+            <div class="summary-card">
+                <div class="summary-label">Today's Usage</div>
+                <div class="summary-value"><span id="energyUsage">--</span> <span class="summary-unit">kWh</span></div>
+            </div>
+            <div class="summary-card">
+                <div class="summary-label">Estimated Cost</div>
+                <div class="summary-value"><span id="costValue">--</span></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Chart -->
+    <div class="chart-container"
+        style="margin-top: 10px; background: white; padding: 20px; border-radius: 20px; height: 350px;">
+        <h2 style="font-size: 20px; margin-bottom: 20px;">Weekly Usage</h2>
+        <canvas id="energyChart"></canvas>
+    </div>
+
+    <!-- Bottom Navigation Dock -->
+    <div class="dock-container">
+        <a href="/home" class="dock-item">
+            <svg class="dock-icon" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M10,20V14H14V20H19V12H22L12,3L2,12H5V20H10Z" />
+            </svg>
+            <span class="dock-label">Home</span>
+        </a>
+        <a href="/usage" class="dock-item active">
+            <svg class="dock-icon" viewBox="0 0 24 24" fill="currentColor">
+                <path
+                    d="M16 6L18.29 8.29L13.41 13.17L9.41 9.17L2 16.59L3.41 18L9.41 12L13.41 16L19.71 9.71L22 12V6H16Z" />
+            </svg>
+            <span class="dock-label">Usage</span>
+        </a>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        async function fetchEnergyData() {
+            try {
+                // Fetch Summary
+                const summaryRes = await fetch('/api/energy/summary');
+                if (summaryRes.ok) {
+                    const summary = await summaryRes.json();
+                    document.getElementById('energyUsage').innerText = summary.usage;
+                    document.getElementById('costValue').innerText = summary.currency + summary.cost;
+                }
+
+                // Fetch History
+                const historyRes = await fetch('/api/energy/history');
+                if (historyRes.ok) {
+                    const history = await historyRes.json();
+                    updateChart(history.labels, history.data);
+                }
+            } catch (e) {
+                console.error("Failed to fetch energy data", e);
+            }
+        }
+
+        let energyChart;
+        function updateChart(labels, data) {
+            const ctx = document.getElementById('energyChart').getContext('2d');
+            if (energyChart) {
+                energyChart.destroy();
+            }
+            energyChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Energy (kWh)',
+                        data: data,
+                        backgroundColor: '#34C759', // Green for Energy Page
+                        borderRadius: 8
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: { beginAtZero: true, grid: { display: false } },
+                        x: { grid: { display: false } }
+                    },
+                    plugins: {
+                        legend: { display: false }
+                    }
+                }
+            });
+        }
+
+        window.onload = () => {
+            fetchEnergyData();
+        };
+    </script>
+</body>
+
+</html>
