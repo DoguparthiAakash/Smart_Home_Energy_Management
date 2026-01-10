@@ -19,23 +19,25 @@ public class WebController {
         return "login";
     }
 
-    @GetMapping("/register")
-    public String register() {
-        return "register";
+    @GetMapping({ "/", "/home", "/dashboard", "/admin" })
+    public String home(Model model, org.springframework.security.core.Authentication authentication) {
+        if (authentication != null) {
+            String role = authentication.getAuthorities().stream()
+                    .findFirst()
+                    .map(r -> r.getAuthority())
+                    .orElse("ROLE_USER");
+            model.addAttribute("userRole", role);
+        }
+        return "home";
     }
 
-    @GetMapping("/verify-2fa")
-    public String verify2fa() {
-        return "verify_2fa";
+    @GetMapping("/usage")
+    public String usage() {
+        return "usage";
     }
 
-    @GetMapping("/admin/dashboard")
-    public String adminDashboard() {
-        return "admin_dashboard";
-    }
-
-    @GetMapping("/dashboard")
-    public String dashboard() {
-        return "dashboard";
+    @GetMapping("/settings")
+    public String settings() {
+        return "settings";
     }
 }

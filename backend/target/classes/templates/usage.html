@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Energy Usage</title>
+    <link rel="stylesheet" href="/css/style.css">
+    <script src="/js/auth-guard.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        const theme = localStorage.getItem('theme') || 'light';
+        document.documentElement.setAttribute('data-theme', theme);
+    </script>
+</head>
+
+<body>
+    <div class="dashboard-container">
+        <!-- Header -->
+        <div class="dashboard-header">
+            <div>
+                <h1 class="h1">Energy Usage</h1>
+                <p class="caption">Track consumption & cost</p>
+            </div>
+            <button onclick="fetchEnergyData()" class="btn btn-secondary btn-icon">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                    <path
+                        d="M17.65,6.35C16.2,4.9 14.21,4 12,4A8,8 0 0,0 4,12A8,8 0 0,0 12,20C15.73,20 18.84,17.45 19.73,14H17.65C16.83,16.33 14.61,18 12,18A6,6 0 0,1 6,12A6,6 0 0,1 12,6C13.66,6 15.14,6.69 16.22,7.78L13,11H20V4L17.65,6.35Z" />
+                </svg>
+            </button>
+        </div>
+
+        <!-- Summary Cards -->
+        <div style="display: flex; gap: 16px; margin-bottom: 24px;">
+            <div class="card w-full">
+                <p class="caption mb-2" style="font-weight: 600; text-transform: uppercase;">Today's Usage</p>
+                <div style="display: flex; align-items: baseline;">
+                    <span id="energyUsage" class="h2 text-primary">--</span>
+                    <span class="caption" style="margin-left: 4px; font-size: 15px;">kWh</span>
+                </div>
+            </div>
+            <div class="card w-full">
+                <p class="caption mb-2" style="font-weight: 600; text-transform: uppercase;">Estimated Cost</p>
+                <div style="display: flex; align-items: baseline;">
+                    <span id="costValue" class="h2" style="color: var(--color-success)">--</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Chart -->
+        <div class="card" style="height: 350px; position: relative;">
+            <h2 class="h3 mb-4">Weekly Overview</h2>
+            <div style="height: 250px;">
+                <canvas id="energyChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bottom Dock -->
+    <div class="bottom-dock">
+        <a href="/dashboard" class="dock-item">
+            <svg viewBox="0 0 24 24" fill="currentColor">
+                <path d="M10,20V14H14V20H19V12H22L12,3L2,12H5V20H10Z" />
+            </svg>
+            <span>Home</span>
+        </a>
+        <a href="/usage" class="dock-item active">
+            <svg viewBox="0 0 24 24" fill="currentColor">
+                <path
+                    d="M16,6L18.29,8.29L13.41,13.17L9.41,9.17L2,16.59L3.41,18L9.41,12L13.41,16L19.71,9.71L22,12V6H16Z" />
+            </svg>
+            <span>Usage</span>
+        </a>
+        <a href="/settings" class="dock-item">
+            <svg viewBox="0 0 24 24" fill="currentColor">
+                <path
+                    d="M19.14,12.94C19.16,12.78 19.16,12.61 19.16,12.45C19.16,12.29 19.16,12.12 19.14,11.96L21.41,10.19C21.61,10.03 21.67,9.75 21.53,9.5L19.38,5.77C19.24,5.53 18.96,5.43 18.72,5.53L16.05,6.61C15.5,6.19 14.88,5.84 14.22,5.57L13.81,2.73C13.78,2.47 13.56,2.28 13.3,2.28H9.04C8.78,2.28 8.56,2.47 8.53,2.73L8.12,5.57C7.46,5.84 6.84,6.19 6.29,6.61L3.62,5.53C3.38,5.43 3.1,5.53 2.96,5.77L0.81,9.5C0.68,9.75 0.73,10.03 0.94,10.19L3.2,11.96C3.18,12.12 3.18,12.29 3.18,12.45C3.18,12.61 3.18,12.78 3.2,12.94L0.94,14.71C0.73,14.87 0.68,15.15 0.81,15.4L2.96,19.13C3.1,19.37 3.38,19.47 3.62,19.37L6.29,18.29C6.84,18.71 7.46,19.06 8.12,19.33L8.53,22.17C8.56,22.43 8.78,22.62 9.04,22.62H13.3C13.56,22.62 13.78,22.43 13.81,22.17L14.22,19.33C14.88,19.06 15.5,18.71 16.05,18.29L18.72,19.37C18.96,19.47 19.24,19.37 19.38,19.13L21.53,15.4C21.67,15.15 21.61,14.87 21.41,14.71L19.14,12.94M12.16,15.25C10.61,15.25 9.36,14 9.36,12.45C9.36,10.9 10.61,9.65 12.16,9.65C13.71,9.65 14.96,10.9 14.96,12.45C14.96,14 13.71,15.25 12.16,15.25Z" />
+            </svg>
+            <span>Settings</span>
+        </a>
+    </div>
+
+    <script>
+        const token = localStorage.getItem('token');
+        if (!token) window.location.href = '/login';
+
+        async function fetchEnergyData() {
+            try {
+                const headers = { 'Authorization': 'Bearer ' + token };
+                // Fetch Summary
+                const summaryRes = await fetch('/api/energy/summary', { headers });
+                if (summaryRes.ok) {
+                    const summary = await summaryRes.json();
+                    document.getElementById('energyUsage').innerText = summary.usage;
+                    document.getElementById('costValue').innerText = summary.currency + summary.cost;
+                }
+
+                // Fetch History
+                const historyRes = await fetch('/api/energy/history', { headers });
+                if (historyRes.ok) {
+                    const history = await historyRes.json();
+                    updateChart(history.labels, history.data);
+                }
+            } catch (e) {
+                console.error("Failed to fetch energy data", e);
+            }
+        }
+
+        let energyChart;
+        function updateChart(labels, data) {
+            const ctx = document.getElementById('energyChart').getContext('2d');
+            if (energyChart) {
+                energyChart.destroy();
+            }
+
+            // Create gradient
+            const gradient = ctx.createLinearGradient(0, 0, 0, 400);
+            gradient.addColorStop(0, 'rgba(0, 122, 255, 0.5)');
+            gradient.addColorStop(1, 'rgba(0, 122, 255, 0.0)');
+
+            energyChart = new Chart(ctx, {
+                type: 'line', // Switched to line for better visuals
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Energy (kWh)',
+                        data: data,
+                        backgroundColor: gradient,
+                        borderColor: '#007AFF',
+                        borderWidth: 2,
+                        pointBackgroundColor: '#007AFF',
+                        pointRadius: 4,
+                        fill: true,
+                        tension: 0.4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            grid: { color: 'rgba(0,0,0,0.05)' },
+                            border: { display: false }
+                        },
+                        x: {
+                            grid: { display: false },
+                            border: { display: false }
+                        }
+                    },
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            backgroundColor: 'rgba(0,0,0,0.8)',
+                            padding: 12,
+                            cornerRadius: 8,
+                            displayColors: false
+                        }
+                    }
+                }
+            });
+        }
+
+        window.onload = () => {
+            fetchEnergyData();
+        };
+    </script>
+</body>
+
+</html>

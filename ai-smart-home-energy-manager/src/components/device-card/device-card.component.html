@@ -1,0 +1,33 @@
+
+<div class="flex items-center justify-between bg-gray-900/50 p-4 rounded-lg hover:bg-gray-700/50 transition-colors duration-200">
+  <div class="flex items-center space-x-4">
+    <div [class]="device().isOn ? 'text-cyan-400' : 'text-gray-500'">
+      <svg class="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+        <path [attr.d]="getIconPath(device().icon)"></path>
+      </svg>
+    </div>
+    <div>
+      <p class="font-semibold text-gray-100">{{ device().name }}</p>
+      <p class="text-xs text-gray-400">
+        {{ device().location }}
+        @if (device().isOn) {
+          <span class="text-green-400 ml-2">{{ device().powerConsumption }}W</span>
+        } @else {
+          <span class="text-gray-500 ml-2">Off</span>
+        }
+      </p>
+    </div>
+  </div>
+  <button
+    (click)="onToggle()"
+    type="button"
+    role="switch"
+    [attr.aria-checked]="device().isOn"
+    class="relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:ring-offset-2 focus:ring-offset-gray-800"
+    [class]="device().isOn ? 'bg-cyan-600' : 'bg-gray-600'">
+    <span
+      aria-hidden="true"
+      class="pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out"
+      [class]="device().isOn ? 'translate-x-5' : 'translate-x-0'"></span>
+  </button>
+</div>

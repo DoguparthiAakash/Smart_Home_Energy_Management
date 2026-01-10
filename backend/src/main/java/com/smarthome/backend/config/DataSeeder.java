@@ -14,6 +14,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.List;
+import java.util.Optional;
 
 @Configuration
 public class DataSeeder {
@@ -30,58 +31,64 @@ public class DataSeeder {
     @Bean
     public CommandLineRunner loadData() {
         return args -> {
-            // Create uploads directory
             Files.createDirectories(Paths.get("uploads"));
 
-            if (userRepository.count() == 0) {
-                // Admin with TOTP
-                User admin = new User();
-                admin.setName("Admin User");
-                admin.setEmail("admin@smarthome.com");
-                admin.setPassword(passwordEncoder.encode("password"));
-                admin.setRole(User.Role.ADMIN);
+            // 0. Inspect Existing Users (Debug)
+            System.out.println("----- EXISTING USERS IN DB -----");
+            userRepository.findAll()
+                    .forEach(u -> System.out.println("User: " + u.getEmail() + " | Role: " + u.getRole()));
+            System.out.println("--------------------------------");
 
-                // Generate Secret
-                String secret = totpService.generateSecret().getKey();
-                admin.setTwoFactorSecret(secret);
-
-                userRepository.save(admin);
-
-                System.out.println("==========================================");
-                System.out.println("ADMIN ACCOUNT CREATED");
-                System.out.println("Email: admin@smarthome.com");
-                System.out.println("Password: password");
-                System.out.println("TOTP SECRET: " + secret);
-                System.out.println("==========================================");
-
-                // Homeowner
-                User homeowner = new User();
-                homeowner.setName("Home Owner");
-                homeowner.setEmail("user@smarthome.com");
-                homeowner.setPassword(passwordEncoder.encode("password"));
-                homeowner.setRole(User.Role.HOMEOWNER);
-                userRepository.save(homeowner);
-
-                // Devices for Homeowner
-                List<Device> devices = List.of(
-                        createDevice(homeowner, "Living Room AC", "AC", 1500.0, true),
-                        createDevice(homeowner, "Smart Fridge", "FRIDGE", 200.0, true),
-                        createDevice(homeowner, "Bedroom Light", "LIGHT", 10.0, false),
-                        createDevice(homeowner, "Water Heater", "HEATER", 3000.0, true));
-                deviceRepository.saveAll(devices);
-
-                System.out.println("Data Seeding Completed: Created users and devices.");
+            // 1. Ensure Admin Exists (Upsert)
+            User admin = userRepository.findByEmail("muterornament").orElseGet(() -> {
+                User newAdmin = new User();
+                newAdmin.setRole(User.Role.ADMIN);
+                return newAdmin;
+            });
+            admin.setName("Admin User");
+            admin.setEmail("muterornament");
+            admin.setPassword(passwordEncoder.encode("DPfamily@5"));
+            if (admin.getTwoFactorSecret() == null) {
+                admin.setTwoFactorSecret(totpService.generateSecret().getKey());
             }
+            userRepository.save(admin);
+            System.out.println("ADMIN ACCOUNT ENSURED: muterornament");
+
+            // 2. Ensure Guest Exists (Upsert)
+            User guest = userRepository.findByEmail("guest").orElseGet(() -> {
+                User newGuest = new User();
+                newGuest.setRole(User.Role.HOMEOWNER);
+                return newGuest;
+            });
+            guest.setName("Guest User");
+            guest.setEmail("guest");
+            guest.setPassword(passwordEncoder.encode("1234@5"));
+            userRepository.save(guest); // Guest still uses HOMEOWNER role for permissions
+            System.out.println("GUEST ACCOUNT ENSURED: guest");
+
+            // 4. Ensure Devices Exist (if none)
+            if (deviceRepository.count() == 0) {
+                List<Device> devices = List.of(
+                        createDevice(guest, "Living Room AC", "AC", 1500.0, true, false),
+                        createDevice(guest, "Smart Fridge", "FRIDGE", 200.0, true, true),
+                        createDevice(guest, "Bedroom Light", "LIGHT", 10.0, false, false),
+                        createDevice(guest, "Water Heater", "HEATER", 3000.0, true, false));
+                deviceRepository.saveAll(devices);
+                System.out.println("DEVICES CREATED");
+            }
+
+            System.out.println("Data Seeding Completed.");
         };
     }
 
-    private Device createDevice(User user, String name, String type, Double power, Boolean status) {
+    private Device createDevice(User user, String name, String type, Double power, Boolean status, Boolean isCritical) {
         Device device = new Device();
         device.setUser(user);
         device.setName(name);
         device.setType(type);
         device.setPowerRating(power);
         device.setStatus(status);
+        device.setIsCritical(isCritical);
         return device;
     }
 }

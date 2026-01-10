@@ -26,4 +26,10 @@ public class Device {
 
     @Column(nullable = false)
     private Boolean status = false; // false = OFF, true = ON
+
+    @Column(nullable = false)
+    private Boolean isCritical = false; // true = Won't be auto-shutoff
+
+    @Column(nullable = true)
+    private String mqttTopic; // MQTT Topic for control/status
 }

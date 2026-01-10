@@ -2,68 +2,251 @@
 <html xmlns:th="http://www.thymeleaf.org">
 
 <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Smart Home - Login</title>
     <link rel="stylesheet" href="/css/style.css">
-    <link href="https://fonts.googleapis.com/css2?family=SF+Pro+Display:wght@400;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #f0f2f5;
+            margin: 0;
+        }
+
+        .auth-card {
+            background: white;
+            padding: 2rem;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            width: 100%;
+            max-width: 420px;
+        }
+
+        .tabs {
+            display: flex;
+            margin-bottom: 2rem;
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 4px;
+        }
+
+        .tab {
+            flex: 1;
+            padding: 10px;
+            text-align: center;
+            cursor: pointer;
+            border-radius: 6px;
+            font-weight: 500;
+            color: #6c757d;
+            transition: all 0.2s;
+        }
+
+        .tab.active {
+            background: white;
+            color: #007bff;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+            font-weight: 600;
+        }
+
+        h1 {
+            text-align: center;
+            color: #1a1a1a;
+            margin-bottom: 0.5rem;
+            font-size: 1.5rem;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #6c757d;
+            margin-bottom: 2rem;
+            font-size: 0.9rem;
+        }
+
+        .form-section {
+            display: none;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .form-section.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(5px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .form-group {
+            margin-bottom: 1.25rem;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: #343a40;
+            font-weight: 500;
+            font-size: 0.9rem;
+        }
+
+        input {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            box-sizing: border-box;
+            transition: border-color 0.2s;
+            font-family: inherit;
+        }
+
+        input:focus {
+            border-color: #007bff;
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
+        }
+
+        button {
+            width: 100%;
+            padding: 0.85rem;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 600;
+            transition: background-color 0.2s;
+            margin-top: 0.5rem;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+
+        .error {
+            background-color: #fde8e8;
+            color: #e02424;
+            padding: 0.75rem;
+            border-radius: 6px;
+            text-align: center;
+            margin-bottom: 1.5rem;
+            font-size: 0.9rem;
+            border: 1px solid #fbd5d5;
+        }
+
+        .logout-msg {
+            background-color: #def7ec;
+            color: #03543f;
+            padding: 0.75rem;
+            border-radius: 6px;
+            text-align: center;
+            margin-bottom: 1.5rem;
+            font-size: 0.9rem;
+            border: 1px solid #bcf0da;
+        }
+    </style>
 </head>
 
-<body class="login-body">
-    <div class="card" style="width: 320px; padding: 40px;">
-        <h1 style="text-align: center; margin-bottom: 10px;">Welcome Home</h1>
-        <p class="subtitle" style="text-align: center; margin-bottom: 30px;">Sign in to control your house.</p>
+<body>
+    <div class="auth-card">
+        <h1>Welcome Back</h1>
+        <p class="subtitle">Please select your login type</p>
 
-        <form onsubmit="handleLogin(event)">
-            <input type="email" id="email" placeholder="Email" class="input-field" required>
-            <input type="password" id="password" placeholder="Password" class="input-field" required>
+        <div th:if="${param.error}" class="error">
+            Invalid credentials. Please try again.
+        </div>
+        <div th:if="${param.logout}" class="logout-msg">
+            You have been logged out successfully.
+        </div>
 
-            <select id="role" class="input-field" style="background: white; margin-bottom: 20px;">
-                <option value="HOMEOWNER">Home Owner</option>
-                <option value="TECHNICIAN">Technician</option>
-                <option value="ADMIN">Admin</option>
-            </select>
+        <div class="tabs">
+            <div class="tab active" onclick="switchTab('admin')">Admin</div>
+            <div class="tab" onclick="switchTab('guest')">Guest</div>
+        </div>
 
-            <button type="submit" class="btn-primary" style="width: 100%;">Sign In</button>
+        <!-- Admin Login Form -->
+        <form id="adminForm" th:action="@{/login}" method="post" class="form-section active">
+            <input type="hidden" name="role" value="ADMIN">
+            <div class="input-group">
+                <label class="input-label" for="adminEmail">Username</label>
+                <input type="text" id="adminEmail" name="username" class="input-field" placeholder="muterornament"
+                    required autofocus>
+            </div>
+            <div class="input-group">
+                <label class="input-label" for="adminPassword">Password</label>
+                <input type="password" id="adminPassword" name="password" class="input-field"
+                    placeholder="Enter password" required>
+            </div>
+            <button type="submit" class="btn btn-primary w-full">Login as Admin</button>
         </form>
 
-        <div style="margin-top: 20px; text-align: center;">
-            <a href="/register" style="color: #007AFF; text-decoration: none;">Create an Account</a>
-        </div>
-    </div>
+        <!-- Guest Login Form -->
+        <form id="guestForm" th:action="@{/login}" method="post" class="form-section">
+            <input type="hidden" name="role" value="HOMEOWNER">
+            <div class="input-group">
+                <label class="input-label" for="guestEmail">Username</label>
+                <input type="text" id="guestEmail" name="username" class="input-field" placeholder="guest" required>
+            </div>
+            <div class="input-group">
+                <label class="input-label" for="guestPassword">Password</label>
+                <input type="password" id="guestPassword" name="password" class="input-field"
+                    placeholder="Enter password" required>
+            </div>
+            <button type="submit" class="btn btn-secondary w-full">Login as Guest</button>
+        </form>
     </div>
 
     <script>
-        async function handleLogin(e) {
-            e.preventDefault();
-            const email = document.getElementById('email').value;
-            const password = document.getElementById('password').value;
-            const role = document.getElementById('role').value;
+        function switchTab(type) {
+            console.log("Switching tab to:", type);
 
-            const response = await fetch('/api/auth/login', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ email, password, role })
+            // 1. Update Tabs Visual State
+            // Remove active from all tabs
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+
+            // Add active to clicked tab
+            // Determine which tab was clicked based on type
+            const tabs = document.querySelectorAll('.tab');
+            tabs.forEach(tab => {
+                if (tab.innerText.toLowerCase().includes(type)) {
+                    tab.classList.add('active');
+                }
             });
 
-            if (response.status === 202) {
-                // 2FA Required
-                localStorage.setItem('pending_email', email);
-                window.location.href = '/verify-2fa';
-                return;
-            }
+            // 2. Update Form Section Visibility
+            // Hide all forms first
+            document.querySelectorAll('.form-section').forEach(s => {
+                s.classList.remove('active');
+                s.style.display = 'none'; // Force hide
+            });
 
-            if (response.ok) {
-                const data = await response.json();
-                localStorage.setItem('token', data.jwt);
-                localStorage.setItem('role', data.role);
+            // Determine target form ID
+            const targetId = type === 'admin' ? 'adminForm' : 'guestForm';
+            const targetForm = document.getElementById(targetId);
 
-                if (data.role === 'ADMIN') {
-                    window.location.href = '/admin/dashboard';
-                } else {
-                    window.location.href = '/dashboard';
-                }
+            if (targetForm) {
+                targetForm.classList.add('active');
+                targetForm.style.display = 'block'; // Force show
+                console.log("Shown form:", targetId);
+
+                // 3. Focus Input
+                setTimeout(() => {
+                    const inputId = type === 'admin' ? 'adminEmail' : 'guestEmail';
+                    const input = document.getElementById(inputId);
+                    if (input) input.focus();
+                }, 50);
             } else {
-                const error = await response.text();
-                alert(error || 'Login failed');
+                console.error("Target form not found:", targetId);
             }
         }
     </script>

@@ -35,10 +35,17 @@ public class JwtFilter extends OncePerRequestFilter {
 
         if (authorizationHeader != null && authorizationHeader.startsWith("Bearer ")) {
             jwt = authorizationHeader.substring(7);
-            try {
-                username = jwtUtil.getUsernameFromToken(jwt);
-            } catch (Exception e) {
-                logger.warn("JWT Token processing failed", e);
+            // Prevent parsing "null" or empty strings which cause MalformedJwtException
+            if (jwt == null || jwt.trim().isEmpty() || "null".equals(jwt)) {
+                jwt = null;
+            } else {
+                try {
+                    username = jwtUtil.getUsernameFromToken(jwt);
+                } catch (Exception e) {
+                    // Log at debug level to avoid spamming console for invalid tokens during
+                    // development
+                    logger.debug("JWT Token processing failed: " + e.getMessage());
+                }
             }
         }
 

@@ -32,27 +32,25 @@ public class SecurityConfig {
                 http
                                 .csrf(AbstractHttpConfigurer::disable)
                                 .authorizeHttpRequests(auth -> auth
-                                                .requestMatchers("/api/auth/**", "/", "/login", "/register",
-                                                                "/dashboard", "/css/**", "/js/**",
-                                                                "/api/energy/**", "/verify-2fa", "/error",
-                                                                "/uploads/**")
+                                                .requestMatchers("/login", "/css/**", "/js/**", "/api/auth/**",
+                                                                "/error")
                                                 .permitAll()
-                                                .requestMatchers("/admin/**", "/api/admin/**").hasAuthority("ADMIN")
-                                                .requestMatchers("/technician/**")
-                                                .hasAnyAuthority("TECHNICIAN", "ADMIN")
-                                                .requestMatchers("/api/devices/**").authenticated() // Require auth for
-                                                                                                    // device Ops
+                                                .requestMatchers("/home/**", "/api/device/**", "/settings", "/usage")
+                                                .hasAnyRole("USER", "HOMEOWNER", "ADMIN")
                                                 .anyRequest().authenticated())
+                                .headers(headers -> headers.frameOptions(frame -> frame.disable()))
                                 .formLogin(form -> form
-                                                .loginPage("/login") // Custom login page if we had one, but we use
-                                                                     // index
-                                                .defaultSuccessUrl("/dashboard", true)
+                                                .loginPage("/login")
+                                                .successHandler((request, response, authentication) -> {
+                                                        // Always redirect to home for simplicity
+                                                        response.sendRedirect("/home");
+                                                })
                                                 .permitAll())
                                 .logout(logout -> logout
-                                                .logoutSuccessUrl("/")
+                                                .logoutSuccessUrl("/login?logout")
                                                 .permitAll())
                                 .sessionManagement(session -> session
-                                                .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                                                .sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED))
                                 .authenticationProvider(authenticationProvider())
                                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
 
