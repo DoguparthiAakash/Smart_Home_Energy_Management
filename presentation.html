@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Home Energy Management - Presentation</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap');
+
+        :root {
+            --primary: #007AFF;
+            --text: #1d1d1f;
+            --bg: #f5f5f7;
+            --card-bg: rgba(255, 255, 255, 0.85);
+        }
+
+        body,
+        html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+        }
+
+        /* Canvas Background */
+        #bgCanvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+        }
+
+        /* Slide Container */
+        .slide-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            width: 100vw;
+            height: 100vh;
+            perspective: 1000px;
+        }
+
+        .slide {
+            display: none;
+            width: 80%;
+            max-width: 900px;
+            padding: 60px;
+            background: var(--card-bg);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-radius: 30px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            animation: fadeIn 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+            flex-direction: column;
+        }
+
+        .slide.active {
+            display: flex;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px) scale(0.98);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        h1 {
+            font-size: 3.5rem;
+            font-weight: 800;
+            margin-bottom: 0.5rem;
+            background: linear-gradient(135deg, #007AFF, #00C6FF);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        h2 {
+            font-size: 2.5rem;
+            color: var(--text);
+            margin-top: 0;
+        }
+
+        h3 {
+            font-size: 1.5rem;
+            color: #86868b;
+            font-weight: 400;
+            margin-top: 0;
+        }
+
+        p,
+        li {
+            font-size: 1.25rem;
+            line-height: 1.6;
+            color: #424245;
+        }
+
+        ul {
+            list-style-type: none;
+            padding: 0;
+        }
+
+        li {
+            margin-bottom: 15px;
+            padding-left: 20px;
+            position: relative;
+        }
+
+        li::before {
+            content: "•";
+            color: var(--primary);
+            font-weight: bold;
+            display: inline-block;
+            width: 1em;
+            margin-left: -1em;
+        }
+
+        .code-block {
+            background: #1d1d1f;
+            color: #fff;
+            padding: 15px;
+            border-radius: 12px;
+            font-family: 'SF Mono', monospace;
+            font-size: 0.9rem;
+            margin-top: 20px;
+        }
+
+        .controls {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn {
+            background: rgba(0, 0, 0, 0.1);
+            border: none;
+            cursor: pointer;
+            padding: 10px 15px;
+            border-radius: 20px;
+            font-weight: 600;
+            transition: background 0.2s;
+        }
+
+        .btn:hover {
+            background: rgba(0, 0, 0, 0.2);
+        }
+
+        .progress-bar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            height: 6px;
+            background: var(--primary);
+            width: 0%;
+            transition: width 0.5s ease;
+        }
+    </style>
+</head>
+
+<body>
+
+    <canvas id="bgCanvas"></canvas>
+
+    <div class="slide-container" id="slideContainer">
+        <!-- Slides will be injected here -->
+    </div>
+
+    <div class="progress-bar" id="progressBar"></div>
+
+    <div class="controls">
+        <button class="btn" onclick="prevSlide()">←</button>
+        <button class="btn" onclick="nextSlide()">→</button>
+    </div>
+
+    <script>
+        // --- SLIDE DATA ---
+        const slides = [
+            {
+                title: "Smart Home Energy Management",
+                subtitle: "An Intelligent Solution for Modern Living",
+                content: `
+                    <div style="margin-top: 40px; text-align: center;">
+                        <p>Designed to monitor, control, and optimize home energy usage.</p>
+                        <p style="margin-top: 20px; font-weight: 600;">Press Arrow Keys to Start →</p>
+                    </div>
+                `
+            },
+            {
+                title: "The Problem",
+                subtitle: "Why do we need this?",
+                content: `
+                    <ul>
+                        <li>Rising energy costs.</li>
+                        <li>Lack of visibility into real-time power consumption.</li>
+                        <li>Difficulty in manually managing multiple devices.</li>
+                        <li>Environmental impact of energy wastage.</li>
+                    </ul>
+                `
+            },
+            {
+                title: "The Solution",
+                subtitle: "Centralized Intelligence",
+                content: `
+                    <p>A Spring Boot backend that provides:</p>
+                    <ul>
+                        <li><strong>Real-time Analytics:</strong> Dashboard for usage & cost tracking.</li>
+                        <li><strong>Remote Control:</strong> Toggle devices anywhere.</li>
+                        <li><strong>Automation:</strong> Smart provisioning and historical data.</li>
+                    </ul>
+                `
+            },
+            {
+                title: "Key Features",
+                subtitle: "What it does",
+                content: `
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                        <div>
+                            <ul>
+                                <li>📊 <strong>Analytics:</strong> Weekly usage charts (Chart.js).</li>
+                                <li>🔌 <strong>Device Control:</strong> Instant ON/OFF via API.</li>
+                            </ul>
+                        </div>
+                        <div>
+                            <ul>
+                                <li>📡 <strong>Provisioning:</strong> Simulates device scanning & pairing.</li>
+                                <li>💸 <strong>Cost Estimation:</strong> Live currency calculation.</li>
+                            </ul>
+                        </div>
+                    </div>
+                `
+            },
+            {
+                title: "Tech Stack",
+                subtitle: "Under the hood",
+                content: `
+                    <ul>
+                        <li><strong>Backend:</strong> Java Spring Boot (MVC, REST API).</li>
+                        <li><strong>Database:</strong> H2 In-Memory DB (JPA/Hibernate).</li>
+                        <li><strong>Frontend:</strong> Thymeleaf, HTML5, CSS3, Vanilla JS.</li>
+                        <li><strong>Visualization:</strong> Chart.js (Dashboard), HTML5 Canvas (This Presentation).</li>
+                    </ul>
+                `
+            },
+            {
+                title: "Live Demo",
+                subtitle: "Let's see it in action",
+                content: `
+                    <div style="text-align: center; margin-top: 30px;">
+                        <p>Navigate to:</p>
+                        <a href="http://localhost:8080/dashboard" target="_blank" style="font-size: 1.5rem; color: #007AFF; text-decoration: none;">
+                            localhost:8080/dashboard
+                        </a>
+                        <p style="margin-top: 20px; color: #888;">Ensure the server is running!</p>
+                    </div>
+                `
+            },
+            {
+                title: "Questions?",
+                subtitle: "Thank You",
+                content: `
+                    <div style="text-align: center; margin-top: 50px;">
+                        <p>Project available on local workspace.</p>
+                        <p style="margin-top: 20px;">Created with AI Assistance.</p>
+                    </div>
+                `
+            }
+        ];
+
+        // --- SLIDE LOGIC ---
+        let currentSlide = 0;
+        const container = document.getElementById('slideContainer');
+        const progressBar = document.getElementById('progressBar');
+
+        function renderSlide(index) {
+            const data = slides[index];
+            container.innerHTML = `
+                <div class="slide active">
+                    <h1>${data.title}</h1>
+                    ${data.subtitle ? `<h3>${data.subtitle}</h3>` : ''}
+                    <div style="margin-top: 20px;">${data.content}</div>
+                </div>
+            `;
+            // Update progress
+            const progress = ((index + 1) / slides.length) * 100;
+            progressBar.style.width = progress + '%';
+        }
+
+        function nextSlide() {
+            if (currentSlide < slides.length - 1) {
+                currentSlide++;
+                renderSlide(currentSlide);
+            }
+        }
+
+        function prevSlide() {
+            if (currentSlide > 0) {
+                currentSlide--;
+                renderSlide(currentSlide);
+            }
+        }
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowRight' || e.key === ' ') nextSlide();
+            if (e.key === 'ArrowLeft') prevSlide();
+        });
+
+        // Initialize
+        renderSlide(currentSlide);
+
+
+        // --- CANVAS ANIMATION (The "With Canvas" part) ---
+        const canvas = document.getElementById('bgCanvas');
+        const ctx = canvas.getContext('2d');
+        let width, height;
+        let particles = [];
+
+        function resize() {
+            width = canvas.width = window.innerWidth;
+            height = canvas.height = window.innerHeight;
+        }
+
+        class Particle {
+            constructor() {
+                this.x = Math.random() * width;
+                this.y = Math.random() * height;
+                this.vx = (Math.random() - 0.5) * 1.5; // Velocity
+                this.vy = (Math.random() - 0.5) * 1.5;
+                this.size = Math.random() * 3 + 1;
+            }
+
+            update() {
+                this.x += this.vx;
+                this.y += this.vy;
+
+                // Bounce off walls
+                if (this.x < 0 || this.x > width) this.vx *= -1;
+                if (this.y < 0 || this.y > height) this.vy *= -1;
+            }
+
+            draw() {
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                ctx.fillStyle = 'rgba(0, 122, 255, 0.3)'; // Primary color low opacity
+                ctx.fill();
+            }
+        }
+
+        function initParticles() {
+            particles = [];
+            const count = Math.min(width * 0.1, 80); // Responsive count
+            for (let i = 0; i < count; i++) {
+                particles.push(new Particle());
+            }
+        }
+
+        function animate() {
+            ctx.clearRect(0, 0, width, height);
+
+            // Update and draw particles
+            for (let i = 0; i < particles.length; i++) {
+                particles[i].update();
+                particles[i].draw();
+
+                // Connect particles
+                for (let j = i + 1; j < particles.length; j++) {
+                    const dx = particles[i].x - particles[j].x;
+                    const dy = particles[i].y - particles[j].y;
+                    const distance = Math.sqrt(dx * dx + dy * dy);
+
+                    if (distance < 150) {
+                        ctx.beginPath();
+                        ctx.strokeStyle = `rgba(0, 122, 255, ${0.15 - distance / 1000})`;
+                        ctx.lineWidth = 1;
+                        ctx.moveTo(particles[i].x, particles[i].y);
+                        ctx.lineTo(particles[j].x, particles[j].y);
+                        ctx.stroke();
+                    }
+                }
+            }
+            requestAnimationFrame(animate);
+        }
+
+        window.addEventListener('resize', () => { resize(); initParticles(); });
+        resize();
+        initParticles();
+        animate();
+
+    </script>
+</body>
+
+</html>
