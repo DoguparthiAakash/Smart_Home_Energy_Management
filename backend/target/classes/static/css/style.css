@@ -303,3 +303,100 @@ h3 {
     font-size: 12px;
     font-weight: 600;
 }
+
+/* Wizard Styles */
+.wizard-content {
+    text-align: center;
+    min-height: 250px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+.pulse-ring {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    border: 4px solid #007AFF;
+    opacity: 0;
+    animation: pulse 2s infinite ease-out;
+}
+
+@keyframes pulse {
+    0% {
+        transform: scale(0.5);
+        opacity: 1;
+    }
+
+    100% {
+        transform: scale(1.5);
+        opacity: 0;
+    }
+}
+
+.found-device-item {
+    background: #F2F2F7;
+    padding: 16px;
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    width: 100%;
+    margin-bottom: 20px;
+    text-align: left;
+}
+
+.text-link {
+    color: #007AFF;
+    cursor: pointer;
+    font-size: 14px;
+    margin-top: 16px;
+    text-decoration: underline;
+}
+
+/* QR Wizard Styles */
+.qr-upload-box {
+    width: 100%;
+    height: 140px;
+    border: 2px dashed #007AFF;
+    border-radius: 16px;
+    background: #F2F2F7;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    transition: background 0.2s;
+    margin-bottom: 20px;
+}
+
+.qr-upload-box:hover {
+    background: #E5E5EA;
+}
+
+.or-divider {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    margin-bottom: 20px;
+    color: #8E8E93;
+    font-size: 14px;
+}
+
+.or-divider::before,
+.or-divider::after {
+    content: "";
+    flex: 1;
+    height: 1px;
+    background: #C7C7CC;
+}
+
+.or-divider::before {
+    margin-right: 10px;
+}
+
+.or-divider::after {
+    margin-left: 10px;
+}
