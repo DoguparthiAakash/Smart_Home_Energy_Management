@@ -18,7 +18,7 @@ import java.util.UUID;
 @Configuration
 public class MqttConfig {
 
-    private static final String BROKER_URL = "tcp://test.mosquitto.org:1883";
+    private static final String BROKER_URL = "tcp://localhost:1883";
     private static final String CLIENT_ID = "smarthome-backend-" + UUID.randomUUID();
     private static final String TOPIC = "smarthome/devices/+/status"; // + is wildcard for deviceID
 

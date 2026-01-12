@@ -27,8 +27,13 @@ public class DeviceController {
     }
 
     @PutMapping("/{id}/status")
-    public DeviceDTO toggleDevice(@PathVariable Long id) {
-        return deviceService.toggleDevice(id);
+    public ResponseEntity<?> toggleDevice(@PathVariable Long id) {
+        try {
+            DeviceDTO device = deviceService.toggleDevice(id);
+            return ResponseEntity.ok(device);
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(409).body(e.getMessage());
+        }
     }
 
     @DeleteMapping("/{id}")

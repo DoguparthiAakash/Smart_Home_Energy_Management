@@ -8,6 +8,7 @@
 /home/aakash/Downloads/Smart_Home_Energy_Management/backend/src/main/java/com/smarthome/backend/controller/AuthController.java
 /home/aakash/Downloads/Smart_Home_Energy_Management/backend/src/main/java/com/smarthome/backend/controller/DeviceController.java
 /home/aakash/Downloads/Smart_Home_Energy_Management/backend/src/main/java/com/smarthome/backend/model/Schedule.java
+/home/aakash/Downloads/Smart_Home_Energy_Management/backend/src/main/java/com/smarthome/backend/config/CustomAuthenticationSuccessHandler.java
 /home/aakash/Downloads/Smart_Home_Energy_Management/backend/src/main/java/com/smarthome/backend/model/Device.java
 /home/aakash/Downloads/Smart_Home_Energy_Management/backend/src/main/java/com/smarthome/backend/controller/AnalyticsController.java
 /home/aakash/Downloads/Smart_Home_Energy_Management/backend/src/main/java/com/smarthome/backend/controller/EnergyController.java
@@ -19,6 +20,7 @@
 /home/aakash/Downloads/Smart_Home_Energy_Management/backend/src/main/java/com/smarthome/backend/repository/UserRepository.java
 /home/aakash/Downloads/Smart_Home_Energy_Management/backend/src/main/java/com/smarthome/backend/config/MqttConfig.java
 /home/aakash/Downloads/Smart_Home_Energy_Management/backend/src/main/java/com/smarthome/backend/security/JwtUtil.java
+/home/aakash/Downloads/Smart_Home_Energy_Management/backend/src/main/java/com/smarthome/backend/controller/TwoFactorController.java
 /home/aakash/Downloads/Smart_Home_Energy_Management/backend/src/main/java/com/smarthome/backend/config/DataSeeder.java
 /home/aakash/Downloads/Smart_Home_Energy_Management/backend/src/main/java/com/smarthome/backend/SmartHomeApplication.java
 /home/aakash/Downloads/Smart_Home_Energy_Management/backend/src/main/java/com/smarthome/backend/dto/AuthRequest.java

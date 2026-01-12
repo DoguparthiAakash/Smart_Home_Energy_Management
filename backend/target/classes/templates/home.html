@@ -178,52 +178,56 @@
     </style>
 </head>
 
-<body class="dashboard-body">
-    <div class="header">
-        <h1>My Home</h1>
-        <div style="display: flex; align-items: center; gap: 10px;">
-            <!-- Load & Progress Bar -->
-            <div style="flex: 1; margin: 0 20px;">
-                <div
-                    style="display: flex; justify-content: space-between; align-items: center; font-size: 12px; color: #666; margin-bottom: 4px;">
-                    <span>Load: <b id="currentLoad">0</b>W / <b id="maxLoad" th:text="${maxWattage}">3000</b>W</span>
-                    <span th:if="${!userRole.contains('GUEST')}" onclick="editMaxWattage()"
-                        style="color: #007AFF; cursor: pointer; font-weight: 600;">Edit</span>
-                </div>
-                <div style="width: 100%; height: 8px; background: #E5E5EA; border-radius: 4px; overflow: hidden;">
-                    <div id="loadBar"
-                        style="width: 0%; height: 100%; background: #34C759; transition: width 0.3s, background 0.3s;">
+<body class="">
+    <!-- Wrapper for Centered Content -->
+    <div class="main-content-wrapper">
+        <div class="header">
+            <h1>My Home</h1>
+            <div style="display: flex; align-items: center; gap: 10px;">
+                <!-- Load & Progress Bar -->
+                <div style="flex: 1; margin: 0 20px;">
+                    <div
+                        style="display: flex; justify-content: space-between; align-items: center; font-size: 12px; color: #666; margin-bottom: 4px;">
+                        <span>Load: <b id="currentLoad">0</b>W / <b id="maxLoad"
+                                th:text="${maxWattage}">3000</b>W</span>
+                        <span th:if="${!userRole.contains('GUEST')}" onclick="editMaxWattage()"
+                            style="color: #007AFF; cursor: pointer; font-weight: 600;">Edit</span>
+                    </div>
+                    <div style="width: 100%; height: 8px; background: #E5E5EA; border-radius: 4px; overflow: hidden;">
+                        <div id="loadBar"
+                            style="width: 0%; height: 100%; background: #34C759; transition: width 0.3s, background 0.3s;">
+                        </div>
                     </div>
                 </div>
-            </div>
 
-            <!-- Admin Dev Mode Toggle -->
-            <div th:if="${userRole != null and userRole.contains('ADMIN')}" class="dev-toggle-container">
-                <span style="font-size: 12px; font-weight: 600; color: #333;">DEV MODE</span>
-                <label class="toggle-switch">
-                    <input type="checkbox" id="devModeToggle" onchange="toggleDevMode()">
-                    <span class="slider"></span>
-                </label>
-            </div>
+                <!-- Admin Dev Mode Toggle -->
+                <div th:if="${userRole != null and userRole.contains('ADMIN')}" class="dev-toggle-container">
+                    <span style="font-size: 12px; font-weight: 600; color: #333;">DEV MODE</span>
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="devModeToggle" onchange="toggleDevMode()">
+                        <span class="slider"></span>
+                    </label>
+                </div>
 
-            <form th:action="@{/logout}" method="post" style="display: inline;">
-                <button type="submit"
-                    style="background: white; color: #FF3B30; padding: 6px 12px; border-radius: 12px; border: none; font-weight: 600; cursor: pointer; font-size: 12px;">Logout</button>
-            </form>
+                <form th:action="@{/logout}" method="post" style="display: inline;">
+                    <button type="submit"
+                        style="background: white; color: #FF3B30; padding: 6px 12px; border-radius: 12px; border: none; font-weight: 600; cursor: pointer; font-size: 12px;">Logout</button>
+                </form>
+            </div>
         </div>
-    </div>
 
-    <!-- Devices Header & Add Button (Hidden for GUEST) -->
-    <div
-        style="display: flex; justify-content: space-between; align-items: center; margin-top: 10px; margin-bottom: 16px;">
-        <h3 style="font-size: 20px; margin: 0;">Devices</h3>
-        <button th:if="${!userRole.contains('GUEST')}" onclick="openModal()"
-            style="background: #007AFF; color: white; border: none; padding: 8px 16px; border-radius: 20px; font-weight: 600; cursor: pointer;">+
-            Add</button>
-    </div>
+        <!-- Devices Header & Add Button (Hidden for GUEST) -->
+        <div
+            style="display: flex; justify-content: space-between; align-items: center; margin-top: 10px; margin-bottom: 16px;">
+            <h3 style="font-size: 20px; margin: 0;">Devices</h3>
+            <button th:if="${!userRole.contains('GUEST')}" onclick="openModal()"
+                style="background: #007AFF; color: white; border: none; padding: 8px 16px; border-radius: 20px; font-weight: 600; cursor: pointer;">+
+                Add</button>
+        </div>
 
-    <div class="grid-container" id="deviceGrid">
-        <!-- Devices rendered via JS -->
+        <div class="grid-container" id="deviceGrid">
+            <!-- Devices rendered via JS -->
+        </div>
     </div>
 
     <!-- Bottom Navigation Dock -->
@@ -243,7 +247,26 @@
             </svg>
             <span class="dock-label">Usage</span>
         </a>
+
+        <!-- Settings Link -->
+        <a href="/settings" class="dock-item">
+            <svg class="dock-icon" viewBox="0 0 24 24" fill="currentColor">
+                <path
+                    d="M19.14,12.94c0.04-0.3,0.06-0.61,0.06-0.94c0-0.32-0.02-0.64-0.07-0.94l2.03-1.58c0.18-0.14,0.23-0.41,0.12-0.61 l-1.92-3.32c-0.12-0.22-0.37-0.29-0.59-0.22l-2.39,0.96c-0.5-0.38-1.03-0.7-1.62-0.94L14.4,2.81c-0.04-0.24-0.24-0.41-0.48-0.41 h-3.84c-0.24,0-0.43,0.17-0.47,0.41L9.25,5.35C8.66,5.59,8.12,5.92,7.63,6.29L5.24,5.33c-0.22-0.08-0.47,0-0.59,0.22L2.74,8.87 C2.62,9.08,2.66,9.34,2.86,9.48l2.03,1.58C4.84,11.36,4.8,11.69,4.8,12s0.02,0.64,0.07,0.94l-2.03,1.58 c-0.18,0.14-0.23,0.41-0.12,0.61l1.92,3.32c0.12,0.22,0.37,0.29,0.59,0.22l2.39-0.96c0.5,0.38,1.03,0.7,1.62,0.94l0.36,2.54 c0.05,0.24,0.24,0.41,0.48,0.41h3.84c0.24,0,0.44-0.17,0.47-0.41l0.36-2.54c0.59-0.24,1.13-0.56,1.62-0.94l2.39,0.96 c0.22,0.08,0.47,0,0.59-0.22l1.92-3.32c0.12-0.22,0.07-0.47-0.12-0.61L19.14,12.94z M12,15.6c-1.98,0-3.6-1.62-3.6-3.6 s1.62-3.6,3.6-3.6s3.6,1.62,3.6,3.6S13.98,15.6,12,15.6z" />
+            </svg>
+            <span class="dock-label">Settings</span>
+        </a>
     </div>
+
+    <!-- Theme Init -->
+    <script>
+        (function () {
+            const savedTheme = localStorage.getItem('theme');
+            if (savedTheme) {
+                document.documentElement.setAttribute('data-theme', savedTheme);
+            }
+        })();
+    </script>
 
     <!-- Add Device Modal (Wizard) -->
     <div id="addDeviceModal"
@@ -321,11 +344,29 @@
 
         function handleConsoleCmd(e) {
             if (e.key === 'Enter') {
-                const cmd = e.target.value;
-                log("> " + cmd);
+                const rawCmd = e.target.value.trim();
+                log("> " + rawCmd);
+
+                const parts = rawCmd.split(' ');
+                const cmd = parts[0];
+                const arg = parts[1];
+
                 if (cmd === 'clear') document.getElementById('sysLogs').innerHTML = '';
                 else if (cmd === 'help') log("Available: clear, status, inspect <id>");
                 else if (cmd === 'status') log("System Clean. Active Connections: 1");
+                else if (cmd === 'inspect') {
+                    if (arg) {
+                        const dev = currentDevices.find(d => d.id == arg);
+                        if (dev) {
+                            showJson(dev);
+                            log(`Inspected Device ${arg}`);
+                        } else {
+                            log(`Device ${arg} not found.`);
+                        }
+                    } else {
+                        log("Usage: inspect <id>");
+                    }
+                }
                 else log("Unknown command.");
                 e.target.value = '';
             }
@@ -445,7 +486,8 @@
             try {
                 const res = await fetch('/api/devices/' + id + '/status', { method: 'PUT' });
                 if (!res.ok) {
-                    alert('Cannot turn ON: Max Wattage Exceeded (and Load Shedding failed)');
+                    const errMsg = await res.text();
+                    alert(errMsg || 'Cannot turn ON: Max Wattage Exceeded');
                 }
             } catch (e) {
                 console.error(e);
@@ -567,6 +609,10 @@
                     <div style="width: 100%; display: flex; gap: 8px;">
                         <input type="text" id="setupCode" placeholder="Enter Setup Code" class="input-field" style="margin-bottom: 0; flex: 2; height: 44px; padding: 0 12px;">
                         <button onclick="submitCode()" style="flex: 1; background: #007AFF; color: white; border: none; border-radius: 12px; font-weight: 600; cursor: pointer;">Connect</button>
+                    </div>
+
+                    <div style="margin-top: 16px; font-size: 14px; color: #8E8E93; cursor: pointer;" onclick="closeModal()">
+                        Cancel
                     </div>
                 `;
 

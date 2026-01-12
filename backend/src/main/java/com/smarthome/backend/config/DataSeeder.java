@@ -53,6 +53,16 @@ public class DataSeeder {
                         createDevice(homeUser, "Water Heater", "HEATER", 3000.0, true, Device.Priority.MEDIUM));
                 deviceRepository.saveAll(devices);
                 System.out.println("DEVICES CREATED");
+            } else {
+                // Ensure specific simulation device exists (User Request)
+                User homeUser = userRepository.findByEmail("homeuser").get();
+                boolean hasEv = deviceRepository.findByUserId(homeUser.getId()).stream()
+                        .anyMatch(d -> d.getName().equals("EV Charger"));
+                if (!hasEv) {
+                    Device ev = createDevice(homeUser, "EV Charger", "EV", 7200.0, true, Device.Priority.LOW);
+                    deviceRepository.save(ev);
+                    System.out.println("SAMPLE DEVICE 'EV Charger' ADDED");
+                }
             }
         };
     }

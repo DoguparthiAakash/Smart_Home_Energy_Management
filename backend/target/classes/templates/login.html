@@ -19,74 +19,26 @@
 
         .auth-card {
             background: white;
-            padding: 2rem;
+            padding: 2.5rem;
             border-radius: 12px;
             box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
             width: 100%;
-            max-width: 420px;
-        }
-
-        .tabs {
-            display: flex;
-            margin-bottom: 2rem;
-            background: #f8f9fa;
-            border-radius: 8px;
-            padding: 4px;
-            gap: 4px;
-        }
-
-        .tab {
-            flex: 1;
-            padding: 10px;
-            text-align: center;
-            cursor: pointer;
-            border-radius: 6px;
-            font-weight: 500;
-            color: #6c757d;
-            transition: all 0.2s;
-            font-size: 0.9rem;
-        }
-
-        .tab.active {
-            background: white;
-            color: #007bff;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-            font-weight: 600;
+            max-width: 400px;
         }
 
         h1 {
             text-align: center;
             color: #1a1a1a;
             margin-bottom: 0.5rem;
-            font-size: 1.5rem;
+            font-size: 1.75rem;
+            margin-top: 0;
         }
 
         .subtitle {
             text-align: center;
             color: #6c757d;
             margin-bottom: 2rem;
-            font-size: 0.9rem;
-        }
-
-        .form-section {
-            display: none;
-            animation: fadeIn 0.3s ease;
-        }
-
-        .form-section.active {
-            display: block;
-        }
-
-        @keyframes fadeIn {
-            from {
-                opacity: 0;
-                transform: translateY(5px);
-            }
-
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
+            font-size: 0.95rem;
         }
 
         .form-group {
@@ -103,12 +55,13 @@
 
         input {
             width: 100%;
-            padding: 0.75rem;
+            padding: 0.85rem;
             border: 1px solid #dee2e6;
             border-radius: 8px;
             box-sizing: border-box;
             transition: border-color 0.2s;
             font-family: inherit;
+            font-size: 1rem;
         }
 
         input:focus {
@@ -128,7 +81,7 @@
             font-size: 1rem;
             font-weight: 600;
             transition: background-color 0.2s;
-            margin-top: 0.5rem;
+            margin-top: 1rem;
         }
 
         button:hover {
@@ -156,105 +109,37 @@
             font-size: 0.9rem;
             border: 1px solid #bcf0da;
         }
+
+        .input-group {
+            margin-bottom: 1rem;
+        }
     </style>
 </head>
 
 <body>
     <div class="auth-card">
         <h1>Welcome Back</h1>
-        <p class="subtitle">Select your role to continue</p>
+        <p class="subtitle">Sign in to your smart home</p>
 
         <div th:if="${param.error}" class="error">
-            Invalid credentials. Please try again.
+            Invalid username or password.
         </div>
         <div th:if="${param.logout}" class="logout-msg">
             Logged out successfully.
         </div>
 
-        <div class="tabs">
-            <div id="tab-homeuser" class="tab active" onclick="switchTab('homeuser')">Home User</div>
-            <div id="tab-guest" class="tab" onclick="switchTab('guest')">Guest</div>
-            <div id="tab-admin" class="tab" onclick="switchTab('admin')">Admin</div>
-        </div>
-
-        <!-- Home User Form -->
-        <form id="homeuserForm" th:action="@{/login}" method="post" class="form-section active">
+        <form th:action="@{/login}" method="post">
             <div class="input-group">
-                <label class="input-label" for="homeEmail">Username</label>
-                <input type="text" id="homeEmail" name="username" class="input-field" placeholder="homeuser"
-                    value="homeuser" required autofocus>
+                <label for="username">Username</label>
+                <input type="text" id="username" name="username" placeholder="Enter your username" required autofocus>
             </div>
             <div class="input-group">
-                <label class="input-label" for="homePassword">Password</label>
-                <input type="password" id="homePassword" name="password" class="input-field"
-                    placeholder="Enter password" required>
+                <label for="password">Password</label>
+                <input type="password" id="password" name="password" placeholder="Enter your password" required>
             </div>
-            <button type="submit" class="btn btn-primary w-full">Login as Home User</button>
-        </form>
-
-        <!-- Guest Form -->
-        <form id="guestForm" th:action="@{/login}" method="post" class="form-section">
-            <div class="input-group">
-                <label class="input-label" for="guestEmail">Username</label>
-                <input type="text" id="guestEmail" name="username" class="input-field" placeholder="guest" value="guest"
-                    readonly style="background-color: #f8f9fa;">
-            </div>
-            <div class="input-group">
-                <label class="input-label" for="guestPassword">Password</label>
-                <input type="password" id="guestPassword" name="password" class="input-field" value="guest" readonly
-                    style="background-color: #f8f9fa;">
-            </div>
-            <button type="submit" class="btn btn-secondary w-full" style="background-color: #6c757d;">Enter Read-Only
-                Mode</button>
-        </form>
-
-        <!-- Admin Form -->
-        <form id="adminForm" th:action="@{/login}" method="post" class="form-section">
-            <div class="input-group">
-                <label class="input-label" for="adminEmail">Username</label>
-                <input type="text" id="adminEmail" name="username" class="input-field" placeholder="muterornament"
-                    required>
-            </div>
-            <div class="input-group">
-                <label class="input-label" for="adminPassword">Password</label>
-                <input type="password" id="adminPassword" name="password" class="input-field"
-                    placeholder="Enter password" required>
-            </div>
-            <button type="submit" class="btn btn-primary w-full" style="background-color: #1e1e1e;">Login as
-                Admin</button>
+            <button type="submit">Sign In</button>
         </form>
     </div>
-
-    <script>
-        function switchTab(type) {
-            // 1. Update Tabs Visual State
-            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-            document.getElementById('tab-' + type).classList.add('active');
-
-            // 2. Update Form Section Visibility
-            document.querySelectorAll('.form-section').forEach(s => {
-                s.classList.remove('active');
-                s.style.display = 'none';
-            });
-
-            const targetId = type + 'Form';
-            const targetForm = document.getElementById(targetId);
-
-            if (targetForm) {
-                targetForm.classList.add('active');
-                targetForm.style.display = 'block';
-
-                // Focus Input
-                setTimeout(() => {
-                    const inputId = type === 'homeuser' ? 'homeEmail' : (type === 'admin' ? 'adminEmail' : null);
-                    if (inputId) {
-                        const input = document.getElementById(inputId);
-                        if (input) input.focus();
-                    }
-                }, 50);
-            }
-        }
-    </script>
 </body>
 
 </html>

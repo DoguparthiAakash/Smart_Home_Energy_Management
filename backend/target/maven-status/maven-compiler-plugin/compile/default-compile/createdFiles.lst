@@ -8,7 +8,11 @@ com/smarthome/backend/controller/AnalyticsController.class
 com/smarthome/backend/service/DeviceService.class
 com/smarthome/backend/service/CustomUserDetailsService.class
 com/smarthome/backend/service/UsageLogService.class
+com/smarthome/backend/controller/UserController.class
+com/smarthome/backend/controller/TwoFactorController.class
 com/smarthome/backend/model/User.class
+com/smarthome/backend/config/CustomAuthenticationSuccessHandler.class
+com/smarthome/backend/model/Device$Priority.class
 com/smarthome/backend/config/SecurityConfig.class
 com/smarthome/backend/controller/AdminController.class
 com/smarthome/backend/repository/UserRepository.class

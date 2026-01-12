@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <title>Verify Identity - My Home</title>
+    <link rel="stylesheet" href="/css/style.css">
+    <script>
+        // Theme Init
+        (function () {
+            const savedTheme = localStorage.getItem('theme');
+            if (savedTheme) {
+                document.documentElement.setAttribute('data-theme', savedTheme);
+            }
+        })();
+    </script>
+</head>
+
+<body class="login-body">
+    <div class="login-container">
+        <div class="card" style="text-align: center; padding: 40px; min-height: auto;">
+            <div
+                style="width: 60px; height: 60px; background: #007AFF; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px;">
+                <svg style="width: 32px; height: 32px; color: white;" viewBox="0 0 24 24" fill="currentColor">
+                    <path
+                        d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm0 10.99h7c-.53 4.12-3.28 7.79-7 8.94V12H5V6.3l7-3.11v8.8z" />
+                </svg>
+            </div>
+            <h1>Two-Factor</h1>
+            <p class="subtitle" style="margin-bottom: 30px;">Enter the code from Microsoft Authenticator</p>
+
+            <input type="text" id="code" class="input-field" placeholder="000 000" maxlength="6"
+                style="text-align: center; font-size: 24px; letter-spacing: 5px;" autofocus>
+
+            <div id="errorMsg" style="color: #FF3B30; margin-bottom: 16px; display: none;">Invalid Code</div>
+
+            <button onclick="verify()" class="btn-primary">Verify</button>
+        </div>
+    </div>
+
+    <script>
+        async function verify() {
+            const code = document.getElementById('code').value.replace(/\s/g, '');
+            if (code.length < 6) return;
+
+            const btn = document.querySelector('button');
+            const originalText = btn.innerText;
+            btn.innerText = "Verifying...";
+            btn.disabled = true;
+
+            try {
+                const res = await fetch('/api/auth/2fa/verify-login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ code: code })
+                });
+
+                if (res.ok) {
+                    window.location.href = '/home';
+                } else {
+                    document.getElementById('errorMsg').style.display = 'block';
+                    btn.innerText = originalText;
+                    btn.disabled = false;
+                }
+            } catch (e) {
+                console.error(e);
+                alert("Error verifying code");
+                btn.innerText = originalText;
+                btn.disabled = false;
+            }
+        }
+
+        // Auto submit on Enter
+        document.getElementById('code').addEventListener('keypress', function (e) {
+            if (e.key === 'Enter') verify();
+        });
+    </script>
+</body>
+
+</html>

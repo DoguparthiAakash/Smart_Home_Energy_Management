@@ -1,0 +1,498 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <title>Admin IDE</title>
+    <link rel="stylesheet" href="/css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        :root {
+            --ide-bg: #1e1e1e;
+            --ide-sidebar: #252526;
+            --ide-activity: #333333;
+            --ide-header: #3c3c3c;
+            --ide-text: #cccccc;
+            --ide-accent: #007acc;
+            --ide-border: #333;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            background: var(--ide-bg);
+            color: var(--ide-text);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            height: 100vh;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Top Bar */
+        .ide-header {
+            height: 30px;
+            background: var(--ide-header);
+            display: flex;
+            align-items: center;
+            padding: 0 10px;
+            font-size: 13px;
+        }
+
+        .back-btn {
+            color: #fff;
+            text-decoration: none;
+            margin-right: 20px;
+            font-size: 12px;
+            opacity: 0.8;
+        }
+
+        .back-btn:hover {
+            opacity: 1;
+        }
+
+        /* Main Layout */
+        .ide-body {
+            flex: 1;
+            display: flex;
+            height: calc(100vh - 30px - 22px);
+            /* Minus header and status bar */
+        }
+
+        /* Activity Bar (Left Icons) */
+        .activity-bar {
+            width: 48px;
+            background: var(--ide-activity);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding-top: 10px;
+        }
+
+        .activity-icon {
+            width: 48px;
+            height: 48px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            color: #858585;
+            font-size: 24px;
+            border-left: 2px solid transparent;
+        }
+
+        .activity-icon.active {
+            color: #fff;
+            border-left: 2px solid #fff;
+        }
+
+        .activity-icon:hover {
+            color: #fff;
+        }
+
+        /* Sidebar (File Explorer) */
+        .sidebar {
+            width: 250px;
+            background: var(--ide-sidebar);
+            border-right: 1px solid var(--ide-border);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .sidebar-title {
+            padding: 10px;
+            font-size: 11px;
+            font-weight: bold;
+            text-transform: uppercase;
+            color: #bbbbbb;
+        }
+
+        .file-item {
+            padding: 5px 10px 5px 20px;
+            cursor: pointer;
+            font-size: 13px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .file-item:hover {
+            background: #2a2d2e;
+        }
+
+        .file-item.active {
+            background: #37373d;
+            color: #fff;
+        }
+
+        /* Editor Area */
+        .editor-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background: var(--ide-bg);
+        }
+
+        .tab-bar {
+            height: 35px;
+            background: var(--ide-sidebar);
+            display: flex;
+            align-items: center;
+            overflow-x: auto;
+        }
+
+        .tab {
+            padding: 0 15px;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            background: var(--ide-bg);
+            color: #fff;
+            font-size: 13px;
+            border-right: 1px solid var(--ide-border);
+            border-top: 1px solid var(--ide-accent);
+            cursor: pointer;
+        }
+
+        .tab-close {
+            margin-left: 8px;
+            font-size: 10px;
+            opacity: 0.7;
+        }
+
+        .tab-close:hover {
+            opacity: 1;
+        }
+
+        #monaco-editor {
+            flex: 1;
+            /* Occupy remaining space */
+        }
+
+        /* Bottom Panel (Terminal) */
+        .panel {
+            height: 200px;
+            background: var(--ide-bg);
+            border-top: 1px solid var(--ide-border);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .panel-header {
+            height: 30px;
+            display: flex;
+            align-items: center;
+            padding: 0 15px;
+            font-size: 11px;
+            text-transform: uppercase;
+            border-bottom: 1px solid var(--ide-border);
+            gap: 20px;
+        }
+
+        .panel-tab {
+            cursor: pointer;
+            padding: 5px 0;
+            border-bottom: 1px solid transparent;
+        }
+
+        .panel-tab.active {
+            border-bottom: 1px solid #fff;
+            color: #fff;
+        }
+
+        .terminal-content {
+            flex: 1;
+            background: #1e1e1e;
+            padding: 10px;
+            font-family: 'Consolas', 'Courier New', monospace;
+            font-size: 13px;
+            overflow-y: auto;
+            color: #cccccc;
+        }
+
+        .terminal-line {
+            margin-bottom: 2px;
+        }
+
+        .prompt {
+            color: #00ff00;
+        }
+
+        .cmd-input {
+            background: transparent;
+            border: none;
+            color: #cccccc;
+            font-family: inherit;
+            font-size: inherit;
+            outline: none;
+            width: 80%;
+        }
+
+        /* Status Bar */
+        .status-bar {
+            height: 22px;
+            background: var(--ide-accent);
+            display: flex;
+            align-items: center;
+            padding: 0 10px;
+            font-size: 12px;
+            color: #fff;
+            justify-content: space-between;
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- Header -->
+    <div class="ide-header">
+        <a href="/home" class="back-btn"><i class="fas fa-arrow-left"></i> Exit to Dashboard</a>
+        <span>SmartHome System - Admin Workspace</span>
+    </div>
+
+    <!-- Body -->
+    <div class="ide-body">
+        <!-- Activity Bar -->
+        <div class="activity-bar">
+            <div class="activity-icon active"><i class="far fa-copy"></i></div>
+            <div class="activity-icon"><i class="fas fa-search"></i></div>
+            <div class="activity-icon"><i class="fas fa-code-branch"></i></div>
+            <div class="activity-icon" onclick="saveFile()"><i class="fas fa-save"></i></div>
+        </div>
+
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <div class="sidebar-title">Explorer</div>
+            <div style="margin-top: 5px;">
+                <div class="file-item" onclick="openFile('system_config.json')">
+                    <i class="fas fa-cog" style="color: #4dc9b0;"></i> system_config.json
+                </div>
+                <div class="file-item" onclick="openFile('devices.json')">
+                    <i class="fas fa-database" style="color: #ce9178;"></i> devices.json
+                </div>
+                <div class="file-item" onclick="openFile('server.log')">
+                    <i class="fas fa-file-alt" style="color: #9cdcfe;"></i> server.log
+                </div>
+                <div class="file-item" onclick="openFile('theme.css')">
+                    <i class="fab fa-css3" style="color: #569cd6;"></i> theme.css
+                </div>
+            </div>
+        </div>
+
+        <!-- Editor -->
+        <div class="editor-container">
+            <div class="tab-bar">
+                <div class="tab">
+                    <i class="fas fa-file-code" style="margin-right: 5px; color: #4dc9b0;"></i>
+                    <span id="active-filename">system_config.json</span>
+                    <i class="fas fa-times tab-close"></i>
+                </div>
+            </div>
+            <div id="monaco-editor"></div>
+
+            <!-- Terminal Panel -->
+            <div class="panel">
+                <div class="panel-header">
+                    <div class="panel-tab active">Terminal</div>
+                    <div class="panel-tab">Output</div>
+                    <div class="panel-tab">Debug Console</div>
+                </div>
+                <div class="terminal-content" id="terminal" onclick="document.getElementById('cmdInput').focus()">
+                    <div class="terminal-line">SmartHome Energy System [Version 1.0.0]</div>
+                    <div class="terminal-line">(c) 2026 Admin Corp. All rights reserved.</div>
+                    <div class="terminal-line"><br></div>
+                    <div id="term-history"></div>
+                    <div class="terminal-line">
+                        <span class="prompt">admin@smarthome:~$</span>
+                        <input type="text" id="cmdInput" class="cmd-input" autocomplete="off"
+                            onkeypress="handleCommand(event)">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Status Bar -->
+    <div class="status-bar">
+        <div><i class="fas fa-code-branch"></i> main*</div>
+        <div style="display: flex; gap: 15px;">
+            <span id="cursor-pos">Ln 1, Col 1</span>
+            <span>UTF-8</span>
+            <span>JSON</span>
+        </div>
+    </div>
+
+    <!-- Monaco Editor Loader -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.45.0/min/vs/loader.min.js"></script>
+    <script>
+        require.config({ paths: { 'vs': 'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.45.0/min/vs' } });
+
+        let editor;
+        let currentFile = 'system_config.json';
+
+        // Mock File System
+        const fileSystem = {
+            'system_config.json': {
+                lang: 'json',
+                content: JSON.stringify({
+                    "system_name": "My Smart Home",
+                    "max_wattage": 3000,
+                    "currency": "₹",
+                    "rate_per_kwh": 8.0,
+                    "refresh_rate_ms": 2000,
+                    "features": {
+                        "live_graph": true,
+                        "device_wizard": true
+                    }
+                }, null, 4)
+            },
+            'devices.json': {
+                lang: 'json',
+                content: JSON.stringify([
+                    { "id": 1, "name": "Living Room AC", "type": "AC", "power": 1500, "status": true },
+                    { "id": 2, "name": "Smart Fridge", "type": "FRIDGE", "power": 200, "status": true },
+                    { "id": 3, "name": "EV Charger", "type": "EV", "power": 7200, "status": false }
+                ], null, 4)
+            },
+            'server.log': {
+                lang: 'plaintext',
+                content: `[INFO] Starting Smart Home Energy Management System...
+[INFO] Tomcat started on port 8080 (http)
+[INFO] Hibernate: drop table if exists device cascade
+[INFO] Initializing Spring DispatcherServlet 'dispatcherServlet'
+[INFO] Completed initialization in 3 ms
+[WARN] Cache miss for REQUEST dispatch to '/api/devices'
+[INFO] SAMPLE DEVICE 'EV Charger' ADDED
+`
+            },
+            'theme.css': {
+                lang: 'css',
+                content: `:root {
+    --card-bg: #1C1C1E;
+    --text-color: #FFFFFF;
+    --accent-color: #007AFF;
+}
+
+body {
+    background-color: #000000;
+}
+`
+            }
+        };
+
+        require(['vs/editor/editor.main'], function () {
+            editor = monaco.editor.create(document.getElementById('monaco-editor'), {
+                value: fileSystem['system_config.json'].content,
+                language: 'json',
+                theme: 'vs-dark',
+                automaticLayout: true,
+                minimap: { enabled: true }
+            });
+
+            // Update Status Bar on change
+            editor.onDidChangeCursorPosition((e) => {
+                document.getElementById('cursor-pos').innerText = `Ln ${e.position.lineNumber}, Col ${e.position.column}`;
+            });
+
+            // Ctrl+S to save
+            editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyS, function () {
+                saveFile();
+            });
+        });
+
+        function openFile(filename) {
+            currentFile = filename;
+            const file = fileSystem[filename];
+
+            // Update Editor
+            editor.setValue(file.content);
+            monaco.editor.setModelLanguage(editor.getModel(), file.lang);
+
+            // Update UI
+            document.getElementById('active-filename').innerText = filename;
+
+            // Highlight active in sidebar
+            document.querySelectorAll('.file-item').forEach(el => el.classList.remove('active'));
+            event.currentTarget.classList.add('active');
+        }
+
+        function saveFile() {
+            const content = editor.getValue();
+            fileSystem[currentFile].content = content;
+
+            // If it's config, actually simulate an API call (Optional enhancement)
+
+            // Visual feedback
+            const btn = document.querySelector('.activity-icon:nth-child(4)');
+            btn.style.color = '#34C759';
+            setTimeout(() => btn.style.color = '', 500);
+
+            logToTerminal(`Saved ${currentFile}`);
+        }
+
+        // Terminal Logic
+        function handleCommand(e) {
+            if (e.key === 'Enter') {
+                const input = e.target;
+                const cmd = input.value.trim();
+
+                logToTerminal(`admin@smarthome:~$ ${cmd}`);
+
+                processCommand(cmd);
+
+                input.value = '';
+                input.scrollIntoView();
+            }
+        }
+
+        function logToTerminal(msg) {
+            const history = document.getElementById('term-history');
+            const div = document.createElement('div');
+            div.className = 'terminal-line';
+            div.innerText = msg;
+            history.appendChild(div);
+
+            document.getElementById('terminal').scrollTop = document.getElementById('terminal').scrollHeight;
+        }
+
+        async function processCommand(cmd) {
+            if (!cmd) return;
+
+            const parts = cmd.split(' ');
+            const command = parts[0];
+
+            if (command === 'clear') {
+                document.getElementById('term-history').innerHTML = '';
+            }
+            else if (command === 'help') {
+                logToTerminal("Commands: help, clear, status, restart, ls, cat <file>");
+            }
+            else if (command === 'status') {
+                logToTerminal("System Status: ONLINE");
+                logToTerminal("Uptime: 42m 15s");
+                logToTerminal("Active Connections: 3");
+                logToTerminal("Load: 0.15");
+            }
+            else if (command === 'ls') {
+                logToTerminal("system_config.json  devices.json  server.log  theme.css");
+            }
+            else if (command === 'cat') {
+                const file = parts[1];
+                if (file && fileSystem[file]) {
+                    logToTerminal(fileSystem[file].content);
+                } else {
+                    logToTerminal(`cat: ${file}: No such file or directory`);
+                }
+            }
+            else if (command === 'restart') {
+                logToTerminal("Restarting services...");
+                setTimeout(() => logToTerminal("Service 'backend' stopped"), 1000);
+                setTimeout(() => logToTerminal("Service 'backend' started (PID 4021)"), 2500);
+            }
+            else {
+                logToTerminal(`${command}: command not found`);
+            }
+        }
+    </script>
+</body>
+
+</html>

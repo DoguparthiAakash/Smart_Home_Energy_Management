@@ -23,24 +23,27 @@ public class SecurityConfig {
         @Autowired
         private CustomUserDetailsService userDetailsService;
 
+        @Autowired
+        private CustomAuthenticationSuccessHandler customAuthenticationSuccessHandler;
+
         @Bean
         public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
                 http
                                 .csrf(AbstractHttpConfigurer::disable)
                                 .authorizeHttpRequests(auth -> auth
                                                 // Public
-                                                .requestMatchers("/login", "/css/**", "/js/**", "/error",
+                                                .requestMatchers("/login", "/login-2fa", "/css/**", "/js/**", "/error",
                                                                 "/api/auth/**")
                                                 .permitAll()
 
                                                 // Admin Only
                                                 .requestMatchers("/admin/**").hasRole("ADMIN")
 
-                                                // Usage & Energy: Admin or Homeowner Only (No Guest)
+                                                // Usage & Energy: Admin or Homeowner Only
                                                 .requestMatchers("/usage", "/api/energy/**")
                                                 .hasAnyRole("ADMIN", "HOMEOWNER")
 
-                                                // Device Management (Write Ops): Admin or Homeowner Only
+                                                // Device Management
                                                 .requestMatchers(HttpMethod.POST, "/api/devices/**")
                                                 .hasAnyRole("ADMIN", "HOMEOWNER")
                                                 .requestMatchers(HttpMethod.PUT, "/api/devices/**")
@@ -48,7 +51,7 @@ public class SecurityConfig {
                                                 .requestMatchers(HttpMethod.DELETE, "/api/devices/**")
                                                 .hasAnyRole("ADMIN", "HOMEOWNER")
 
-                                                // Device Reading (Read Ops): Authenticated (Includes Guest)
+                                                // Device Reading
                                                 .requestMatchers(HttpMethod.GET, "/api/devices/**").authenticated()
 
                                                 // General Pages
@@ -57,7 +60,7 @@ public class SecurityConfig {
                                 .formLogin(form -> form
                                                 .loginPage("/login")
                                                 .loginProcessingUrl("/login")
-                                                .defaultSuccessUrl("/home", true)
+                                                .successHandler(customAuthenticationSuccessHandler)
                                                 .permitAll())
                                 .logout(logout -> logout
                                                 .logoutUrl("/logout")

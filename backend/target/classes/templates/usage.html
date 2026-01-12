@@ -6,31 +6,59 @@
     <link rel="stylesheet" href="/css/style.css">
 </head>
 
-<body class="dashboard-body">
-    <div class="header">
-        <h1>Energy</h1>
-        <p class="subtitle">Usage & Analytics</p>
-    </div>
+<body class="">
+    <!-- Wrapper for Centered Content -->
+    <div class="main-content-wrapper">
+        <div class="header">
+            <h1>Energy</h1>
+            <p class="subtitle">Usage & Analytics</p>
+        </div>
 
-    <!-- Summary Cards -->
-    <div class="summary-container" style="flex-direction: column; gap: 16px;">
-        <div style="display: flex; gap: 16px;">
-            <div class="summary-card">
-                <div class="summary-label">Today's Usage</div>
-                <div class="summary-value"><span id="energyUsage">--</span> <span class="summary-unit">kWh</span></div>
-            </div>
-            <div class="summary-card">
-                <div class="summary-label">Estimated Cost</div>
-                <div class="summary-value"><span id="costValue">--</span></div>
+        <!-- Summary Cards -->
+        <div class="summary-container" style="flex-direction: column; gap: 16px;">
+            <div style="display: flex; gap: 16px;">
+                <div class="summary-card">
+                    <div class="summary-label">Today's Usage</div>
+                    <div class="summary-value"><span id="energyUsage">--</span> <span class="summary-unit">kWh</span>
+                    </div>
+                </div>
+                <div class="summary-card">
+                    <div class="summary-label">Estimated Cost</div>
+                    <div class="summary-value"><span id="costValue">--</span></div>
+                </div>
             </div>
         </div>
-    </div>
 
-    <!-- Chart -->
-    <div class="chart-container"
-        style="margin-top: 10px; background: white; padding: 20px; border-radius: 20px; height: 350px;">
-        <h2 style="font-size: 20px; margin-bottom: 20px;">Weekly Usage</h2>
-        <canvas id="energyChart"></canvas>
+        <!-- Live Power Bar (Dynamic) -->
+        <div id="livePowerSection" class="summary-container"
+            style="flex-direction: column; gap: 16px; margin-top: 16px; display: none;">
+            <div class="summary-card" style="width: 100%; flex-direction: column; align-items: flex-start;">
+                <div style="display: flex; justify-content: space-between; width: 100%; margin-bottom: 8px;">
+                    <div class="summary-label">Live Power</div>
+                    <div class="summary-value" style="font-size: 16px;"><span id="liveWatts">0</span> W / <span
+                            id="capacityWatts">0</span> W</div>
+                </div>
+                <div
+                    style="width: 100%; height: 8px; background: rgba(0,0,0,0.1); border-radius: 4px; overflow: hidden;">
+                    <div id="livePowerBar"
+                        style="width: 0%; height: 100%; background: #007AFF; transition: width 0.5s ease;"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Live Power Graph (Time Series) -->
+        <div id="liveGraphSection" class="chart-container"
+            style="margin-top: 10px; background: var(--card-bg); padding: 20px; border-radius: 20px; height: 250px;">
+            <h2 style="font-size: 16px; margin-bottom: 10px; color: var(--text-color);">Live Energy Usage (kW)</h2>
+            <canvas id="livePowerChart"></canvas>
+        </div>
+
+        <!-- Chart -->
+        <div id="chartSection" class="chart-container"
+            style="margin-top: 10px; background: var(--card-bg); padding: 20px; border-radius: 20px; height: 350px;">
+            <h2 style="font-size: 20px; margin-bottom: 20px;">Weekly Usage</h2>
+            <canvas id="energyChart"></canvas>
+        </div>
     </div>
 
     <!-- Bottom Navigation Dock -->
@@ -41,67 +69,223 @@
             </svg>
             <span class="dock-label">Home</span>
         </a>
-        <a href="/usage" class="dock-item active">
+        <a th:if="${!userRole.contains('GUEST')}" href="/usage" class="dock-item active">
             <svg class="dock-icon" viewBox="0 0 24 24" fill="currentColor">
                 <path
                     d="M16 6L18.29 8.29L13.41 13.17L9.41 9.17L2 16.59L3.41 18L9.41 12L13.41 16L19.71 9.71L22 12V6H16Z" />
             </svg>
             <span class="dock-label">Usage</span>
         </a>
+        <a href="/settings" class="dock-item">
+            <svg class="dock-icon" viewBox="0 0 24 24" fill="currentColor">
+                <path
+                    d="M19.14,12.94c0.04-0.3,0.06-0.61,0.06-0.94c0-0.32-0.02-0.64-0.07-0.94l2.03-1.58c0.18-0.14,0.23-0.41,0.12-0.61 l-1.92-3.32c-0.12-0.22-0.37-0.29-0.59-0.22l-2.39,0.96c-0.5-0.38-1.03-0.7-1.62-0.94L14.4,2.81c-0.04-0.24-0.24-0.41-0.48-0.41 h-3.84c-0.24,0-0.43,0.17-0.47,0.41L9.25,5.35C8.66,5.59,8.12,5.92,7.63,6.29L5.24,5.33c-0.22-0.08-0.47,0-0.59,0.22L2.74,8.87 C2.62,9.08,2.66,9.34,2.86,9.48l2.03,1.58C4.84,11.36,4.8,11.69,4.8,12s0.02,0.64,0.07,0.94l-2.03,1.58 c-0.18,0.14-0.23,0.41-0.12,0.61l1.92,3.32c0.12,0.22,0.37,0.29,0.59,0.22l2.39-0.96c0.5,0.38,1.03,0.7,1.62,0.94l0.36,2.54 c0.05,0.24,0.24,0.41,0.48,0.41h3.84c0.24,0,0.44-0.17,0.47-0.41l0.36-2.54c0.59-0.24,1.13-0.56,1.62-0.94l2.39,0.96 c0.22,0.08,0.47,0,0.59-0.22l1.92-3.32c0.12-0.22,0.07-0.47-0.12-0.61L19.14,12.94z M12,15.6c-1.98,0-3.6-1.62-3.6-3.6 s1.62-3.6,3.6-3.6s3.6,1.62,3.6,3.6S13.98,15.6,12,15.6z" />
+            </svg>
+            <span class="dock-label">Settings</span>
+        </a>
     </div>
+
+    <!-- Theme Init -->
+    <script>
+        (function () {
+            const savedTheme = localStorage.getItem('theme');
+            if (savedTheme) {
+                document.documentElement.setAttribute('data-theme', savedTheme);
+            }
+        })();
+    </script>
 
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
         async function fetchEnergyData() {
             try {
-                // Fetch Summary
+                // Fetch Summary (Includes Live Watts)
                 const summaryRes = await fetch('/api/energy/summary');
                 if (summaryRes.ok) {
                     const summary = await summaryRes.json();
                     document.getElementById('energyUsage').innerText = summary.usage;
                     document.getElementById('costValue').innerText = summary.currency + summary.cost;
+
+                    // Update Live Power Bar if Visible
+                    if (summary.currentWatts !== undefined) {
+                        document.getElementById('liveWatts').innerText = Math.round(summary.currentWatts);
+                        document.getElementById('capacityWatts').innerText = Math.round(summary.capacityWatts);
+
+                        const pct = (summary.currentWatts / summary.capacityWatts) * 100;
+                        document.getElementById('livePowerBar').style.width = pct + '%';
+
+                        // Color scale (Green -> Orange -> Red)
+                        const bar = document.getElementById('livePowerBar');
+                        if (pct < 50) bar.style.backgroundColor = '#34C759';
+                        else if (pct < 80) bar.style.backgroundColor = '#FF9500';
+                        else bar.style.backgroundColor = '#FF3B30';
+                    }
                 }
 
-                // Fetch History
-                const historyRes = await fetch('/api/energy/history');
-                if (historyRes.ok) {
-                    const history = await historyRes.json();
-                    updateChart(history.labels, history.data);
+                // Check Visibility Prefs
+                const showLive = localStorage.getItem('showLivePower');
+                const showChart = localStorage.getItem('showDailyChart');
+
+                if (showLive !== 'false') { // Default True
+                    document.getElementById('livePowerSection').style.display = 'flex';
+                    document.getElementById('liveGraphSection').style.display = 'block';
+                } else {
+                    document.getElementById('livePowerSection').style.display = 'none';
+                    document.getElementById('liveGraphSection').style.display = 'none';
                 }
+
+                if (showChart !== 'false') { // Default True
+                    document.getElementById('chartSection').style.display = 'block';
+                    // Fetch History Only if Chart is visible
+                    const historyRes = await fetch('/api/energy/history');
+                    if (historyRes.ok) {
+                        const history = await historyRes.json();
+                        updateChart(history.labels, history.data);
+                    }
+                } else {
+                    document.getElementById('chartSection').style.display = 'none';
+                }
+
             } catch (e) {
+                // If fetch failed or JSON parse error (e.g., getting HTML login page instead of JSON)
                 console.error("Failed to fetch energy data", e);
-            }
-        }
 
-        let energyChart;
-        function updateChart(labels, data) {
-            const ctx = document.getElementById('energyChart').getContext('2d');
-            if (energyChart) {
-                energyChart.destroy();
+                // Simple heuristic: If we failed to parse JSON, it might be an auth redirect
+                // Check if we are stuck on a login page redirect
+                if (e instanceof SyntaxError) {
+                    window.location.href = '/login?expired';
+                }
             }
-            energyChart = new Chart(ctx, {
-                type: 'bar',
-                data: {
-                    labels: labels,
-                    datasets: [{
-                        label: 'Energy (kWh)',
-                        data: data,
-                        backgroundColor: '#34C759', // Green for Energy Page
-                        borderRadius: 8
-                    }]
-                },
+
+
+            // --- Live Power Graph Logic ---
+            const liveCtx = document.getElementById('livePowerChart').getContext('2d');
+
+            // Try to restore from session
+            let storedData = null;
+            try {
+                const saved = sessionStorage.getItem('liveGraphData');
+                if (saved) {
+                    const parsed = JSON.parse(saved);
+                    // Only use if recent (< 5 mins)
+                    if (Date.now() - parsed.timestamp < 300000) {
+                        storedData = parsed.data;
+                    }
+                }
+            } catch (e) { }
+
+            // Initial data (Restored or Empty)
+            // Initial data (Restored or Empty)
+            // Note: We fill missing spots with null if we restore partial data.
+            let initialDataPoints = storedData || Array(60).fill(null);
+
+            // Fix: If stored data is shorter than 60 (e.g. from old session), pad it
+            if (initialDataPoints.length < 60) {
+                const missing = 60 - initialDataPoints.length;
+                initialDataPoints = [...Array(missing).fill(null), ...initialDataPoints];
+            }
+
+            const initialData = {
+                labels: Array(60).fill(''),
+                datasets: [{
+                    label: 'Live Usage (kW)',
+                    data: initialDataPoints,
+                    borderColor: '#00E0FF',
+                    backgroundColor: 'rgba(0, 224, 255, 0.2)',
+                    borderWidth: 2,
+                    pointRadius: 0,
+                    tension: 0.4,
+                    fill: true
+                }]
+            };
+
+            const liveChart = new Chart(liveCtx, {
+                type: 'line',
+                data: initialData,
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
+                    animation: { duration: 0 },
+                    interaction: { intersect: false },
+                    plugins: { legend: { display: false } },
                     scales: {
-                        y: { beginAtZero: true, grid: { display: false } },
-                        x: { grid: { display: false } }
-                    },
-                    plugins: {
-                        legend: { display: false }
+                        x: { display: false },
+                        y: {
+                            display: false,
+                            beginAtZero: true,
+                            suggestedMax: 5
+                        }
                     }
                 }
             });
+
+            // Polling loop for Live Graph
+            setInterval(async () => {
+                try {
+                    const res = await fetch('/api/energy/summary');
+                    if (res.ok) {
+                        const data = await res.json();
+                        const kw = data.currentWatts / 1000.0;
+
+                        // Update Chart Data (Shift buffer)
+                        const currentLabels = liveChart.data.labels;
+                        const currentData = liveChart.data.datasets[0].data;
+
+                        currentLabels.shift();
+                        currentLabels.push(new Date().toLocaleTimeString());
+
+                        currentData.shift();
+                        currentData.push(kw);
+
+                        // Save to Session Storage
+                        sessionStorage.setItem('liveGraphData', JSON.stringify({
+                            timestamp: Date.now(),
+                            data: currentData
+                        }));
+
+                        // Update Scale dynamically if needed
+                        if (kw > liveChart.options.scales.y.suggestedMax) {
+                            liveChart.options.scales.y.suggestedMax = kw + 1;
+                        }
+
+                        liveChart.update('none');
+                    }
+                } catch (e) {
+                    console.error("Poll error", e);
+                }
+            }, 1000); // Poll every 1 second
+
+            let energyChart;
+            function updateChart(labels, data) {
+                const ctx = document.getElementById('energyChart').getContext('2d');
+                if (energyChart) {
+                    energyChart.destroy();
+                }
+                energyChart = new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: labels,
+                        datasets: [{
+                            label: 'Energy (kWh)',
+                            data: data,
+                            backgroundColor: '#34C759', // Green for Energy Page
+                            borderRadius: 8
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            y: { beginAtZero: true, grid: { display: false } },
+                            x: { grid: { display: false } }
+                        },
+                        plugins: {
+                            legend: { display: false }
+                        }
+                    }
+                });
+            }
+
         }
 
         window.onload = () => {
