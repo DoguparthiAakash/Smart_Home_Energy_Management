@@ -27,6 +27,8 @@ public class CustomAuthenticationSuccessHandler implements AuthenticationSuccess
 
         if (user != null && user.getTwoFactorSecret() != null && !user.getTwoFactorSecret().isEmpty()) {
             response.sendRedirect("/login-2fa");
+        } else if (user != null && user.getRole() == User.Role.TECHNICIAN) {
+            response.sendRedirect("/technician");
         } else {
             response.sendRedirect("/home");
         }

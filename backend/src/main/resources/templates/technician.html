@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <title>Technician Dashboard - My Home</title>
+    <link rel="stylesheet" href="/css/style.css">
+    <style>
+        .device-card {
+            background: var(--card-bg);
+            border-radius: 16px;
+            padding: 16px;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .voltage-display {
+            font-family: monospace;
+            font-size: 1.2rem;
+            color: #FF9500;
+            font-weight: bold;
+        }
+    </style>
+    <script>
+        // Init Theme
+        (function () {
+            const savedTheme = localStorage.getItem('theme');
+            if (savedTheme) {
+                document.documentElement.setAttribute('data-theme', savedTheme);
+            }
+        })();
+    </script>
+</head>
+
+<body>
+    <div class="main-content-wrapper">
+        <div class="header">
+            <h1>Technician Panel</h1>
+            <a href="/logout" style="color: #FF3B30; text-decoration: none; font-weight: 500;">Logout</a>
+        </div>
+
+        <div th:each="device : ${devices}" class="device-card">
+            <div>
+                <h3 th:text="${device.name}" style="margin: 0; font-size: 18px;">Device Name</h3>
+                <p th:text="${device.type}" style="margin: 4px 0 0; color: var(--text-muted); font-size: 14px;">TYPE</p>
+                <p style="margin: 4px 0 0; color: var(--text-muted); font-size: 12px;">
+                    Priority: <span th:text="${device.priority}">LOW</span>
+                </p>
+            </div>
+            <div style="text-align: right;">
+                <div th:id="'voltage-' + ${device.id}" class="voltage-display">-- V</div>
+                <button th:onclick="'checkVoltage(' + ${device.id} + ')'" class="btn-primary"
+                    style="margin-top: 8px; padding: 8px 16px; font-size: 14px; background: #5856D6;">
+                    Check Voltage
+                </button>
+            </div>
+        </div>
+
+        <div th:if="${devices.empty}" style="text-align: center; color: var(--text-muted); margin-top: 40px;">
+            No devices found in the system.
+        </div>
+    </div>
+
+    <script>
+        async function checkVoltage(deviceId) {
+            const display = document.getElementById('voltage-' + deviceId);
+            display.innerText = "Measuring...";
+
+            try {
+                const res = await fetch('/technician/api/voltage/' + deviceId);
+                if (res.ok) {
+                    const voltage = await res.json();
+                    display.innerText = voltage.toFixed(1) + " V";
+                } else {
+                    display.innerText = "Error";
+                }
+            } catch (e) {
+                console.error(e);
+                display.innerText = "Error";
+            }
+        }
+    </script>
+</body>
+
+</html>

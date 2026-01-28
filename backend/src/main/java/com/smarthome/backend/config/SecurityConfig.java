@@ -39,6 +39,10 @@ public class SecurityConfig {
                                                 // Admin Only
                                                 .requestMatchers("/admin/**").hasRole("ADMIN")
 
+                                                // Technician Only
+                                                .requestMatchers("/technician/**", "/api/technician/**")
+                                                .hasRole("TECHNICIAN")
+
                                                 // Usage & Energy: Admin or Homeowner Only
                                                 .requestMatchers("/usage", "/api/energy/**")
                                                 .hasAnyRole("ADMIN", "HOMEOWNER")

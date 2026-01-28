@@ -16,6 +16,7 @@ com/smarthome/backend/model/Device$Priority.class
 com/smarthome/backend/config/SecurityConfig.class
 com/smarthome/backend/controller/AdminController.class
 com/smarthome/backend/repository/UserRepository.class
+com/smarthome/backend/controller/TechnicianController.class
 com/smarthome/backend/controller/DeviceController.class
 com/smarthome/backend/model/UsageLog.class
 com/smarthome/backend/repository/DeviceRepository.class

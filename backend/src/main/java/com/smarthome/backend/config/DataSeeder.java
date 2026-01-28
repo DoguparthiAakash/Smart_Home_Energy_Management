@@ -43,6 +43,9 @@ public class DataSeeder {
             // 3. Ensure Guest User Exists (Upsert) - Read Only
             upsertUser("guest", "Guest User", "guest", User.Role.GUEST);
 
+            // 4. Ensure Technician User Exists (Upsert) - Diagnostic Access
+            upsertUser("tech@smarthome.com", "Technician", "password", User.Role.TECHNICIAN);
+
             // 4. Ensure Devices Exist (Associate with Home User)
             if (deviceRepository.count() == 0) {
                 User homeUser = userRepository.findByEmail("homeuser").get();

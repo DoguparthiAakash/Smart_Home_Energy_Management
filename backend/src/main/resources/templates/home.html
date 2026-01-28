@@ -225,8 +225,10 @@
                 Add</button>
         </div>
 
-        <div class="grid-container" id="deviceGrid">
-            <!-- Devices rendered via JS -->
+        <div class="device-scroll-wrapper">
+            <div class="grid-container" id="deviceGrid">
+                <!-- Devices rendered via JS -->
+            </div>
         </div>
     </div>
 
@@ -456,23 +458,28 @@
                     `<div style="position: absolute; top: 10px; right: 10px; color: #FF3B30; cursor: pointer; padding: 5px; z-index: 5;" onclick="deleteDevice(event, ${device.id})">✕</div>`
                     : '';
 
-                const clickAction = !isGuest ? `onclick="toggleDevice(${device.id})"` : '';
-                const cursorStyle = !isGuest ? 'cursor: pointer;' : 'cursor: default;';
+                // Toggle Switch HTML
+                const toggleSwitch = !isGuest ? `
+                    <label class="toggle-switch" onclick="event.stopPropagation()" style="margin-top: auto;">
+                        <input type="checkbox" ${device.status ? 'checked' : ''} onchange="toggleDevice(${device.id})">
+                        <span class="slider"></span>
+                    </label>
+                ` : `<p class="${device.status ? 'status-on' : 'status-off'}" style="margin-top: auto;">${device.status ? 'On' : 'Off'}</p>`;
 
                 const priorityBadge = device.priority ? `<div class="priority-badge priority-${device.priority}">${device.priority}</div>` : '';
 
                 const card = document.createElement('div');
                 card.className = 'card';
-                card.style = `position: relative; ${cursorStyle}`;
+                card.style = `position: relative; cursor: default;`; // Removed pointer cursor since click is gone
                 card.innerHTML = `
                         ${debugHtml}
                         ${deleteBtn}
-                        <div style="height: 100%; display: flex; flex-direction: column; justify-content: space-between;" ${clickAction}>
-                            <div class="icon-container ${device.status ? 'on' : 'off'}">
+                        <div style="height: 100%; display: flex; flex-direction: column; justify-content: flex-start;">
+                            <div class="icon-container ${device.status ? 'on' : 'off'}" style="margin-bottom: 12px;">
                                 <svg width="32" height="32" viewBox="0 0 24 24" fill="currentColor">${icon}</svg>
                             </div>
-                            <h3>${device.name}</h3>
-                            <p class="${device.status ? 'status-on' : 'status-off'}">${device.status ? 'On' : 'Off'}</p>
+                            <h3 style="margin-bottom: 8px;">${device.name}</h3>
+                            ${toggleSwitch}
                             ${priorityBadge}
                         </div>
                      `;

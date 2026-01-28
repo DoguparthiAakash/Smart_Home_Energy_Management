@@ -117,7 +117,22 @@ h1 {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
     gap: 16px;
+    /* Move scroll handling to wrapper or keep here if we want grid itself to scroll */
 }
+
+.device-scroll-wrapper {
+    max-height: 60vh;
+    /* Restrict height */
+    overflow-y: auto;
+    /* Enable vertical scroll */
+    padding: 10px;
+    /* Padding for scrollbar spacing */
+    border-radius: 20px;
+    background: rgba(0, 0, 0, 0.02);
+    /* Subtle contrast */
+    border: 1px solid var(--divider-color);
+}
+
 
 .card {
     background: var(--card-bg);
