@@ -2,6 +2,7 @@ package com.smarthome.backend.model;
 
 import jakarta.persistence.*;
 import lombok.Data;
+import java.time.LocalDateTime;
 
 @Data
 @Entity
@@ -30,6 +31,9 @@ public class Device {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private Priority priority = Priority.LOW;
+
+    @Column(name = "last_start_time")
+    private LocalDateTime lastStartTime;
 
     public enum Priority {
         HIGH,

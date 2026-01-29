@@ -17,7 +17,13 @@ public class UsageLog {
     private Device device;
 
     @Column(nullable = false)
-    private LocalDateTime timestamp;
+    private LocalDateTime timestamp; // Acts as endTime or record time
+
+    @Column(name = "start_time")
+    private LocalDateTime startTime;
+
+    @Column(name = "end_time")
+    private LocalDateTime endTime;
 
     @Column(name = "energy_kwh", nullable = false)
     private Double energyKwh;

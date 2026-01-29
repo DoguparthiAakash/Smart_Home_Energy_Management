@@ -4,16 +4,25 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.smarthome.backend.repository.UsageLogRepository;
+import org.springframework.beans.factory.annotation.Autowired;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.format.TextStyle;
 import java.util.HashMap;
+import java.util.Locale;
 import java.util.Map;
-import java.util.Random;
 
 @RestController
 @RequestMapping("/api/energy")
 public class EnergyController {
 
-    @org.springframework.beans.factory.annotation.Autowired
+    @Autowired
     private com.smarthome.backend.repository.DeviceRepository deviceRepository;
+
+    @Autowired
+    private UsageLogRepository usageLogRepository;
 
     @GetMapping("/summary")
     public Map<String, Object> getEnergySummary() {
@@ -26,16 +35,15 @@ public class EnergyController {
                 .mapToDouble(d -> d.getPowerRating() != null ? d.getPowerRating() : 0.0)
                 .sum();
 
-        // Algorithm: Assume devices run for approx 8 hours/day on average effective
-        // load
-        // Usage (kWh) = (Watts / 1000) * Hours
-        double dailyUsageKwh = (totalActiveWatts / 1000.0) * 8.0;
+        // Calculate usage for today
+        LocalDateTime startOfDay = LocalDateTime.of(LocalDate.now(), LocalTime.MIN);
+        LocalDateTime now = LocalDateTime.now();
+        Double dailyUsageKwh = usageLogRepository.sumEnergyBetween(startOfDay, now);
+        if (dailyUsageKwh == null) {
+            dailyUsageKwh = 0.0;
+        }
 
-        // Add a small base load (e.g., WiFi, Standby) of 2 kWh even if everything is
-        // off
-        dailyUsageKwh += 2.0;
-
-        double ratePerKwh = 8.0; // ₹8.00 per kWh
+        double ratePerKwh = 8.0; // Rate per kWh
         double estimatedCost = dailyUsageKwh * ratePerKwh;
 
         // Calculate Total Potential Capacity for Progress Bar scale
@@ -57,29 +65,42 @@ public class EnergyController {
 
     @GetMapping("/history")
     public Map<String, Object> getEnergyHistory() {
-        // Fetch total potential load to scale the chart
+        // Fetch total potential load to scale the chart if needed
         java.util.List<com.smarthome.backend.model.Device> devices = deviceRepository.findAll();
-        double totalPotentialWatts = devices.stream()
-                .mapToDouble(d -> d.getPowerRating() != null ? d.getPowerRating() : 0.0)
-                .sum();
 
-        // Convert to Max Possible Daily kWh (running 24h)
-        double maxDailyKwh = (totalPotentialWatts / 1000.0) * 24.0;
-        if (maxDailyKwh < 5.0)
-            maxDailyKwh = 10.0; // Fallback for empty homes
-
-        // Fixed pattern to ensure stability (Mon-Sun profile)
-        // Usage pattern factors (0.0 to 1.0 of max capacity)
-        double[] weeklyPattern = { 0.4, 0.45, 0.5, 0.48, 0.6, 0.75, 0.55 };
-
+        String[] labels = new String[7];
         double[] data = new double[7];
+
+        LocalDate today = LocalDate.now();
         for (int i = 0; i < 7; i++) {
-            data[i] = Math.round(maxDailyKwh * weeklyPattern[i] * 10.0) / 10.0;
+            LocalDate date = today.minusDays(6 - i);
+            labels[i] = date.getDayOfWeek().getDisplayName(TextStyle.SHORT, Locale.ENGLISH);
+
+            LocalDateTime start = LocalDateTime.of(date, LocalTime.MIN);
+            LocalDateTime end = LocalDateTime.of(date, LocalTime.MAX);
+
+            Double dailySum = usageLogRepository.sumEnergyBetween(start, end);
+            double val = dailySum != null ? Math.round(dailySum * 100.0) / 100.0 : 0.0;
+            data[i] = val;
         }
 
+        // Calculate Totals & Averages for the week
+        double totalUsage = 0;
+        for (double d : data)
+            totalUsage += d;
+
+        double ratePerKwh = 8.0;
+        double totalCost = totalUsage * ratePerKwh;
+        double avgUsage = totalUsage / 7.0;
+        double avgCost = totalCost / 7.0;
+
         Map<String, Object> response = new HashMap<>();
-        response.put("labels", new String[] { "Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun" });
+        response.put("labels", labels);
         response.put("data", data);
+        response.put("totalUsage", Math.round(totalUsage * 100.0) / 100.0);
+        response.put("totalCost", Math.round(totalCost * 100.0) / 100.0);
+        response.put("avgUsage", Math.round(avgUsage * 100.0) / 100.0);
+        response.put("avgCost", Math.round(avgCost * 100.0) / 100.0);
         return response;
     }
 }

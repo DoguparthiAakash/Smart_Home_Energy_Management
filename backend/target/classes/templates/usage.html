@@ -59,6 +59,31 @@
             <h2 style="font-size: 20px; margin-bottom: 20px;">Weekly Usage</h2>
             <canvas id="energyChart"></canvas>
         </div>
+
+        <!-- Weekly Stats Grid -->
+        <div id="weeklyStatsSection" class="summary-container"
+            style="margin-top: 16px; margin-bottom: 80px; display: none; gap: 10px; flex-wrap: wrap;">
+
+            <div class="summary-card" style="flex: 1; min-width: 140px;">
+                <div class="summary-label">7-Day Total</div>
+                <div class="summary-value" style="font-size: 18px;">
+                    <span id="totalUsage">--</span> kWh
+                </div>
+                <div style="font-size: 12px; color: #888; margin-top: 4px;">
+                    Cost: ₹<span id="totalCost">--</span>
+                </div>
+            </div>
+
+            <div class="summary-card" style="flex: 1; min-width: 140px;">
+                <div class="summary-label">Daily Avg</div>
+                <div class="summary-value" style="font-size: 18px;">
+                    <span id="avgUsage">--</span> kWh
+                </div>
+                <div style="font-size: 12px; color: #888; margin-top: 4px;">
+                    Cost: ₹<span id="avgCost">--</span>
+                </div>
+            </div>
+        </div>
     </div>
 
     <!-- Bottom Navigation Dock -->
@@ -141,9 +166,19 @@
                     if (historyRes.ok) {
                         const history = await historyRes.json();
                         updateChart(history.labels, history.data);
+
+                        // Populate Weekly Stats
+                        if (history.totalUsage !== undefined) {
+                            document.getElementById('weeklyStatsSection').style.display = 'flex';
+                            document.getElementById('totalUsage').innerText = history.totalUsage;
+                            document.getElementById('totalCost').innerText = history.totalCost;
+                            document.getElementById('avgUsage').innerText = history.avgUsage;
+                            document.getElementById('avgCost').innerText = history.avgCost;
+                        }
                     }
                 } else {
                     document.getElementById('chartSection').style.display = 'none';
+                    document.getElementById('weeklyStatsSection').style.display = 'none';
                 }
 
             } catch (e) {

@@ -2,13 +2,16 @@ package com.smarthome.backend.service;
 
 import com.smarthome.backend.dto.DeviceDTO;
 import com.smarthome.backend.model.Device;
+import com.smarthome.backend.model.UsageLog;
 import com.smarthome.backend.model.User;
 import com.smarthome.backend.repository.DeviceRepository;
+import com.smarthome.backend.repository.UsageLogRepository;
 import com.smarthome.backend.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.Comparator;
+import java.time.Duration;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -19,6 +22,9 @@ public class DeviceService {
 
     @Autowired
     private UserRepository userRepository;
+
+    @Autowired
+    private UsageLogRepository usageLogRepository;
 
     public List<DeviceDTO> getDevicesForUser(String userEmail) {
         User user = userRepository.findByEmail(userEmail).orElseThrow(() -> new RuntimeException("User not found"));
@@ -54,9 +60,36 @@ public class DeviceService {
 
     public DeviceDTO toggleDevice(Long deviceId) {
         Device device = deviceRepository.findById(deviceId).orElseThrow(() -> new RuntimeException("Device not found"));
+        LocalDateTime now = LocalDateTime.now();
 
-        // If turning ON, check load
-        if (!device.getStatus()) {
+        if (device.getStatus()) {
+            // Turning OFF - Log Usage
+            if (device.getLastStartTime() != null) {
+                long minutes = Duration.between(device.getLastStartTime(), now).toMinutes();
+
+                // Prevent negative or zero duration if toggled too fast (minimum 1 min for
+                // non-zero calc if needed, or allow 0)
+                if (minutes > 0) {
+                    // Formula: (Power * Minutes) / 60000.0 (User provided formula seems to be P *
+                    // MIN / 60000)
+                    // wait, (P * MIN) / 60 -> Watt-Hours. / 1000 -> kWh.
+                    // So (P * MIN) / 60000.0 is correct for kWh.
+                    double energyKwh = (device.getPowerRating() * minutes) / 60000.0;
+
+                    UsageLog log = new UsageLog();
+                    log.setDevice(device);
+                    log.setStartTime(device.getLastStartTime());
+                    log.setEndTime(now);
+                    log.setTimestamp(now);
+                    log.setEnergyKwh(energyKwh);
+
+                    usageLogRepository.save(log);
+                }
+            }
+            device.setStatus(false);
+            device.setLastStartTime(null);
+        } else {
+            // Turning ON - Check Load & Set Start Time
             User owner = device.getUser();
             double maxWattage = owner.getMaxWattage() != null ? owner.getMaxWattage() : 5000.0;
             double currentLoad = calculateCurrentLoad(owner.getId());
@@ -64,17 +97,17 @@ public class DeviceService {
 
             if (potentialLoad > maxWattage) {
                 double required = potentialLoad - maxWattage;
-                System.out.println("LOAD LIMIT EXCEEDED! Current: " + currentLoad + " + Device: "
-                        + device.getPowerRating() + " > Max: " + maxWattage + ". Shedding: " + required);
                 boolean success = shedLoad(owner.getId(), required);
                 if (!success) {
                     throw new RuntimeException(
                             "Cannot turn on device. Max wattage exceeded and no lower priority devices to shed.");
                 }
             }
+
+            device.setStatus(true);
+            device.setLastStartTime(now);
         }
 
-        device.setStatus(!device.getStatus());
         return convertToDTO(deviceRepository.save(device));
     }
 
@@ -90,29 +123,35 @@ public class DeviceService {
                 .filter(Device::getStatus)
                 .collect(Collectors.toList());
 
-        // Sort by Priority: LOW first, then MEDIUM. (High is skipped or last)
-        // High = 0, Medium = 1, Low = 2 in natural enum order? No, define explicit
-        // order.
-        // Priority: HIGH, MEDIUM, LOW.
-        // We want to shed LOW first.
-
         List<Device> shedCandidates = activeDevices.stream()
-                .filter(d -> d.getPriority() != Device.Priority.HIGH) // Never shed HIGH
-                .sorted((d1, d2) -> {
-                    // Priority.LOW (2) > Priority.MEDIUM (1). We want LOW first.
-                    return d2.getPriority().compareTo(d1.getPriority());
-                })
+                .filter(d -> d.getPriority() != Device.Priority.HIGH)
+                .sorted((d1, d2) -> d2.getPriority().compareTo(d1.getPriority()))
                 .collect(Collectors.toList());
 
         double shedAmount = 0;
+        LocalDateTime now = LocalDateTime.now();
 
         for (Device d : shedCandidates) {
-            d.setStatus(false);
-            deviceRepository.save(d);
-            shedAmount += d.getPowerRating();
-            System.out.println("SHEDDING LOAD: Turned off " + d.getName() + " (" + d.getPriority() + ") - "
-                    + d.getPowerRating() + "W");
+            // Log usage before shedding
+            if (d.getLastStartTime() != null) {
+                long minutes = Duration.between(d.getLastStartTime(), now).toMinutes();
+                if (minutes > 0) {
+                    double energyKwh = (d.getPowerRating() * minutes) / 60000.0;
+                    UsageLog log = new UsageLog();
+                    log.setDevice(d);
+                    log.setStartTime(d.getLastStartTime());
+                    log.setEndTime(now);
+                    log.setTimestamp(now);
+                    log.setEnergyKwh(energyKwh);
+                    usageLogRepository.save(log);
+                }
+            }
 
+            d.setStatus(false);
+            d.setLastStartTime(null);
+            deviceRepository.save(d);
+
+            shedAmount += d.getPowerRating();
             if (shedAmount >= requiredWattage) {
                 return true;
             }

@@ -14,4 +14,7 @@ public interface UsageLogRepository extends JpaRepository<UsageLog, Long> {
     @Query("SELECT u FROM UsageLog u JOIN u.device d WHERE d.user.id = :userId AND u.timestamp BETWEEN :start AND :end")
     List<UsageLog> findByUserIdAndTimestampBetween(@Param("userId") Long userId, @Param("start") LocalDateTime start,
             @Param("end") LocalDateTime end);
+
+    @Query("SELECT SUM(u.energyKwh) FROM UsageLog u WHERE u.timestamp BETWEEN :start AND :end")
+    Double sumEnergyBetween(@Param("start") LocalDateTime start, @Param("end") LocalDateTime end);
 }
