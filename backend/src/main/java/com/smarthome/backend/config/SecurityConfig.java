@@ -33,7 +33,7 @@ public class SecurityConfig {
                                 .authorizeHttpRequests(auth -> auth
                                                 // Public
                                                 .requestMatchers("/login", "/login-2fa", "/css/**", "/js/**", "/error",
-                                                                "/api/auth/**")
+                                                                "/api/auth/**", "/api/recovery/**", "/forgot-password")
                                                 .permitAll()
 
                                                 // Admin Only

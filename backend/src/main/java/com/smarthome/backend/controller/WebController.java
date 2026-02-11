@@ -16,6 +16,11 @@ public class WebController {
         return "login";
     }
 
+    @GetMapping("/forgot-password")
+    public String forgotPassword() {
+        return "forgot_password";
+    }
+
     @GetMapping("/admin/ide")
     public String adminIde(Model model, Principal principal) {
         if (principal != null) {

@@ -1,4 +1,5 @@
 /home/aakash/Downloads/Smart_Home_Energy_Management/backend/src/main/java/com/smarthome/backend/controller/AdminController.java
+/home/aakash/Downloads/Smart_Home_Energy_Management/backend/src/main/java/com/smarthome/backend/service/PasswordRecoveryService.java
 /home/aakash/Downloads/Smart_Home_Energy_Management/backend/src/main/java/com/smarthome/backend/config/SecurityConfig.java
 /home/aakash/Downloads/Smart_Home_Energy_Management/backend/src/main/java/com/smarthome/backend/controller/TechnicianController.java
 /home/aakash/Downloads/Smart_Home_Energy_Management/backend/src/main/java/com/smarthome/backend/repository/UsageLogRepository.java
@@ -11,12 +12,14 @@
 /home/aakash/Downloads/Smart_Home_Energy_Management/backend/src/main/java/com/smarthome/backend/model/Schedule.java
 /home/aakash/Downloads/Smart_Home_Energy_Management/backend/src/main/java/com/smarthome/backend/config/CustomAuthenticationSuccessHandler.java
 /home/aakash/Downloads/Smart_Home_Energy_Management/backend/src/main/java/com/smarthome/backend/model/Device.java
+/home/aakash/Downloads/Smart_Home_Energy_Management/backend/src/main/java/com/smarthome/backend/service/DataGeneratorService.java
 /home/aakash/Downloads/Smart_Home_Energy_Management/backend/src/main/java/com/smarthome/backend/controller/AnalyticsController.java
 /home/aakash/Downloads/Smart_Home_Energy_Management/backend/src/main/java/com/smarthome/backend/controller/EnergyController.java
 /home/aakash/Downloads/Smart_Home_Energy_Management/backend/src/main/java/com/smarthome/backend/dto/DeviceDTO.java
 /home/aakash/Downloads/Smart_Home_Energy_Management/backend/src/main/java/com/smarthome/backend/model/User.java
 /home/aakash/Downloads/Smart_Home_Energy_Management/backend/src/main/java/com/smarthome/backend/model/UsageLog.java
 /home/aakash/Downloads/Smart_Home_Energy_Management/backend/src/main/java/com/smarthome/backend/controller/WebController.java
+/home/aakash/Downloads/Smart_Home_Energy_Management/backend/src/main/java/com/smarthome/backend/controller/RecoveryController.java
 /home/aakash/Downloads/Smart_Home_Energy_Management/backend/src/main/java/com/smarthome/backend/controller/UserController.java
 /home/aakash/Downloads/Smart_Home_Energy_Management/backend/src/main/java/com/smarthome/backend/repository/UserRepository.java
 /home/aakash/Downloads/Smart_Home_Energy_Management/backend/src/main/java/com/smarthome/backend/config/MqttConfig.java

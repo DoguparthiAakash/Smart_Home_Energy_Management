@@ -127,6 +127,28 @@
             <button id="disableBtn" onclick="disable2FA()" class="btn-primary"
                 style="margin-top: 16px; background: #FF3B30; color: white; display: none;">Disable 2FA</button>
         </div>
+
+        <h3 style="margin: 20px 0 10px; color: var(--text-muted); font-size: 14px; text-transform: uppercase;">Recovery
+            Options
+        </h3>
+        <div class="card" style="aspect-ratio: auto; min-height: auto; flex-direction: column; padding: 20px;">
+            <div style="display: flex; flex-direction: column; gap: 16px; width: 100%;">
+                <div>
+                    <label style="font-size: 15px; font-weight: 500; display: block; margin-bottom: 8px;">Mobile
+                        Number</label>
+                    <input type="tel" id="recoveryMobile" placeholder="+91 99999 99999" class="input-field"
+                        style="width: 100%; border: 1px solid var(--divider-color); padding: 10px; border-radius: 8px;">
+                </div>
+                <div>
+                    <label style="font-size: 15px; font-weight: 500; display: block; margin-bottom: 8px;">Recovery
+                        Email</label>
+                    <input type="email" id="recoveryEmail" placeholder="backup@example.com" class="input-field"
+                        style="width: 100%; border: 1px solid var(--divider-color); padding: 10px; border-radius: 8px;">
+                </div>
+                <button onclick="saveRecoveryOptions()" class="btn-primary"
+                    style="margin-top: 10px; padding: 12px;">Save Recovery Options</button>
+            </div>
+        </div>
     </div>
     </div>
 
@@ -243,7 +265,38 @@
             }
         }
 
+        async function saveRecoveryOptions() {
+            const mobile = document.getElementById('recoveryMobile').value;
+            const email = document.getElementById('recoveryEmail').value;
+
+            try {
+                const res = await fetch('/api/recovery/options', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ mobile: mobile, recoveryEmail: email })
+                });
+
+                if (res.ok) {
+                    alert('Recovery options saved successfully!');
+                } else {
+                    alert('Failed to save options.');
+                }
+            } catch (e) { console.error(e); }
+        }
+
+        async function loadRecoveryOptions() {
+            try {
+                const res = await fetch('/api/recovery/options');
+                if (res.ok) {
+                    const data = await res.json();
+                    if (data.mobile) document.getElementById('recoveryMobile').value = data.mobile;
+                    if (data.recoveryEmail) document.getElementById('recoveryEmail').value = data.recoveryEmail;
+                }
+            } catch (e) { console.error(e); }
+        }
+
         checkStatus();
+        loadRecoveryOptions();
 
         // Check for saved theme
         const currentTheme = localStorage.getItem('theme');

@@ -30,6 +30,10 @@ public class User {
 
     private Double maxWattage = 5000.0; // Default limit per user home
 
+    // Recovery Options
+    private String mobileNumber;
+    private String recoveryEmail;
+
     public enum Role {
         ADMIN,
         HOMEOWNER,

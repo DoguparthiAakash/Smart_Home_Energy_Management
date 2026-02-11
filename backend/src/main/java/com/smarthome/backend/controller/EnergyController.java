@@ -22,12 +22,18 @@ public class EnergyController {
     private com.smarthome.backend.repository.DeviceRepository deviceRepository;
 
     @Autowired
-    private UsageLogRepository usageLogRepository;
+    private com.smarthome.backend.service.UsageLogService usageLogService;
+
+    @Autowired
+    private com.smarthome.backend.repository.UserRepository userRepository;
 
     @GetMapping("/summary")
-    public Map<String, Object> getEnergySummary() {
-        // Fetch all devices from DB
-        java.util.List<com.smarthome.backend.model.Device> devices = deviceRepository.findAll();
+    public Map<String, Object> getEnergySummary(org.springframework.security.core.Authentication authentication) {
+        String userEmail = authentication.getName();
+        com.smarthome.backend.model.User user = userRepository.findByEmail(userEmail).orElseThrow();
+
+        // Fetch user's devices
+        java.util.List<com.smarthome.backend.model.Device> devices = deviceRepository.findByUserId(user.getId());
 
         // Calculate real-time active load
         double totalActiveWatts = devices.stream()
@@ -38,20 +44,16 @@ public class EnergyController {
         // Calculate usage for today
         LocalDateTime startOfDay = LocalDateTime.of(LocalDate.now(), LocalTime.MIN);
         LocalDateTime now = LocalDateTime.now();
-        Double dailyUsageKwh = usageLogRepository.sumEnergyBetween(startOfDay, now);
+        
+        Double dailyUsageKwh = usageLogService.getDailyUsage(userEmail, startOfDay, now);
         if (dailyUsageKwh == null) {
             dailyUsageKwh = 0.0;
         }
 
-        double ratePerKwh = 8.0; // Rate per kWh
-        double estimatedCost = dailyUsageKwh * ratePerKwh;
+        double estimatedCost = usageLogService.calculateCost(dailyUsageKwh);
 
         // Calculate Total Potential Capacity for Progress Bar scale
-        double totalPotentialWatts = devices.stream()
-                .mapToDouble(d -> d.getPowerRating() != null ? d.getPowerRating() : 0.0)
-                .sum();
-        if (totalPotentialWatts < 1.0)
-            totalPotentialWatts = 5000.0; // Default fallback
+        double totalPotentialWatts = user.getMaxWattage() != null ? user.getMaxWattage() : 5000.0;
 
         Map<String, Object> response = new HashMap<>();
         response.put("usage", Math.round(dailyUsageKwh * 100.0) / 100.0);
@@ -64,9 +66,8 @@ public class EnergyController {
     }
 
     @GetMapping("/history")
-    public Map<String, Object> getEnergyHistory() {
-        // Fetch total potential load to scale the chart if needed
-        java.util.List<com.smarthome.backend.model.Device> devices = deviceRepository.findAll();
+    public Map<String, Object> getEnergyHistory(org.springframework.security.core.Authentication authentication) {
+        String userEmail = authentication.getName();
 
         String[] labels = new String[7];
         double[] data = new double[7];
@@ -79,7 +80,7 @@ public class EnergyController {
             LocalDateTime start = LocalDateTime.of(date, LocalTime.MIN);
             LocalDateTime end = LocalDateTime.of(date, LocalTime.MAX);
 
-            Double dailySum = usageLogRepository.sumEnergyBetween(start, end);
+            Double dailySum = usageLogService.getDailyUsage(userEmail, start, end);
             double val = dailySum != null ? Math.round(dailySum * 100.0) / 100.0 : 0.0;
             data[i] = val;
         }
@@ -89,8 +90,7 @@ public class EnergyController {
         for (double d : data)
             totalUsage += d;
 
-        double ratePerKwh = 8.0;
-        double totalCost = totalUsage * ratePerKwh;
+        double totalCost = usageLogService.calculateCost(totalUsage);
         double avgUsage = totalUsage / 7.0;
         double avgCost = totalCost / 7.0;
 
