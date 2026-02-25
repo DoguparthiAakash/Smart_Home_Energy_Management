@@ -4,16 +4,24 @@ import com.smarthome.backend.dto.DeviceDTO;
 import com.smarthome.backend.model.Device;
 import com.smarthome.backend.model.UsageLog;
 import com.smarthome.backend.model.User;
+import com.smarthome.backend.repository.DeviceEventRepository;
 import com.smarthome.backend.repository.DeviceRepository;
+import com.smarthome.backend.repository.DeviceScheduleRepository;
 import com.smarthome.backend.repository.UsageLogRepository;
 import com.smarthome.backend.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Duration;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.stream.Collectors;
+import com.smarthome.backend.dto.DeviceScheduleDTO;
+import com.smarthome.backend.model.DeviceSchedule;
 
 @Service
 public class DeviceService {
@@ -25,6 +33,12 @@ public class DeviceService {
 
     @Autowired
     private UsageLogRepository usageLogRepository;
+
+    @Autowired
+    private DeviceEventRepository eventRepository;
+
+    @Autowired
+    private DeviceScheduleRepository scheduleRepository;
 
     public List<DeviceDTO> getDevicesForUser(String userEmail) {
         User user = userRepository.findByEmail(userEmail).orElseThrow(() -> new RuntimeException("User not found"));
@@ -48,6 +62,10 @@ public class DeviceService {
         device.setType(deviceDTO.getType());
         device.setPowerRating(deviceDTO.getPowerRating());
         device.setStatus(false);
+        device.setLocation(deviceDTO.getLocation());
+        if (deviceDTO.getPowerLimit() != null) {
+            device.setPowerLimit(deviceDTO.getPowerLimit());
+        }
         try {
             device.setPriority(Device.Priority.valueOf(deviceDTO.getPriority()));
         } catch (Exception e) {
@@ -58,6 +76,23 @@ public class DeviceService {
         return convertToDTO(saved);
     }
 
+    public DeviceDTO updateDevice(Long deviceId, DeviceDTO deviceDTO) {
+        Device device = deviceRepository.findById(deviceId).orElseThrow(() -> new RuntimeException("Device not found"));
+        if (deviceDTO.getName() != null)
+            device.setName(deviceDTO.getName());
+        if (deviceDTO.getLocation() != null)
+            device.setLocation(deviceDTO.getLocation());
+        if (deviceDTO.getPowerLimit() != null)
+            device.setPowerLimit(deviceDTO.getPowerLimit());
+        if (deviceDTO.getPriority() != null) {
+            try {
+                device.setPriority(Device.Priority.valueOf(deviceDTO.getPriority()));
+            } catch (Exception ignored) {
+            }
+        }
+        return convertToDTO(deviceRepository.save(device));
+    }
+
     public DeviceDTO toggleDevice(Long deviceId) {
         Device device = deviceRepository.findById(deviceId).orElseThrow(() -> new RuntimeException("Device not found"));
         LocalDateTime now = LocalDateTime.now();
@@ -66,23 +101,14 @@ public class DeviceService {
             // Turning OFF - Log Usage
             if (device.getLastStartTime() != null) {
                 long minutes = Duration.between(device.getLastStartTime(), now).toMinutes();
-
-                // Prevent negative or zero duration if toggled too fast (minimum 1 min for
-                // non-zero calc if needed, or allow 0)
                 if (minutes > 0) {
-                    // Formula: (Power * Minutes) / 60000.0 (User provided formula seems to be P *
-                    // MIN / 60000)
-                    // wait, (P * MIN) / 60 -> Watt-Hours. / 1000 -> kWh.
-                    // So (P * MIN) / 60000.0 is correct for kWh.
                     double energyKwh = (device.getPowerRating() * minutes) / 60000.0;
-
                     UsageLog log = new UsageLog();
                     log.setDevice(device);
                     log.setStartTime(device.getLastStartTime());
                     log.setEndTime(now);
                     log.setTimestamp(now);
                     log.setEnergyKwh(energyKwh);
-
                     usageLogRepository.save(log);
                 }
             }
@@ -92,11 +118,16 @@ public class DeviceService {
             // Turning ON - Check Load & Set Start Time
             User owner = device.getUser();
             double maxWattage = owner.getMaxWattage() != null ? owner.getMaxWattage() : 5000.0;
+
+            // Also respect device-level power limit
+            double effectiveMax = (device.getPowerLimit() != null) ? Math.min(maxWattage, device.getPowerLimit())
+                    : maxWattage;
+
             double currentLoad = calculateCurrentLoad(owner.getId());
             double potentialLoad = currentLoad + device.getPowerRating();
 
-            if (potentialLoad > maxWattage) {
-                double required = potentialLoad - maxWattage;
+            if (potentialLoad > effectiveMax) {
+                double required = potentialLoad - effectiveMax;
                 boolean success = shedLoad(owner.getId(), required);
                 if (!success) {
                     throw new RuntimeException(
@@ -132,7 +163,6 @@ public class DeviceService {
         LocalDateTime now = LocalDateTime.now();
 
         for (Device d : shedCandidates) {
-            // Log usage before shedding
             if (d.getLastStartTime() != null) {
                 long minutes = Duration.between(d.getLastStartTime(), now).toMinutes();
                 if (minutes > 0) {
@@ -146,7 +176,6 @@ public class DeviceService {
                     usageLogRepository.save(log);
                 }
             }
-
             d.setStatus(false);
             d.setLastStartTime(null);
             deviceRepository.save(d);
@@ -160,8 +189,14 @@ public class DeviceService {
         return shedAmount >= requiredWattage;
     }
 
+    @Transactional
     public void deleteDevice(Long deviceId) {
-        deviceRepository.deleteById(deviceId);
+        Device device = deviceRepository.findById(deviceId).orElseThrow(() -> new RuntimeException("Device not found"));
+        // Manual cleanup of dependent entities
+        usageLogRepository.deleteByDeviceId(deviceId);
+        eventRepository.deleteByDeviceId(deviceId);
+        scheduleRepository.deleteByDeviceId(deviceId);
+        deviceRepository.delete(device);
     }
 
     private DeviceDTO convertToDTO(Device device) {
@@ -172,6 +207,45 @@ public class DeviceService {
         dto.setPowerRating(device.getPowerRating());
         dto.setStatus(device.getStatus());
         dto.setPriority(device.getPriority().name());
+        dto.setLocation(device.getLocation());
+        dto.setPowerLimit(device.getPowerLimit());
+        dto.setFirmwareVersion(device.getFirmwareVersion() != null ? device.getFirmwareVersion() : "1.0.0");
+        dto.setHealthStatus(device.getHealthStatus() != null ? device.getHealthStatus() : "EXCELLENT");
         return dto;
+    }
+
+    public DeviceScheduleDTO getSchedule(Long deviceId) {
+        List<DeviceSchedule> schedules = scheduleRepository.findByDeviceId(deviceId);
+        if (schedules.isEmpty()) {
+            return new DeviceScheduleDTO("", false, "", false);
+        }
+        DeviceSchedule s = schedules.get(0);
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("HH:mm");
+        String onTime = s.getScheduledOnTime() != null ? s.getScheduledOnTime().format(formatter) : "";
+        String offTime = s.getScheduledOffTime() != null ? s.getScheduledOffTime().format(formatter) : "";
+        return new DeviceScheduleDTO(onTime, s.getActive(), offTime, s.getActive()); // Simplification: one active flag
+                                                                                     // for both
+    }
+
+    @Transactional
+    public void saveSchedule(Long deviceId, DeviceScheduleDTO dto) {
+        Device device = deviceRepository.findById(deviceId).orElseThrow(() -> new RuntimeException("Device not found"));
+        scheduleRepository.deleteByDeviceId(deviceId);
+
+        DeviceSchedule s = new DeviceSchedule();
+        s.setDevice(device);
+        s.setActive(dto.isOnEnabled() || dto.isOffEnabled());
+
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("HH:mm");
+        if (dto.getOnTime() != null && !dto.getOnTime().isEmpty()) {
+            LocalTime time = LocalTime.parse(dto.getOnTime(), formatter);
+            s.setScheduledOnTime(LocalDateTime.of(LocalDate.now(), time));
+        }
+        if (dto.getOffTime() != null && !dto.getOffTime().isEmpty()) {
+            LocalTime time = LocalTime.parse(dto.getOffTime(), formatter);
+            s.setScheduledOffTime(LocalDateTime.of(LocalDate.now(), time));
+        }
+
+        scheduleRepository.save(s);
     }
 }

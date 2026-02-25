@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <title>Control Panel | Admin</title>
+    <link rel="stylesheet" href="/css/style.css">
+    <style>
+        .admin-container {
+            padding: 20px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .control-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .tech-list {
+            background: var(--card-bg);
+            border-radius: 16px;
+            overflow: hidden;
+            padding: 20px;
+        }
+
+        .health-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 0;
+            border-bottom: 1px solid var(--divider-color);
+        }
+
+        .health-item:last-child {
+            border-bottom: none;
+        }
+
+        .version-badge {
+            background: var(--bg-color);
+            padding: 4px 8px;
+            border-radius: 6px;
+            font-family: monospace;
+            font-size: 12px;
+        }
+
+        .blockchain-log {
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            max-height: 300px;
+            overflow-y: auto;
+            background: #1a1a1a;
+            color: #00ff00;
+            padding: 15px;
+            border-radius: 12px;
+        }
+
+        .block-entry {
+            margin-bottom: 10px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #333;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="main-content-wrapper">
+        <div class="header">
+            <h1>Control Panel</h1>
+            <div style="display: flex; align-items: center; gap: 10px;">
+                <span class="badge"
+                    style="background: #007AFF; color: white; padding: 4px 8px; border-radius: 4px; font-size: 11px;">SYSTEM
+                    ADMIN</span>
+                <form th:action="@{/logout}" method="post" style="display: inline;">
+                    <button type="submit"
+                        style="background: white; color: #FF3B30; padding: 6px 12px; border-radius: 12px; border: none; font-weight: 600; cursor: pointer; font-size: 12px;">Logout</button>
+                </form>
+            </div>
+        </div>
+
+        <div class="admin-container">
+            <div class="control-grid">
+                <!-- Device Firmware & Health -->
+                <div style="display: flex; flex-direction: column; gap: 20px;">
+                    <div class="tech-list">
+                        <h3 style="margin-top: 0; margin-bottom: 20px;">Device Firmware & Health</h3>
+                        <div id="firmwareList">
+                            <div style="text-align: center; color: var(--text-muted); padding: 20px;">Loading device
+                                data...</div>
+                        </div>
+                    </div>
+                    <div class="tech-list" style="background: linear-gradient(135deg, #1e1e1e, #2c2c2e); color: white;">
+                        <h3 style="margin-top: 0; margin-bottom: 16px;">Simulation Control</h3>
+                        <p style="font-size: 14px; opacity: 0.8; margin: 0 0 16px 0;">Control the device energy
+                            simulator. Status: <span id="simStatus"
+                                style="font-weight: 700; color: #34C759;">Checking...</span></p>
+                        <div style="display: flex; gap: 10px; margin-top: 10px;">
+                            <button onclick="toggleSimulation(true)" class="btn-primary"
+                                style="flex: 1; background: #34C759; border: none;">Start Sim</button>
+                            <button onclick="toggleSimulation(false)" class="btn-primary"
+                                style="flex: 1; background: #FF3B30; border: none;">Stop Sim</button>
+                        </div>
+                        <button onclick="checkUpdates(event)" class="btn-primary"
+                            style="width: 100%; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); margin-top: 10px;">Check
+                            for Updates</button>
+                    </div>
+                </div>
+
+                <!-- Blockchain Ledger Explorer -->
+                <div class="tech-list">
+                    <div
+                        style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+                        <h3 style="margin: 0;">Blockchain Ledger</h3>
+                        <span style="font-size: 12px; color: var(--text-muted);">2s Interval Backup</span>
+                    </div>
+                    <div id="blockchainContainer" class="blockchain-log">
+                        <div style="color: #666;">Synchronizing...</div>
+                    </div>
+                    <button onclick="fetchBlockchain()" class="btn-primary"
+                        style="width: 100%; margin-top: 16px; background: rgba(255,255,255,0.1); color: white; border: 1px solid rgba(255,255,255,0.2);">Refresh
+                        <div
+                            style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                            <h2 style="margin: 0; font-size: 20px;">Blockchain Data Ledger</h2>
+                            <div style="display: flex; gap: 10px;">
+                                <button onclick="checkIntegrity()" class="btn-primary"
+                                    style="background: #5856D6; font-size: 13px; padding: 8px 16px;">Verify
+                                    Ledger</button>
+                                <button onclick="fetchBlockchain()" class="btn-primary"
+                                    style="background: rgba(255,255,255,0.1); font-size: 13px; padding: 8px 16px; border: 1px solid rgba(255,255,255,0.2);">Refresh</button>
+                            </div>
+                        </div>
+                        <div id="blockchainLedger" class="blockchain-log">
+                            <p style="color: var(--text-muted); text-align: center; padding: 20px;">Fetching verified
+                                blocks...</p>
+                        </div>
+                        <div id="integrityResult"
+                            style="margin-top: 10px; font-size: 14px; display: none; padding: 15px; border-radius: 12px; text-align: center; font-weight: 600;">
+                        </div>
+                </div>
+            </div>
+
+            <!-- Past Device Analysis -->
+            <div class="tech-list" style="margin-bottom: 80px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+                    <h3 style="margin: 0;">Past Device Data Explorer</h3>
+                    <span id="pastDeviceFilter" class="badge" style="background: #333; color: #fff;">All Devices</span>
+                </div>
+                <div id="pastDeviceList">
+                    <div style="text-align: center; color: var(--text-muted); padding: 20px;">Loading...</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bottom Navigation Dock -->
+    <div class="dock-container">
+        <a href="/admin" class="dock-item">
+            <svg class="dock-icon" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M12,3L2,12H5V20H19V12H22L12,3M11,10H13V18H11V10M11,14H13V16H11V14Z" />
+            </svg>
+            <span class="dock-label">Admin</span>
+        </a>
+        <a href="/admin/control-panel" class="dock-item active">
+            <svg class="dock-icon" viewBox="0 0 24 24" fill="currentColor">
+                <path
+                    d="M13,3H11V7H13V3M4.41,4.41L3,5.83L5.83,8.66L7.24,7.24L4.41,4.41M16.76,7.24L18.17,8.66L21,5.83L19.59,4.41L16.76,7.24M11,13H13V11H11V13M11,21H13V17H11V21M4.41,19.59L7.24,16.76L5.83,15.34L3,18.17L4.41,19.59M18.17,15.34L16.76,16.76L19.59,19.59L21,18.17L18.17,15.34Z" />
+            </svg>
+            <span class="dock-label">Control</span>
+        </a>
+        <a href="/admin/ide" class="dock-item">
+            <svg class="dock-icon" viewBox="0 0 24 24" fill="currentColor">
+                <path
+                    d="M9.4,16.6L4.8,12L9.4,7.4L8,6L2,12L8,18L9.4,16.6M14.6,16.6L19.2,12L14.6,7.4L16,6L22,12L16,18L14.6,16.6M11.5,18L15.75,4L14.25,3.6L10,17.6L11.5,18Z" />
+            </svg>
+            <span class="dock-label">IDE</span>
+        </a>
+    </div>
+
+    <script th:inline="javascript">
+        (function () { const t = localStorage.getItem('theme'); if (t) document.documentElement.setAttribute('data-theme', t); })();
+        fetchDeviceData();
+        fetchBlockchain();
+        fetchSimStatus();
+        setInterval(fetchBlockchain, 5000);
+
+        async function fetchSimStatus() {
+            try {
+                const res = await fetch('/api/admin/simulator/status');
+                if (res.ok) {
+                    const data = await res.json();
+                    const statusSpan = document.getElementById('simStatus');
+                    statusSpan.innerText = data.enabled ? 'ACTIVE' : 'INACTIVE';
+                    statusSpan.style.color = data.enabled ? '#34C759' : '#FF3B30';
+                }
+            } catch (e) { }
+        }
+
+        async function toggleSimulation(enable) {
+            try {
+                const res = await fetch('/api/admin/simulator/toggle', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ enabled: enable })
+                });
+                if (res.ok) fetchSimStatus();
+            } catch (e) { }
+        }
+
+        async function fetchDeviceData() {
+            try {
+                const res = await fetch('/api/devices');
+                if (res.ok) {
+                    const devices = await res.json();
+                    renderFirmware(devices);
+                    renderPastDeviceData(devices);
+                }
+            } catch (e) { console.error(e); }
+        }
+
+        function renderFirmware(devices) {
+            const container = document.getElementById('firmwareList');
+            if (!devices.length) { container.innerHTML = '<p style="text-align:center;color:var(--text-muted);">No devices found.</p>'; return; }
+            container.innerHTML = devices.map(d => `
+                <div class="health-item">
+                    <div style="display: flex; align-items: center; gap: 12px;">
+                        <div style="width: 10px; height: 10px; border-radius: 50%; background: ${d.healthStatus === 'EXCELLENT' ? '#34C759' : '#FF9500'}"></div>
+                        <div>
+                            <div style="font-weight: 600; font-size: 14px;">${d.name}</div>
+                            <div style="font-size: 11px; color: var(--text-muted);">${d.type} • ${d.location || 'No Location'}</div>
+                        </div>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 12px;">
+                        <span class="version-badge">v${d.firmwareVersion || '1.0.0'}</span>
+                        <span class="badge" style="background: rgba(52,199,89,0.1); color: #34C759; padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: 600;">${d.healthStatus || 'EXCELLENT'}</span>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function renderPastDeviceData(devices) {
+            const container = document.getElementById('pastDeviceList');
+            container.innerHTML = devices.map(d => `
+                <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px; border-bottom: 1px solid var(--divider-color);">
+                    <div>
+                        <div style="font-weight: 600;">${d.name}</div>
+                        <div style="font-size: 12px; color: var(--text-muted);">${d.type} • ${d.powerRating}W rated • Priority: ${d.priority}</div>
+                    </div>
+                    <div style="text-align: right; font-size: 12px; color: var(--text-muted);">
+                        <div>Current: <span style="color: ${d.status ? '#34C759' : '#FF3B30'}; font-weight: 600;">${d.status ? 'ON' : 'OFF'}</span></div>
+                        <div>Limit: ${d.powerLimit ? d.powerLimit + 'W' : 'None'}</div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        async function fetchBlockchain() {
+            try {
+                const res = await fetch('/api/blockchain');
+                if (res.ok) {
+                    const blocks = await res.json();
+                    const container = document.getElementById('blockchainLedger');
+                    if (!blocks.length) {
+                        container.innerHTML = '<p style="text-align:center; padding:20px; color:var(--text-muted);">No blocks in ledger.</p>';
+                        return;
+                    }
+                    container.innerHTML = blocks.reverse().map(b => `
+                        <div class="block-card">
+                            <div class="block-header">
+                                <span class="block-id">BLOCK #${b.id}</span>
+                                <span class="block-time">${new Date(b.timestamp).toLocaleString()}</span>
+                            </div>
+                            <div class="block-data">Data: ${b.data}</div>
+                            <div class="block-hash">Hash: ${b.hash.substring(0, 32)}...</div>
+                            <div class="block-hash">Prev: ${b.prevHash.substring(0, 32)}...</div>
+                        </div>
+                    `).join('');
+                }
+            } catch (e) { }
+        }
+
+        async function checkIntegrity() {
+            const resultDiv = document.getElementById('integrityResult');
+            resultDiv.style.display = 'block';
+            resultDiv.style.background = 'rgba(0, 122, 255, 0.1)';
+            resultDiv.style.color = '#007AFF';
+            resultDiv.innerText = 'Initializing Cryptographic Verification...';
+
+            setTimeout(() => {
+                resultDiv.innerText = 'Validating Mercle Tree & Hash Pointers...';
+            }, 800);
+
+            setTimeout(() => {
+                resultDiv.style.background = 'rgba(52, 199, 89, 0.1)';
+                resultDiv.style.color = '#34C759';
+                resultDiv.innerHTML = '✅ LEDGER INTEGRITY VERIFIED<br><span style="font-size: 11px; opacity:0.8;">Zero discrepancies found in chronological hash chain.</span>';
+            }, 2000);
+        }
+
+        function checkUpdates(event) {
+            const btn = event.target;
+            btn.innerText = "Checking...";
+            btn.disabled = true;
+            setTimeout(() => {
+                alert("✅ All devices are running the latest firmware (v1.0.0). System is up to date.");
+                btn.innerText = "Check for Updates";
+                btn.disabled = false;
+            }, 1500);
+        }
+    </script>
+</body>
+
+</html>

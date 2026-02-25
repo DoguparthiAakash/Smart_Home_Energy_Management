@@ -35,6 +35,18 @@ public class Device {
     @Column(name = "last_start_time")
     private LocalDateTime lastStartTime;
 
+    @Column
+    private String location; // e.g., "Bedroom", "Hall"
+
+    @Column(name = "power_limit")
+    private Double powerLimit;
+
+    @Column(name = "firmware_version")
+    private String firmwareVersion = "1.0.0";
+
+    @Column(name = "health_status")
+    private String healthStatus = "EXCELLENT";
+
     public enum Priority {
         HIGH,
         MEDIUM,

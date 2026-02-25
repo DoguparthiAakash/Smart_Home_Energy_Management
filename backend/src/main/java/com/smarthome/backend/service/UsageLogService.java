@@ -9,6 +9,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.List;
+
 @Service
 public class UsageLogService {
 
@@ -17,6 +18,17 @@ public class UsageLogService {
 
     @Autowired
     private UserRepository userRepository;
+
+    // Default rate: ₹7.00 per kWh (flat rate, no state tariff)
+    // Tiered pricing:
+    // 0–50 kWh → ₹5.00/kWh (low usage discount)
+    // 51–200 kWh → ₹7.00/kWh (standard rate)
+    // 201–500 kWh → ₹9.00/kWh (medium usage)
+    // >500 kWh → ₹12.00/kWh (high usage)
+    private static final double RATE_LOW = 5.00;
+    private static final double RATE_STD = 7.00;
+    private static final double RATE_MED = 9.00;
+    private static final double RATE_HIGH = 12.00;
 
     public List<UsageLog> getUsageForUser(String userEmail, String period) {
         User user = userRepository.findByEmail(userEmail).orElseThrow();
@@ -39,73 +51,48 @@ public class UsageLogService {
         return usageLogRepository.findByUserIdAndTimestampBetween(user.getId(), start, end);
     }
 
-    // TN Tariff Logic (Domestic) - Updated 2024
-    // 0-100 units: Free (Subsidy)
-    // 101-200 units: 2.25
-    // 201-400 units: 4.80 (Consolidated for demo simplicity as per search results: 0-400 @ 4.80 but first 100 free)
-    // Let's implement the specific logic:
-    // Bi-monthly logic adapted for monthly/daily estimation.
-    // For calculation simplicity, we will apply the rate based on total units accumulated.
-    
-    public Double calculateCost(Double currentUsageKwh) {
-        if (currentUsageKwh == null) return 0.0;
-        
-        // This function calculates cost for a specific usage amount assuming it is the *incremental* usage
-        // pushing through slabs? No, for accurate billing we need TOTAL usage for the billing period.
-        // However, the current architecture sums up daily costs. 
-        // To support "live" cost display without refactoring the entire billing engine:
-        // We will assume a simplified PRO-RATA daily slab or just a tiered rate based on current volume.
-        
-        // BETTER APPROACH FOR DEMO:
-        // Use a tiered rate function.
-        // <= 100 units: 0
-        // > 100 && <= 400: 4.80
-        // > 400 && <= 500: 6.45
-        // > 500: 8.55
-        
-        // Note: In real billing, the first 100 are free, next 100 are charged X, etc.
-        // But since we are calculating cost per *UsageLog* (or small batches), we can't easily know 
-        // "where" in the slab this specific unit falls without contextualizing total month usage.
-        
-        // COMPROMISE:
-        // for `calculateCost(totalUsage)`, we apply the full slab logic.
-        // for `calculateCost(small_increment)`, we might underestimate if we don't know the base.
-        
-        // Let's treat the input `currentUsageKwh` as the TOTAL accumulated usage for the period 
-        // (which is how `calculateTotalCost` and the Controller use it for history).
-        
-        double totalUnits = currentUsageKwh;
-        double totalCost = 0.0;
-        
-        if (totalUnits <= 100) {
-            return 0.0; 
-        }
-        
-        // First 100 free
-        totalUnits -= 100;
-        
-        // Next 300 (101-400) @ 4.80
-        if (totalUnits <= 300) {
-            totalCost += totalUnits * 4.80;
-            return totalCost;
-        } else {
-            totalCost += 300 * 4.80;
-            totalUnits -= 300;
-        }
-        
-        // Next 100 (401-500) @ 6.45
-        if (totalUnits <= 100) {
-            totalCost += totalUnits * 6.45;
-            return totalCost;
-        } else {
-            totalCost += 100 * 6.45;
-            totalUnits -= 100;
-        }
-        
-        // Above 500 @ 8.55
-        totalCost += totalUnits * 8.55;
-        
-        return totalCost;
+    /**
+     * Tiered cost calculation (no state-specific tariff).
+     * Treats totalUsageKwh as the accumulated total for the billing period.
+     *
+     * Slabs:
+     * 0–50 kWh → ₹5.00/unit
+     * 51–200 kWh → ₹7.00/unit
+     * 201–500 kWh → ₹9.00/unit
+     * >500 kWh → ₹12.00/unit
+     */
+    public Double calculateCost(Double usageKwh) {
+        if (usageKwh == null || usageKwh <= 0)
+            return 0.0;
+
+        double units = usageKwh;
+        double cost = 0.0;
+
+        // Slab 1: 0–50 kWh @ ₹5.00
+        double slab1 = Math.min(units, 50);
+        cost += slab1 * RATE_LOW;
+        units -= slab1;
+        if (units <= 0)
+            return Math.round(cost * 100.0) / 100.0;
+
+        // Slab 2: 51–200 kWh @ ₹7.00
+        double slab2 = Math.min(units, 150);
+        cost += slab2 * RATE_STD;
+        units -= slab2;
+        if (units <= 0)
+            return Math.round(cost * 100.0) / 100.0;
+
+        // Slab 3: 201–500 kWh @ ₹9.00
+        double slab3 = Math.min(units, 300);
+        cost += slab3 * RATE_MED;
+        units -= slab3;
+        if (units <= 0)
+            return Math.round(cost * 100.0) / 100.0;
+
+        // Slab 4: >500 kWh @ ₹12.00
+        cost += units * RATE_HIGH;
+
+        return Math.round(cost * 100.0) / 100.0;
     }
 
     public Double calculateTotalCost(List<UsageLog> logs) {
@@ -121,5 +108,16 @@ public class UsageLogService {
                 .stream()
                 .mapToDouble(UsageLog::getEnergyKwh)
                 .sum();
+    }
+
+    public Double getDeviceDailyUsage(Long deviceId, LocalDateTime start, LocalDateTime end) {
+        return usageLogRepository.findByDeviceIdAndTimestampBetween(deviceId, start, end)
+                .stream()
+                .mapToDouble(UsageLog::getEnergyKwh)
+                .sum();
+    }
+
+    public List<UsageLog> getLogsForDevice(Long deviceId, LocalDateTime start, LocalDateTime end) {
+        return usageLogRepository.findByDeviceIdAndTimestampBetween(deviceId, start, end);
     }
 }

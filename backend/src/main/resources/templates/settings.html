@@ -4,52 +4,233 @@
 <head>
     <title>Settings - My Home</title>
     <link rel="stylesheet" href="/css/style.css">
+    <style>
+        :root {
+            --ios-bg: #F2F2F7;
+            --ios-group-bg: #FFFFFF;
+            --ios-label: #000000;
+            --ios-muted: #8E8E93;
+            --ios-separator: rgba(60, 60, 67, 0.36);
+        }
+
+        [data-theme="dark"] {
+            --ios-bg: #000000;
+            --ios-group-bg: #1C1C1E;
+            --ios-label: #FFFFFF;
+            --ios-muted: #8E8E93;
+            --ios-separator: rgba(84, 84, 88, 0.65);
+        }
+
+        body {
+            background-color: var(--ios-bg);
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            color: var(--ios-label);
+            margin: 0;
+            padding: 0;
+            padding-bottom: 160px;
+        }
+
+        .settings-container {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px 16px;
+        }
+
+        .settings-header {
+            font-size: 34px;
+            font-weight: 700;
+            margin-bottom: 24px;
+            letter-spacing: -0.5px;
+        }
+
+        .settings-section-title {
+            font-size: 13px;
+            text-transform: uppercase;
+            color: var(--ios-muted);
+            margin: 20px 16px 8px;
+            letter-spacing: 0.3px;
+        }
+
+        .ios-group {
+            background: var(--ios-group-bg);
+            border-radius: 10px;
+            overflow: hidden;
+            margin-bottom: 20px;
+        }
+
+        .ios-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 11px 16px;
+            min-height: 44px;
+            position: relative;
+        }
+
+        .ios-row:not(:last-child)::after {
+            content: "";
+            position: absolute;
+            left: 54px;
+            right: 0;
+            bottom: 0;
+            height: 0.5px;
+            background-color: var(--ios-separator);
+        }
+
+        /* Group without icons should have shorter separator */
+        .ios-group.no-icons .ios-row:not(:last-child)::after {
+            left: 16px;
+        }
+
+        .ios-row-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .ios-icon {
+            width: 29px;
+            height: 29px;
+            border-radius: 7px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            flex-shrink: 0;
+        }
+
+        .ios-row-label {
+            font-size: 17px;
+            font-weight: 400;
+        }
+
+        .ios-row-value {
+            font-size: 17px;
+            color: var(--ios-muted);
+        }
+
+        .ios-btn {
+            background: none;
+            border: none;
+            color: #007AFF;
+            font-size: 17px;
+            padding: 0;
+            cursor: pointer;
+        }
+
+        .ios-btn-destructive {
+            color: #FF3B30;
+        }
+
+        .ios-btn-block {
+            width: 100%;
+            text-align: center;
+            padding: 11px 16px;
+            background: var(--ios-group-bg);
+            border-radius: 10px;
+            font-size: 17px;
+            color: #007AFF;
+            border: none;
+            cursor: pointer;
+            margin-bottom: 20px;
+        }
+
+        .ios-input {
+            background: none;
+            border: none;
+            color: var(--ios-label);
+            font-size: 17px;
+            width: 100%;
+            text-align: right;
+            padding: 0;
+        }
+
+        .ios-input:focus {
+            outline: none;
+        }
+
+        .ios-card-content {
+            padding: 0 16px 16px;
+            font-size: 15px;
+            color: var(--ios-muted);
+        }
+
+        /* 2FA Setup Styles */
+        #2faSetup {
+            background: var(--ios-group-bg);
+            border-radius: 10px;
+            padding: 16px;
+            margin-top: -10px;
+            margin-bottom: 20px;
+        }
+
+        #qrcode {
+            background: white;
+            padding: 10px;
+            border-radius: 8px;
+            display: inline-block;
+        }
+
+        .ios-setup-header {
+            font-size: 15px;
+            color: var(--ios-muted);
+            margin-bottom: 12px;
+        }
+
+        /* Glassmorphism overlays */
+        .glass-icon-bg {
+            background: rgba(120, 120, 128, 0.16);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+    </style>
 </head>
 
 <body class="">
-    <!-- Wrapper for Centered Content -->
-    <div class="main-content-wrapper">
-        <div class="header">
-            <h1>Settings</h1>
+    <div class="settings-container">
+        <h1 class="settings-header">Settings</h1>
+        <div th:if="${userRole.contains('GUEST')}"
+            style="margin-bottom: 20px; background: rgba(255,149,0,0.1); color: #FF9500; padding: 12px 16px; border-radius: 12px; font-size: 14px; font-weight: 500; display: flex; align-items: center; gap: 10px;">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                <path
+                    d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z" />
+            </svg>
+            Guest Mode - Read Only Access
         </div>
 
-        <div class="card"
-            style="aspect-ratio: auto; min-height: auto; flex-direction: row; align-items: center; margin-bottom: 16px;">
-            <div style="display: flex; align-items: center; gap: 16px;">
-                <div
-                    style="background: #007AFF; width: 32px; height: 32px; border-radius: 8px; display: flex; justify-content: center; align-items: center;">
-                    <svg style="width: 20px; height: 20px; color: white;" viewBox="0 0 24 24" fill="currentColor">
-                        <path
-                            d="M12 3C7.03 3 3 7.03 3 12C3 16.97 7.03 21 12 21C16.97 21 21 16.97 21 12C21 7.03 16.97 3 12 3M12 19C8.13 19 5 15.87 5 12C5 8.13 8.13 5 12 5C15.87 5 19 8.13 19 12C19 15.87 15.87 19 12 19M12 7V17M12 7L7 12M12 7L17 12" />
-                    </svg>
+        <!-- System Section -->
+        <h3 class="settings-section-title">System</h3>
+        <div class="ios-group">
+            <div class="ios-row">
+                <div class="ios-row-left">
+                    <div class="ios-icon" style="background: #007AFF;">
+                        <svg style="width: 20px; height: 20px;" viewBox="0 0 24 24" fill="currentColor">
+                            <path
+                                d="M12 3C7.03 3 3 7.03 3 12C3 16.97 7.03 21 12 21C16.97 21 21 16.97 21 12C21 7.03 16.97 3 12 3M12 19C8.13 19 5 15.87 5 12C5 8.13 8.13 5 12 5C15.87 5 19 8.13 19 12C19 15.87 15.87 19 12 19M12 7V17M12 7L7 12M12 7L17 12" />
+                        </svg>
+                    </div>
+                    <span class="ios-row-label">Dark Mode</span>
                 </div>
-                <span style="font-size: 17px; font-weight: 500;">Dark Mode</span>
+                <label class="toggle-switch">
+                    <input type="checkbox" id="themeToggle" onchange="toggleTheme()">
+                    <span class="slider"></span>
+                </label>
             </div>
-            <label class="toggle-switch">
-                <input type="checkbox" id="themeToggle" onchange="toggleTheme()">
-                <span class="slider"></span>
-            </label>
         </div>
 
         <!-- Display Settings -->
         <div th:if="${!userRole.contains('GUEST')}">
-            <h3 style="margin: 20px 0 10px; color: var(--text-muted); font-size: 14px; text-transform: uppercase;">
-                Display
-            </h3>
-
-            <div class="card" style="aspect-ratio: auto; min-height: auto; flex-direction: column; padding: 0;">
-                <!-- Live Power Toggle -->
-                <div
-                    style="display: flex; justify-content: space-between; align-items: center; padding: 16px; border-bottom: 1px solid var(--divider-color);">
-                    <div style="display: flex; align-items: center; gap: 16px;">
-                        <div
-                            style="background: #34C759; width: 32px; height: 32px; border-radius: 8px; display: flex; justify-content: center; align-items: center;">
-                            <svg style="width: 20px; height: 20px; color: white;" viewBox="0 0 24 24"
-                                fill="currentColor">
+            <h3 class="settings-section-title">Display</h3>
+            <div class="ios-group">
+                <div class="ios-row">
+                    <div class="ios-row-left">
+                        <div class="ios-icon" style="background: #34C759;">
+                            <svg style="width: 20px; height: 20px;" viewBox="0 0 24 24" fill="currentColor">
                                 <path d="M13 2L3 14H12V22L22 10H13V2Z" />
                             </svg>
                         </div>
-                        <span style="font-size: 17px; font-weight: 500;">Live Power Bar</span>
+                        <span class="ios-row-label">Live Power Bar</span>
                     </div>
                     <label class="toggle-switch">
                         <input type="checkbox" id="livePowerToggle"
@@ -57,19 +238,15 @@
                         <span class="slider"></span>
                     </label>
                 </div>
-
-                <!-- Chart Toggle -->
-                <div style="display: flex; justify-content: space-between; align-items: center; padding: 16px;">
-                    <div style="display: flex; align-items: center; gap: 16px;">
-                        <div
-                            style="background: #FF9500; width: 32px; height: 32px; border-radius: 8px; display: flex; justify-content: center; align-items: center;">
-                            <svg style="width: 20px; height: 20px; color: white;" viewBox="0 0 24 24"
-                                fill="currentColor">
+                <div class="ios-row">
+                    <div class="ios-row-left">
+                        <div class="ios-icon" style="background: #FF9500;">
+                            <svg style="width: 20px; height: 20px;" viewBox="0 0 24 24" fill="currentColor">
                                 <path
                                     d="M19 3H5C3.9 3 3 3.9 3 5V19C3 20.1 3.9 21 5 21H19C20.1 21 21 20.1 21 19V5C21 3.9 20.1 3 19 3M9 17H7V10H9V17M13 17H11V7H13V17M17 17H15V13H17V17Z" />
                             </svg>
                         </div>
-                        <span style="font-size: 17px; font-weight: 500;">Daily Usage Chart</span>
+                        <span class="ios-row-label">Daily Usage Chart</span>
                     </div>
                     <label class="toggle-switch">
                         <input type="checkbox" id="chartToggle"
@@ -79,77 +256,62 @@
                 </div>
             </div>
         </div>
-    </div>
 
-    <!-- Security Settings -->
-    <div th:if="${!userRole.contains('GUEST')}">
-        <h3 style="margin: 20px 0 10px; color: var(--text-muted); font-size: 14px; text-transform: uppercase;">Security
-        </h3>
-        <div class="card" style="aspect-ratio: auto; min-height: auto; flex-direction: column; padding: 20px;">
-            <div style="display: flex; justify-content: space-between; align-items: center;">
-                <div style="display: flex; align-items: center; gap: 16px;">
-                    <div
-                        style="background: #5856D6; width: 32px; height: 32px; border-radius: 8px; display: flex; justify-content: center; align-items: center;">
-                        <svg style="width: 20px; height: 20px; color: white;" viewBox="0 0 24 24" fill="currentColor">
-                            <path
-                                d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm0 10.99h7c-.53 4.12-3.28 7.79-7 8.94V12H5V6.3l7-3.11v8.8z" />
-                        </svg>
+        <!-- Security Settings -->
+        <div th:if="${!userRole.contains('GUEST')}">
+            <h3 class="settings-section-title">Security</h3>
+            <div class="ios-group">
+                <div class="ios-row">
+                    <div class="ios-row-left">
+                        <div class="ios-icon" style="background: #5856D6;">
+                            <svg style="width: 20px; height: 20px;" viewBox="0 0 24 24" fill="currentColor">
+                                <path
+                                    d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm0 10.99h7c-.53 4.12-3.28 7.79-7 8.94V12H5V6.3l7-3.11v8.8z" />
+                            </svg>
+                        </div>
+                        <span class="ios-row-label">Two-Factor Auth</span>
                     </div>
-                    <span style="font-size: 17px; font-weight: 500;">Two-Factor Auth</span>
+                    <span id="2faStatus" class="ios-row-value">Disabled</span>
                 </div>
-                <!-- Status Text -->
-                <div id="2faStatus" style="font-size: 15px; color: var(--text-muted);">Disabled</div>
             </div>
 
-            <!-- Expansion for Setup -->
-            <div id="2faSetup"
-                style="display: none; margin-top: 20px; border-top: 1px solid var(--divider-color); padding-top: 20px;">
-                <p style="font-size: 14px; color: var(--text-muted); margin-bottom: 16px;">Scan with Microsoft
-                    Authenticator
-                </p>
-
-                <!-- QR Code Container (White BG for scanning) -->
-                <div id="qrcode"
-                    style="width: 170px; height: 170px; margin: 0 auto 20px; background: white; padding: 10px; border-radius: 8px;">
+            <div id="2faSetup" style="display: none;">
+                <p class="ios-setup-header">Scan with Microsoft Authenticator</p>
+                <div style="text-align: center; margin-bottom: 20px;">
+                    <div id="qrcode"></div>
                 </div>
-
-                <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 10px;">Or enter code manually:</p>
-                <code id="manualKey"
-                    style="display: block; margin-bottom: 20px; font-family: monospace; font-size: 16px; color: var(--text-color); background: var(--bg-color); padding: 8px; border-radius: 6px; user-select: all;">Loading...</code>
-
-                <input type="text" id="verifyCode" class="input-field" placeholder="Enter 6-digit code"
-                    style="text-align: center; margin-bottom: 10px;">
-                <button onclick="enable2FA()" class="btn-primary" style="margin-top: 0; padding: 12px;">Enable</button>
+                <div class="ios-group">
+                    <div class="ios-row">
+                        <span class="ios-row-label">Manual Key</span>
+                        <code id="manualKey"
+                            style="font-family: monospace; font-size: 14px; user-select: all;">Loading...</code>
+                    </div>
+                    <div class="ios-row">
+                        <input type="text" id="verifyCode" class="ios-input" placeholder="6-digit code">
+                    </div>
+                </div>
+                <button onclick="enable2FA()" class="ios-btn-block">Verify & Enable</button>
+                <button onclick="cancelSetup()" class="ios-btn-block"
+                    style="background: none; margin-top: -12px; color: var(--ios-muted);">Cancel Setup</button>
             </div>
 
-            <button id="setupBtn" onclick="startSetup()" class="btn-primary"
-                style="margin-top: 16px; background: #E5E5EA; color: #007AFF;">Setup 2FA</button>
-            <button id="disableBtn" onclick="disable2FA()" class="btn-primary"
-                style="margin-top: 16px; background: #FF3B30; color: white; display: none;">Disable 2FA</button>
+            <button id="setupBtn" onclick="startSetup()" class="ios-btn-block">Set Up Two-Factor Authentication</button>
+            <button id="disableBtn" onclick="disable2FA()" class="ios-btn-block ios-btn-destructive"
+                style="display: none;">Disable Two-Factor Authentication</button>
+
+            <h3 class="settings-section-title">Recovery</h3>
+            <div class="ios-group no-icons">
+                <div class="ios-row">
+                    <span class="ios-row-label">Mobile</span>
+                    <input type="tel" id="recoveryMobile" placeholder="+91 99999 99999" class="ios-input">
+                </div>
+                <div class="ios-row">
+                    <span class="ios-row-label">Email</span>
+                    <input type="email" id="recoveryEmail" placeholder="backup@example.com" class="ios-input">
+                </div>
+            </div>
+            <button onclick="saveRecoveryOptions()" class="ios-btn-block">Save Recovery Options</button>
         </div>
-
-        <h3 style="margin: 20px 0 10px; color: var(--text-muted); font-size: 14px; text-transform: uppercase;">Recovery
-            Options
-        </h3>
-        <div class="card" style="aspect-ratio: auto; min-height: auto; flex-direction: column; padding: 20px;">
-            <div style="display: flex; flex-direction: column; gap: 16px; width: 100%;">
-                <div>
-                    <label style="font-size: 15px; font-weight: 500; display: block; margin-bottom: 8px;">Mobile
-                        Number</label>
-                    <input type="tel" id="recoveryMobile" placeholder="+91 99999 99999" class="input-field"
-                        style="width: 100%; border: 1px solid var(--divider-color); padding: 10px; border-radius: 8px;">
-                </div>
-                <div>
-                    <label style="font-size: 15px; font-weight: 500; display: block; margin-bottom: 8px;">Recovery
-                        Email</label>
-                    <input type="email" id="recoveryEmail" placeholder="backup@example.com" class="input-field"
-                        style="width: 100%; border: 1px solid var(--divider-color); padding: 10px; border-radius: 8px;">
-                </div>
-                <button onclick="saveRecoveryOptions()" class="btn-primary"
-                    style="margin-top: 10px; padding: 12px;">Save Recovery Options</button>
-            </div>
-        </div>
-    </div>
     </div>
 
     <!-- Bottom Navigation Dock -->
@@ -161,7 +323,6 @@
             <span class="dock-label">Home</span>
         </a>
 
-        <!-- Usage Link (Hidden for GUEST) -->
         <a th:if="${!userRole.contains('GUEST')}" href="/usage" class="dock-item">
             <svg class="dock-icon" viewBox="0 0 24 24" fill="currentColor">
                 <path
@@ -170,7 +331,6 @@
             <span class="dock-label">Usage</span>
         </a>
 
-        <!-- Settings Link (Active) -->
         <a href="/settings" class="dock-item active">
             <svg class="dock-icon" viewBox="0 0 24 24" fill="currentColor">
                 <path
@@ -197,7 +357,7 @@
                         document.getElementById('2faSetup').style.display = 'none';
                     } else {
                         document.getElementById('2faStatus').innerText = 'Disabled';
-                        document.getElementById('2faStatus').style.color = 'var(--text-muted)';
+                        document.getElementById('2faStatus').style.color = 'var(--ios-muted)';
                         document.getElementById('setupBtn').style.display = 'block';
                         document.getElementById('disableBtn').style.display = 'none';
                     }
@@ -227,11 +387,20 @@
                     });
                 } else {
                     alert("Failed to generate key");
+                    cancelSetup();
                 }
             } catch (e) {
                 console.error(e);
                 alert("Error connecting to server");
+                cancelSetup();
             }
+        }
+
+        function cancelSetup() {
+            document.getElementById('2faSetup').style.display = 'none';
+            document.getElementById('setupBtn').style.display = 'block';
+            document.getElementById('qrcode').innerHTML = '';
+            document.getElementById('verifyCode').value = '';
         }
 
         async function enable2FA() {

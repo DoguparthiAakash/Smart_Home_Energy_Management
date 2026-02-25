@@ -1,6 +1,7 @@
 package com.smarthome.backend.controller;
 
 import com.smarthome.backend.dto.DeviceDTO;
+import com.smarthome.backend.dto.DeviceScheduleDTO;
 import com.smarthome.backend.service.DeviceService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -26,6 +27,16 @@ public class DeviceController {
         return deviceService.addDevice(authentication.getName(), deviceDTO);
     }
 
+    @PutMapping("/{id}")
+    public ResponseEntity<?> updateDevice(@PathVariable Long id, @RequestBody DeviceDTO deviceDTO) {
+        try {
+            DeviceDTO updated = deviceService.updateDevice(id, deviceDTO);
+            return ResponseEntity.ok(updated);
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(404).body(e.getMessage());
+        }
+    }
+
     @PutMapping("/{id}/status")
     public ResponseEntity<?> toggleDevice(@PathVariable Long id) {
         try {
@@ -39,6 +50,17 @@ public class DeviceController {
     @DeleteMapping("/{id}")
     public ResponseEntity<?> deleteDevice(@PathVariable Long id) {
         deviceService.deleteDevice(id);
+        return ResponseEntity.ok().build();
+    }
+
+    @GetMapping("/{id}/schedule")
+    public ResponseEntity<DeviceScheduleDTO> getDeviceSchedule(@PathVariable Long id) {
+        return ResponseEntity.ok(deviceService.getSchedule(id));
+    }
+
+    @PostMapping("/{id}/schedule")
+    public ResponseEntity<?> saveDeviceSchedule(@PathVariable Long id, @RequestBody DeviceScheduleDTO dto) {
+        deviceService.saveSchedule(id, dto);
         return ResponseEntity.ok().build();
     }
 }

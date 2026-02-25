@@ -57,4 +57,23 @@ public class AdminController {
         }
         return ResponseEntity.notFound().build();
     }
+
+    @Autowired
+    private com.smarthome.backend.service.DeviceSimulatorService simulatorService;
+
+    @GetMapping("/simulator/status")
+    public java.util.Map<String, Object> getSimulatorStatus() {
+        java.util.Map<String, Object> status = new java.util.HashMap<>();
+        status.put("enabled", simulatorService.isEnabled());
+        return status;
+    }
+
+    @PostMapping("/simulator/toggle")
+    public java.util.Map<String, Object> toggleSimulator(@RequestBody java.util.Map<String, Boolean> request) {
+        boolean enabled = request.getOrDefault("enabled", false);
+        simulatorService.setEnabled(enabled);
+        java.util.Map<String, Object> status = new java.util.HashMap<>();
+        status.put("enabled", simulatorService.isEnabled());
+        return status;
+    }
 }

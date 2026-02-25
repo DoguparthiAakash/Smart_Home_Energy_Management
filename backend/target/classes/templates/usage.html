@@ -12,6 +12,14 @@
         <div class="header">
             <h1>Energy</h1>
             <p class="subtitle">Usage & Analytics</p>
+            <div th:if="${userRole.contains('GUEST')}"
+                style="margin-top: 10px; background: rgba(255,149,0,0.1); color: #FF9500; padding: 8px 12px; border-radius: 10px; font-size: 13px; font-weight: 500; display: flex; align-items: center; gap: 8px;">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                    <path
+                        d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z" />
+                </svg>
+                Guest Mode - Read Only Access
+            </div>
         </div>
 
         <!-- Summary Cards -->
@@ -29,60 +37,144 @@
             </div>
         </div>
 
-        <!-- Live Power Bar (Dynamic) -->
-        <div id="livePowerSection" class="summary-container"
-            style="flex-direction: column; gap: 16px; margin-top: 16px; display: none;">
-            <div class="summary-card" style="width: 100%; flex-direction: column; align-items: flex-start;">
-                <div style="display: flex; justify-content: space-between; width: 100%; margin-bottom: 8px;">
-                    <div class="summary-label">Live Power</div>
-                    <div class="summary-value" style="font-size: 16px;"><span id="liveWatts">0</span> W / <span
-                            id="capacityWatts">0</span> W</div>
-                </div>
-                <div
-                    style="width: 100%; height: 8px; background: rgba(0,0,0,0.1); border-radius: 4px; overflow: hidden;">
-                    <div id="livePowerBar"
-                        style="width: 0%; height: 100%; background: #007AFF; transition: width 0.5s ease;"></div>
-                </div>
-            </div>
-        </div>
 
-        <!-- Live Power Graph (Time Series) -->
-        <div id="liveGraphSection" class="chart-container"
-            style="margin-top: 10px; background: var(--card-bg); padding: 20px; border-radius: 20px; height: 250px;">
+        <!-- Live Energy Graph (Time Series) -->
+        <div class="chart-container"
+            style="margin-top: 10px; background: var(--card-bg); padding: 20px; border-radius: 20px; height: 220px;">
             <h2 style="font-size: 16px; margin-bottom: 10px; color: var(--text-color);">Live Energy Usage (kW)</h2>
             <canvas id="livePowerChart"></canvas>
         </div>
 
-        <!-- Chart -->
-        <div id="chartSection" class="chart-container"
-            style="margin-top: 10px; background: var(--card-bg); padding: 20px; border-radius: 20px; height: 350px;">
-            <h2 style="font-size: 20px; margin-bottom: 20px;">Weekly Usage</h2>
-            <canvas id="energyChart"></canvas>
+        <!-- Weekly Usage Combo Chart -->
+        <div id="chartSection"
+            style="margin-top: 10px; background: var(--card-bg); padding: 20px; border-radius: 20px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+                <h2 style="font-size: 20px; margin: 0;">Weekly Usage</h2>
+                <div style="display: flex; gap: 16px; align-items: center; font-size: 12px; color: var(--text-muted);">
+                    <span
+                        style="background: rgba(88,86,214,0.1); color: #5856D6; padding: 4px 8px; border-radius: 6px; font-weight: 600; font-size: 10px; display: flex; align-items: center; gap: 4px;">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
+                            <path
+                                d="M12 2L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm-2 14.5l-3.5-3.5 1.41-1.41L10 13.67l6.59-6.59L18 8.5 10 16.5z" />
+                        </svg>
+                        Blockchain Verified
+                    </span>
+                    <span id="chartUpdatedAt" style="font-size: 11px; opacity: 0.6;"></span>
+                    <span style="display: flex; align-items: center; gap: 4px;"><span
+                            style="width: 12px; height: 12px; background: #34C759; border-radius: 3px; display: inline-block;"></span>
+                        kWh Used</span>
+                    <span style="display: flex; align-items: center; gap: 4px;"><span
+                            style="width: 18px; height: 2px; background: #FF9500; display: inline-block;"></span> ₹
+                        Cost</span>
+                </div>
+            </div>
+            <div style="height: 260px;">
+                <canvas id="energyChart"></canvas>
+            </div>
+        </div>
+
+        <!-- Date Range Filter + Summary -->
+        <div style="margin-top: 16px; background: var(--card-bg); border-radius: 20px; padding: 20px;">
+            <h3 style="margin: 0 0 14px 0; font-size: 15px;">Usage Summary by Date Range</h3>
+            <div style="display: flex; gap: 12px; align-items: flex-end; flex-wrap: wrap;">
+                <div style="flex: 1; min-width: 140px;">
+                    <label style="font-size: 11px; color: #888; display: block; margin-bottom: 4px;">From</label>
+                    <input type="date" id="filterFrom" class="input-field" style="width: 100%;">
+                </div>
+                <div style="flex: 1; min-width: 140px;">
+                    <label style="font-size: 11px; color: #888; display: block; margin-bottom: 4px;">To</label>
+                    <input type="date" id="filterTo" class="input-field" style="width: 100%;">
+                </div>
+                <button onclick="applyDateFilter()" class="btn-primary"
+                    style="padding: 10px 20px; white-space: nowrap;">Apply Filter</button>
+            </div>
+            <!-- Filter Results -->
+            <div id="filterResults" style="margin-top: 16px; display: none;">
+                <div style="display: flex; gap: 12px; flex-wrap: wrap;">
+                    <div class="summary-card" style="flex: 1; min-width: 130px;">
+                        <div class="summary-label">Total Usage</div>
+                        <div class="summary-value" style="font-size: 20px;"><span id="filteredUsage">--</span> kWh</div>
+                    </div>
+                    <div class="summary-card" style="flex: 1; min-width: 130px;">
+                        <div class="summary-label">Estimated Cost</div>
+                        <div class="summary-value" style="font-size: 20px; color: #FF9500;">₹<span
+                                id="filteredCost">--</span></div>
+                    </div>
+                    <div class="summary-card" style="flex: 1; min-width: 130px;">
+                        <div class="summary-label">Avg per Day</div>
+                        <div class="summary-value" style="font-size: 20px;"><span id="filteredAvg">--</span> kWh</div>
+                    </div>
+                </div>
+            </div>
         </div>
 
         <!-- Weekly Stats Grid -->
-        <div id="weeklyStatsSection" class="summary-container"
-            style="margin-top: 16px; margin-bottom: 80px; display: none; gap: 10px; flex-wrap: wrap;">
-
+        <div id="weeklyStatsSection" class="summary-container" style="margin-top: 16px; gap: 10px; flex-wrap: wrap;">
             <div class="summary-card" style="flex: 1; min-width: 140px;">
                 <div class="summary-label">7-Day Total</div>
-                <div class="summary-value" style="font-size: 18px;">
-                    <span id="totalUsage">--</span> kWh
-                </div>
-                <div style="font-size: 12px; color: #888; margin-top: 4px;">
-                    Cost: ₹<span id="totalCost">--</span>
-                </div>
+                <div class="summary-value" style="font-size: 18px;"><span id="totalUsage">--</span> kWh</div>
+                <div style="font-size: 12px; color: #888; margin-top: 4px;">Cost: ₹<span id="totalCost">--</span></div>
             </div>
-
             <div class="summary-card" style="flex: 1; min-width: 140px;">
                 <div class="summary-label">Daily Avg</div>
-                <div class="summary-value" style="font-size: 18px;">
-                    <span id="avgUsage">--</span> kWh
-                </div>
-                <div style="font-size: 12px; color: #888; margin-top: 4px;">
-                    Cost: ₹<span id="avgCost">--</span>
+                <div class="summary-value" style="font-size: 18px;"><span id="avgUsage">--</span> kWh</div>
+                <div style="font-size: 12px; color: #888; margin-top: 4px;">Cost: ₹<span id="avgCost">--</span></div>
+            </div>
+            <!-- Pricing Slab Info Card -->
+            <div class="summary-card"
+                style="flex: 2; min-width: 280px; flex-direction: column; align-items: flex-start;">
+                <div class="summary-label" style="margin-bottom: 10px;">Pricing Slabs (per kWh)</div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px; width: 100%; font-size: 12px;">
+                    <div style="color: #34C759;">● 0–50 kWh</div>
+                    <div>₹5.00 / unit</div>
+                    <div style="color: #007AFF;">● 51–200 kWh</div>
+                    <div>₹7.00 / unit</div>
+                    <div style="color: #FF9500;">● 201–500 kWh</div>
+                    <div>₹9.00 / unit</div>
+                    <div style="color: #FF3B30;">● Above 500 kWh</div>
+                    <div>₹12.00 / unit</div>
                 </div>
             </div>
+        </div>
+
+        <!-- Advanced Data Export -->
+        <div th:if="${!userRole.contains('GUEST')}"
+            style="margin: 16px 0 80px; background: var(--card-bg); border-radius: 20px; padding: 20px;">
+            <h2 style="font-size: 18px; margin-bottom: 16px;">Advanced Data Export</h2>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 16px;">
+                <div>
+                    <label style="font-size: 12px; color: #888; display: block; margin-bottom: 4px;">Category</label>
+                    <select id="exportCategory" class="input-field" style="width: 100%;"
+                        onchange="filterExportDevices()">
+                        <option value="">All Categories</option>
+                        <option value="AC">AC</option>
+                        <option value="LIGHT">Lights</option>
+                        <option value="FAN">Fans</option>
+                        <option value="FRIDGE">Fridges</option>
+                        <option value="EV">EV Chargers</option>
+                        <option value="HEATER">Heaters</option>
+                        <option value="OTHER">Other</option>
+                    </select>
+                </div>
+                <div>
+                    <label style="font-size: 12px; color: #888; display: block; margin-bottom: 4px;">Device</label>
+                    <select id="exportDevice" class="input-field" style="width: 100%;">
+                        <option value="">All Devices</option>
+                    </select>
+                </div>
+                <div>
+                    <label style="font-size: 12px; color: #888; display: block; margin-bottom: 4px;">Start Time</label>
+                    <input type="datetime-local" id="exportStart" class="input-field" style="width: 100%;">
+                </div>
+                <div>
+                    <label style="font-size: 12px; color: #888; display: block; margin-bottom: 4px;">End Time</label>
+                    <input type="datetime-local" id="exportEnd" class="input-field" style="width: 100%;">
+                </div>
+            </div>
+            <button onclick="downloadReport()" class="btn-primary"
+                style="width: 100%; justify-content: center; padding: 14px; font-size: 15px;">
+                Download Usage Report (CSV)
+            </button>
         </div>
     </div>
 
@@ -122,121 +214,86 @@
 
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
-        async function fetchEnergyData() {
+        // Refresh Today's Usage + Estimated Cost (every 30 seconds)
+        async function refreshSummary() {
             try {
-                // Fetch Summary (Includes Live Watts)
-                const summaryRes = await fetch('/api/energy/summary');
-                if (summaryRes.ok) {
-                    const summary = await summaryRes.json();
-                    document.getElementById('energyUsage').innerText = summary.usage;
-                    document.getElementById('costValue').innerText = summary.currency + summary.cost;
-
-                    // Update Live Power Bar if Visible
-                    if (summary.currentWatts !== undefined) {
-                        document.getElementById('liveWatts').innerText = Math.round(summary.currentWatts);
-                        document.getElementById('capacityWatts').innerText = Math.round(summary.capacityWatts);
-
-                        const pct = (summary.currentWatts / summary.capacityWatts) * 100;
-                        document.getElementById('livePowerBar').style.width = pct + '%';
-
-                        // Color scale (Green -> Orange -> Red)
-                        const bar = document.getElementById('livePowerBar');
-                        if (pct < 50) bar.style.backgroundColor = '#34C759';
-                        else if (pct < 80) bar.style.backgroundColor = '#FF9500';
-                        else bar.style.backgroundColor = '#FF3B30';
-                    }
-                }
-
-                // Check Visibility Prefs
-                const showLive = localStorage.getItem('showLivePower');
-                const showChart = localStorage.getItem('showDailyChart');
-
-                if (showLive !== 'false') { // Default True
-                    document.getElementById('livePowerSection').style.display = 'flex';
-                    document.getElementById('liveGraphSection').style.display = 'block';
-                } else {
-                    document.getElementById('livePowerSection').style.display = 'none';
-                    document.getElementById('liveGraphSection').style.display = 'none';
-                }
-
-                if (showChart !== 'false') { // Default True
-                    document.getElementById('chartSection').style.display = 'block';
-                    // Fetch History Only if Chart is visible
-                    const historyRes = await fetch('/api/energy/history');
-                    if (historyRes.ok) {
-                        const history = await historyRes.json();
-                        updateChart(history.labels, history.data);
-
-                        // Populate Weekly Stats
-                        if (history.totalUsage !== undefined) {
-                            document.getElementById('weeklyStatsSection').style.display = 'flex';
-                            document.getElementById('totalUsage').innerText = history.totalUsage;
-                            document.getElementById('totalCost').innerText = history.totalCost;
-                            document.getElementById('avgUsage').innerText = history.avgUsage;
-                            document.getElementById('avgCost').innerText = history.avgCost;
-                        }
-                    }
-                } else {
-                    document.getElementById('chartSection').style.display = 'none';
-                    document.getElementById('weeklyStatsSection').style.display = 'none';
-                }
-
+                const res = await fetch('/api/energy/summary');
+                if (!res.ok) return;
+                const summary = await res.json();
+                document.getElementById('energyUsage').innerText = summary.usage;
+                document.getElementById('costValue').innerText = summary.currency + summary.cost;
             } catch (e) {
-                // If fetch failed or JSON parse error (e.g., getting HTML login page instead of JSON)
-                console.error("Failed to fetch energy data", e);
-
-                // Simple heuristic: If we failed to parse JSON, it might be an auth redirect
-                // Check if we are stuck on a login page redirect
-                if (e instanceof SyntaxError) {
-                    window.location.href = '/login?expired';
-                }
+                if (e instanceof SyntaxError) window.location.href = '/login?expired';
             }
+        }
+
+        // Refresh Weekly Chart + Summary Cards (every 30 seconds)
+        async function refreshWeekly() {
+            try {
+                document.getElementById('chartSection').style.display = 'block';
+                const res = await fetch('/api/energy/history');
+                if (!res.ok) return;
+                const history = await res.json();
+
+                // Update chart data in-place so there's no flicker/destroy
+                if (energyChart) {
+                    energyChart.data.labels = history.labels;
+                    energyChart.data.datasets[0].data = history.data;
+                    energyChart.data.datasets[1].data = history.costData;
+                    const maxUsage = Math.max(...history.data, 0.1);
+                    energyChart.data.datasets[0].backgroundColor = history.data.map(v =>
+                        v === 0 ? 'rgba(52,199,89,0.15)' :
+                            v < maxUsage * 0.4 ? 'rgba(52,199,89,0.7)' :
+                                v < maxUsage * 0.8 ? 'rgba(255,149,0,0.7)' :
+                                    'rgba(255,59,48,0.7)'
+                    );
+                    energyChart.update('active');
+                } else {
+                    updateChart(history.labels, history.data, history.costData);
+                }
+
+                document.getElementById('totalUsage').innerText = history.totalUsage;
+                document.getElementById('totalCost').innerText = history.totalCost;
+                document.getElementById('avgUsage').innerText = history.avgUsage;
+                document.getElementById('avgCost').innerText = history.avgCost;
+                const ts = document.getElementById('chartUpdatedAt');
+                if (ts) ts.innerText = 'Updated ' + new Date().toLocaleTimeString();
+            } catch (e) { console.error('Weekly refresh error', e); }
+        }
 
 
-            // --- Live Power Graph Logic ---
+
+        // --- Live Power Graph ---
+        (function initLiveGraph() {
             const liveCtx = document.getElementById('livePowerChart').getContext('2d');
 
-            // Try to restore from session
             let storedData = null;
             try {
                 const saved = sessionStorage.getItem('liveGraphData');
                 if (saved) {
                     const parsed = JSON.parse(saved);
-                    // Only use if recent (< 5 mins)
-                    if (Date.now() - parsed.timestamp < 300000) {
-                        storedData = parsed.data;
-                    }
+                    if (Date.now() - parsed.timestamp < 300000) storedData = parsed.data;
                 }
             } catch (e) { }
 
-            // Initial data (Restored or Empty)
-            // Initial data (Restored or Empty)
-            // Note: We fill missing spots with null if we restore partial data.
-            let initialDataPoints = storedData || Array(60).fill(null);
-
-            // Fix: If stored data is shorter than 60 (e.g. from old session), pad it
-            if (initialDataPoints.length < 60) {
-                const missing = 60 - initialDataPoints.length;
-                initialDataPoints = [...Array(missing).fill(null), ...initialDataPoints];
-            }
-
-            const initialData = {
-                labels: Array(60).fill(''),
-                datasets: [{
-                    label: 'Live Usage (kW)',
-                    data: initialDataPoints,
-                    borderColor: '#00E0FF',
-                    backgroundColor: 'rgba(0, 224, 255, 0.2)',
-                    borderWidth: 2,
-                    pointRadius: 0,
-                    tension: 0.4,
-                    fill: true
-                }]
-            };
+            let pts = storedData || Array(60).fill(null);
+            if (pts.length < 60) pts = [...Array(60 - pts.length).fill(null), ...pts];
 
             const liveChart = new Chart(liveCtx, {
                 type: 'line',
-                data: initialData,
+                data: {
+                    labels: Array(60).fill(''),
+                    datasets: [{
+                        label: 'Live Usage (kW)',
+                        data: pts,
+                        borderColor: '#00E0FF',
+                        backgroundColor: 'rgba(0, 224, 255, 0.15)',
+                        borderWidth: 2,
+                        pointRadius: 0,
+                        tension: 0.4,
+                        fill: true
+                    }]
+                },
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
@@ -245,87 +302,231 @@
                     plugins: { legend: { display: false } },
                     scales: {
                         x: { display: false },
-                        y: {
-                            display: false,
-                            beginAtZero: true,
-                            suggestedMax: 5
-                        }
+                        y: { display: false, beginAtZero: true, suggestedMax: 5 }
                     }
                 }
             });
 
-            // Polling loop for Live Graph
             setInterval(async () => {
                 try {
                     const res = await fetch('/api/energy/summary');
-                    if (res.ok) {
-                        const data = await res.json();
-                        const kw = data.currentWatts / 1000.0;
+                    if (!res.ok) return;
+                    const data = await res.json();
+                    const kw = data.currentWatts / 1000.0;
 
-                        // Update Chart Data (Shift buffer)
-                        const currentLabels = liveChart.data.labels;
-                        const currentData = liveChart.data.datasets[0].data;
+                    liveChart.data.labels.shift();
+                    liveChart.data.labels.push(new Date().toLocaleTimeString());
+                    liveChart.data.datasets[0].data.shift();
+                    liveChart.data.datasets[0].data.push(kw);
 
-                        currentLabels.shift();
-                        currentLabels.push(new Date().toLocaleTimeString());
+                    sessionStorage.setItem('liveGraphData', JSON.stringify({
+                        timestamp: Date.now(),
+                        data: liveChart.data.datasets[0].data
+                    }));
 
-                        currentData.shift();
-                        currentData.push(kw);
+                    if (kw > liveChart.options.scales.y.suggestedMax)
+                        liveChart.options.scales.y.suggestedMax = kw + 1;
 
-                        // Save to Session Storage
-                        sessionStorage.setItem('liveGraphData', JSON.stringify({
-                            timestamp: Date.now(),
-                            data: currentData
-                        }));
+                    liveChart.update('none');
+                } catch (e) { console.error('Live poll error', e); }
+            }, 1000);
+        })();
 
-                        // Update Scale dynamically if needed
-                        if (kw > liveChart.options.scales.y.suggestedMax) {
-                            liveChart.options.scales.y.suggestedMax = kw + 1;
-                        }
+        // --- Module-scope chart variable and render function ---
+        let energyChart;
+        function updateChart(labels, usageData, costData) {
+            const ctx = document.getElementById('energyChart').getContext('2d');
+            if (energyChart) energyChart.destroy();
 
-                        liveChart.update('none');
-                    }
-                } catch (e) {
-                    console.error("Poll error", e);
-                }
-            }, 1000); // Poll every 1 second
+            const maxUsage = Math.max(...usageData, 0.1);
 
-            let energyChart;
-            function updateChart(labels, data) {
-                const ctx = document.getElementById('energyChart').getContext('2d');
-                if (energyChart) {
-                    energyChart.destroy();
-                }
-                energyChart = new Chart(ctx, {
-                    type: 'bar',
-                    data: {
-                        labels: labels,
-                        datasets: [{
+            energyChart = new Chart(ctx, {
+                data: {
+                    labels: labels,
+                    datasets: [
+                        {
+                            type: 'bar',
                             label: 'Energy (kWh)',
-                            data: data,
-                            backgroundColor: '#34C759', // Green for Energy Page
-                            borderRadius: 8
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        scales: {
-                            y: { beginAtZero: true, grid: { display: false } },
-                            x: { grid: { display: false } }
+                            data: usageData,
+                            backgroundColor: usageData.map(v =>
+                                v === 0 ? 'rgba(52,199,89,0.15)' :
+                                    v < maxUsage * 0.4 ? 'rgba(52,199,89,0.7)' :
+                                        v < maxUsage * 0.8 ? 'rgba(255,149,0,0.7)' :
+                                            'rgba(255,59,48,0.7)'
+                            ),
+                            borderRadius: 8,
+                            borderSkipped: false,
+                            yAxisID: 'yUsage',
+                            order: 2
                         },
-                        plugins: {
-                            legend: { display: false }
+                        {
+                            type: 'line',
+                            label: 'Cost (\u20b9)',
+                            data: costData || usageData.map(() => 0),
+                            borderColor: '#FF9500',
+                            backgroundColor: 'rgba(255,149,0,0.1)',
+                            borderWidth: 2.5,
+                            pointBackgroundColor: '#FF9500',
+                            pointRadius: 5,
+                            pointHoverRadius: 7,
+                            tension: 0.3,
+                            fill: false,
+                            yAxisID: 'yCost',
+                            order: 1
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    interaction: { mode: 'index', intersect: false },
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: (c) => {
+                                    if (c.datasetIndex === 0) return ` ${c.parsed.y.toFixed(3)} kWh`;
+                                    return ` \u20b9${c.parsed.y.toFixed(2)}`;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            grid: { display: false },
+                            ticks: { color: 'var(--text-muted)' }
+                        },
+                        yUsage: {
+                            type: 'linear', position: 'left', beginAtZero: true,
+                            grid: { color: 'rgba(128,128,128,0.08)' },
+                            ticks: { color: '#34C759', callback: v => v.toFixed(2) + ' kWh' },
+                            title: { display: true, text: 'kWh', color: '#34C759', font: { size: 11 } }
+                        },
+                        yCost: {
+                            type: 'linear', position: 'right', beginAtZero: true,
+                            grid: { drawOnChartArea: false },
+                            ticks: { color: '#FF9500', callback: v => '\u20b9' + v.toFixed(2) },
+                            title: { display: true, text: '\u20b9 Cost', color: '#FF9500', font: { size: 11 } }
                         }
                     }
-                });
-            }
-
+                }
+            });
         }
 
         window.onload = () => {
-            fetchEnergyData();
+            // Initial load
+            refreshSummary();
+            refreshWeekly();
+            loadExportDevices();
+            // Auto-refresh intervals
+            setInterval(refreshSummary, 30_000);   // Today's usage + cost every 30s
+            setInterval(refreshWeekly, 30_000);   // Weekly chart + totals every 30s
         };
+
+
+        let allExportDevices = [];
+        async function loadExportDevices() {
+            try {
+                const res = await fetch('/api/devices');
+                if (res.ok) {
+                    allExportDevices = await res.json();
+                    populateExportDevices(allExportDevices);
+                }
+            } catch (e) { }
+        }
+
+        function populateExportDevices(devices) {
+            const select = document.getElementById('exportDevice');
+            if (!select) return;
+            select.innerHTML = '<option value="">All Devices</option>';
+            devices.forEach(d => {
+                const opt = document.createElement('option');
+                opt.value = d.id; opt.innerText = d.name;
+                select.appendChild(opt);
+            });
+        }
+
+        function filterExportDevices() {
+            const category = document.getElementById('exportCategory').value;
+            const filtered = category ? allExportDevices.filter(d => d.type === category) : allExportDevices;
+            populateExportDevices(filtered);
+        }
+
+        function downloadReport() {
+            const deviceId = document.getElementById('exportDevice').value;
+            const category = document.getElementById('exportCategory').value;
+            if (!document.getElementById('exportStart').value) {
+                const yesterday = new Date(Date.now() - 86400000);
+                yesterday.setMinutes(yesterday.getMinutes() - yesterday.getTimezoneOffset());
+                document.getElementById('exportStart').value = yesterday.toISOString().slice(0, 16);
+            }
+            if (!document.getElementById('exportEnd').value) {
+                const now = new Date();
+                now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+                document.getElementById('exportEnd').value = now.toISOString().slice(0, 16);
+            }
+            const start = document.getElementById('exportStart').value;
+            const end = document.getElementById('exportEnd').value;
+            const params = new URLSearchParams({ start, end });
+            if (deviceId) params.append('deviceId', deviceId);
+            if (category) params.append('category', category);
+            window.location.href = `/api/devices/energy/export/custom?${params.toString()}`;
+        }
+
+        // --- Date Range Usage Summary ---
+        function calcCost(kwh) {
+            if (kwh <= 0) return 0;
+            let units = kwh, cost = 0;
+            const slab1 = Math.min(units, 50); cost += slab1 * 5.00; units -= slab1; if (units <= 0) return cost;
+            const slab2 = Math.min(units, 150); cost += slab2 * 7.00; units -= slab2; if (units <= 0) return cost;
+            const slab3 = Math.min(units, 300); cost += slab3 * 9.00; units -= slab3; if (units <= 0) return cost;
+            cost += units * 12.00;
+            return cost;
+        }
+
+        async function applyDateFilter() {
+            const fromVal = document.getElementById('filterFrom').value;
+            const toVal = document.getElementById('filterTo').value;
+            if (!fromVal || !toVal) { alert('Please select both From and To dates.'); return; }
+
+            const start = fromVal + 'T00:00';
+            const end = toVal + 'T23:59';
+            const params = new URLSearchParams({ start, end });
+
+            const btn = document.querySelector('button[onclick="applyDateFilter()"]');
+            if (btn) { btn.disabled = true; btn.innerText = 'Loading...'; }
+
+            try {
+                const res = await fetch(`/api/devices/energy/export/custom?${params.toString()}`);
+                if (!res.ok) { alert('Failed to fetch data.'); return; }
+                const text = await res.text();
+                const lines = text.trim().split('\n').slice(1); // skip CSV header
+
+                let totalKwh = 0;
+                for (const line of lines) {
+                    if (!line.trim()) continue;
+                    const parts = line.split(',');
+                    const kwh = parseFloat(parts[parts.length - 1]);
+                    if (!isNaN(kwh)) totalKwh += kwh;
+                }
+
+                const fromDate = new Date(fromVal);
+                const toDate = new Date(toVal);
+                const days = Math.max(1, Math.round((toDate - fromDate) / 86400000) + 1);
+                const cost = calcCost(totalKwh);
+                const avg = totalKwh / days;
+
+                document.getElementById('filteredUsage').innerText = totalKwh.toFixed(3);
+                document.getElementById('filteredCost').innerText = cost.toFixed(2);
+                document.getElementById('filteredAvg').innerText = avg.toFixed(3);
+                document.getElementById('filterResults').style.display = 'block';
+            } catch (e) {
+                console.error('Filter error', e);
+                alert('Error calculating range. Please try again.');
+            } finally {
+                if (btn) { btn.disabled = false; btn.innerText = 'Apply Filter'; }
+            }
+        }
     </script>
 </body>
 

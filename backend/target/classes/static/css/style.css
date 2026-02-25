@@ -3,7 +3,8 @@
     margin: 0;
     padding: 0;
     box-sizing: border-box;
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Helvetica Neue", sans-serif;
+    letter-spacing: -0.022em;
 }
 
 :root {
@@ -208,10 +209,12 @@ h3 {
 
 .summary-card {
     background: var(--card-bg);
-    border-radius: 20px;
-    padding: 20px;
+    border-radius: 28px;
+    padding: 24px;
     flex: 1;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(10px);
 }
 
 .summary-label {
@@ -327,24 +330,19 @@ h3 {
 /* Bottom Navigation Dock */
 .dock-container {
     position: fixed;
-    bottom: 24px;
-    /* Slightly higher */
+    bottom: 34px;
     left: 50%;
     transform: translateX(-50%);
-    background: rgba(255, 255, 255, 0.85);
-    /* More translucent */
-    backdrop-filter: blur(20px);
-    /* Stronger blur */
-    -webkit-backdrop-filter: blur(20px);
-    border-radius: 32px;
-    /* Smoother radius */
-    padding: 12px 32px;
+    background: var(--dock-bg);
+    backdrop-filter: blur(25px);
+    -webkit-backdrop-filter: blur(25px);
+    border-radius: 40px;
+    padding: 14px 40px;
     display: flex;
-    gap: 32px;
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
-    /* Deep shadow */
+    gap: 40px;
+    box-shadow: 0 15px 40px rgba(0, 0, 0, 0.15);
     z-index: 1000;
-    border: 1px solid rgba(255, 255, 255, 0.2);
+    border: 1px solid var(--dock-border);
 }
 
 .dock-item {

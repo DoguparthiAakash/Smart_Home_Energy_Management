@@ -1,0 +1,941 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" data-theme="light">
+
+<head>
+    <title>Admin Portal</title>
+    <link rel="stylesheet" href="/css/style.css">
+    <style>
+        :root {
+            --ios-blue: #007AFF;
+            --ios-green: #34C759;
+            --ios-red: #FF3B30;
+            --ios-orange: #FF9500;
+            --bg-glass: rgba(255, 255, 255, 0.7);
+            --border-glass: rgba(255, 255, 255, 0.3);
+        }
+
+        body.admin-mode {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            transition: background-color 0.3s;
+        }
+
+        .header-ios {
+            background: var(--dock-bg);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--divider-color);
+            padding: 16px 32px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .admin-logo {
+            font-size: 20px;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .admin-logo span {
+            background: var(--accent-color);
+            color: #fff;
+            padding: 2px 8px;
+            border-radius: 6px;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 16px;
+            margin: 24px 32px;
+        }
+
+        .metric-card {
+            background: var(--card-bg);
+            border: 1px solid var(--divider-color);
+            border-radius: 20px;
+            padding: 20px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
+            transition: transform 0.2s cubic-bezier(0.25, 0.1, 0.25, 1);
+        }
+
+        .metric-card:active {
+            transform: scale(0.98);
+        }
+
+        .metric-label {
+            font-size: 13px;
+            color: var(--text-muted);
+            font-weight: 500;
+            margin-bottom: 4px;
+        }
+
+        .metric-value {
+            font-size: 28px;
+            font-weight: 700;
+            color: var(--text-color);
+            letter-spacing: -0.5px;
+        }
+
+        .admin-container {
+            padding: 0 40px 100px 40px;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .tech-list {
+            background: var(--card-bg);
+            border-radius: 20px;
+            border: 1px solid var(--divider-color);
+            overflow: hidden;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
+        }
+
+        .tech-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px 20px;
+            border-bottom: 1px solid var(--divider-color);
+            transition: background-color 0.2s;
+        }
+
+        .tech-item:last-child {
+            border-bottom: none;
+        }
+
+        .tech-item:hover {
+            background: rgba(0, 0, 0, 0.02);
+        }
+
+        .tech-info h4 {
+            margin: 0;
+            color: var(--text-color);
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        .tech-info p {
+            margin: 2px 0 0 0;
+            font-size: 13px;
+            color: var(--text-muted);
+        }
+
+        .badge {
+            padding: 4px 10px;
+            border-radius: 8px;
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+
+        .badge-success {
+            background: rgba(48, 209, 88, 0.15);
+            color: #30D158;
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin: 40px 0 20px 0;
+        }
+
+        .section-header h3 {
+            font-size: 20px;
+            margin: 0;
+            font-weight: 800;
+            letter-spacing: -0.5px;
+        }
+
+        .toggle-switch {
+            position: relative;
+            display: inline-block;
+            width: 44px;
+            height: 24px;
+        }
+
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(255, 255, 255, 0.1);
+            transition: .4s;
+            border-radius: 34px;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 18px;
+            width: 18px;
+            left: 3px;
+            bottom: 3px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+
+        input:checked+.slider {
+            background-color: var(--ios-blue);
+        }
+
+        input:checked+.slider:before {
+            transform: translateX(20px);
+        }
+
+        .dev-toggle-container {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            background: rgba(0, 0, 0, 0.05);
+            padding: 6px 16px;
+            border-radius: 20px;
+            border: 1px solid var(--divider-color);
+        }
+
+        .dev-label {
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--text-muted);
+            letter-spacing: -0.2px;
+        }
+
+        /* Technical Features visibility */
+        .technical-feature {
+            display: none !important;
+        }
+
+        body.dev-mode-active .technical-feature {
+            display: block !important;
+        }
+
+        body.dev-mode-active div.technical-feature {
+            display: flex !important;
+        }
+
+        .diagnostic-grid {
+            display: grid;
+            grid-template-columns: 1.5fr 1fr;
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .log-terminal {
+            background: var(--input-bg);
+            color: var(--text-color);
+            font-family: 'SF Mono', 'Menlo', monospace;
+            padding: 16px;
+            border-radius: 12px;
+            height: 350px;
+            overflow-y: auto;
+            font-size: 12px;
+            border: 1px solid var(--divider-color);
+        }
+
+        .object-inspector {
+            background: var(--card-bg);
+            padding: 24px;
+            border-radius: 20px;
+            border: 1px solid var(--divider-color);
+            height: 350px;
+            overflow-y: auto;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 2000;
+            justify-content: center;
+            align-items: center;
+            backdrop-filter: blur(10px);
+        }
+
+        .modal-content {
+            background: var(--admin-card);
+            padding: 32px;
+            border-radius: 32px;
+            width: 90%;
+            max-width: 450px;
+            border: 1px solid var(--divider);
+            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.5);
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-size: 12px;
+            font-weight: 700;
+            color: #888;
+            text-transform: uppercase;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 14px;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--divider);
+            border-radius: 12px;
+            color: #fff;
+            font-size: 14px;
+            box-sizing: border-box;
+            transition: 0.3s;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: var(--admin-neon);
+            background: rgba(0, 224, 255, 0.05);
+        }
+
+        .btn-action {
+            background: var(--admin-neon);
+            color: #000;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 12px;
+            font-weight: 800;
+            cursor: pointer;
+            transition: 0.3s;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .btn-action:hover {
+            box-shadow: 0 0 20px rgba(0, 224, 255, 0.4);
+            transform: translateY(-2px);
+        }
+    </style>
+</head>
+
+<body>
+    <header class="header-ios">
+        <div class="admin-logo">
+            SMART ENERGY <span>ADMIN</span>
+        </div>
+        <div style="display: flex; align-items: center; gap: 24px;">
+            <div id="dev-toggle-container" class="dev-toggle-container" style="margin: 0;">
+                <span class="dev-label">DIAGNOSTICS</span>
+                <label class="toggle-switch">
+                    <input type="checkbox" id="devModeToggle" onchange="toggleDevMode()">
+                    <span class="slider"></span>
+                </label>
+            </div>
+            <form th:action="@{/logout}" method="post">
+                <button type="submit"
+                    style="background: transparent; border: 1px solid var(--ios-red); color: var(--ios-red); padding: 8px 20px; border-radius: 10px; font-weight: 600; cursor: pointer; transition: 0.2s; font-size: 13px;">Logout</button>
+            </form>
+        </div>
+    </header>
+
+    <div class="metrics-grid">
+        <div class="metric-card">
+            <div class="metric-label">Total Users</div>
+            <div class="metric-value">124</div>
+        </div>
+        <div class="metric-card">
+            <div class="metric-label">Active Systems</div>
+            <div class="metric-value">98</div>
+        </div>
+        <div class="metric-card">
+            <div class="metric-label">System Health</div>
+            <div class="metric-value" style="color: var(--ios-green);">99.9%</div>
+        </div>
+        <div class="metric-card">
+            <div class="metric-label">Energy Throttled</div>
+            <div class="metric-value" style="color: var(--ios-orange);">12.4 kW</div>
+        </div>
+    </div>
+
+    <div class="admin-container">
+
+        <div style="display: flex; gap: 20px; margin-bottom: 20px;">
+            <!-- Security Overview -->
+            <div style="flex: 1;" class="tech-list">
+                <div style="padding: 24px;">
+                    <h3
+                        style="margin-top: 0; margin-bottom: 20px; font-size: 15px; color: var(--text-color); font-weight: 600;">
+                        Security Overview</h3>
+                    <div
+                        style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; padding: 12px; background: var(--bg-color); border-radius: 12px;">
+                        <span style="color: var(--text-muted); font-size: 13px;">Failed Logins (24h)</span>
+                        <span style="font-weight: 600; color: var(--ios-red);">3</span>
+                    </div>
+                    <div
+                        style="display: flex; justify-content: space-between; align-items: center; padding: 12px; background: var(--bg-color); border-radius: 12px;">
+                        <span style="color: var(--text-muted); font-size: 13px;">Active Sessions</span>
+                        <span style="font-weight: 600; color: var(--ios-blue);">234</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- System Health -->
+            <div style="flex: 1;" class="tech-list technical-feature">
+                <div style="padding: 24px;">
+                    <h3 style="margin: 0 0 20px 0; font-size: 15px; color: var(--text-color); font-weight: 600;">Network
+                        Status</h3>
+                    <div style="margin-bottom: 20px;">
+                        <div
+                            style="display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 6px; font-weight: 500; color: var(--text-muted);">
+                            <span>Database</span>
+                            <span style="color: var(--ios-green);">Connected</span>
+                        </div>
+                        <div style="height: 6px; background: var(--bg-color); border-radius: 3px; overflow: hidden;">
+                            <div style="width: 100%; height: 100%; background: var(--ios-blue);"></div>
+                        </div>
+                    </div>
+                    <div style="margin-bottom: 20px;">
+                        <div
+                            style="display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 6px; font-weight: 500; color: var(--text-muted);">
+                            <span>API Gateway</span>
+                            <span style="color: var(--ios-green);">Stable</span>
+                        </div>
+                        <div style="height: 6px; background: var(--bg-color); border-radius: 3px; overflow: hidden;">
+                            <div style="width: 85%; height: 100%; background: var(--ios-blue); opacity: 0.8;"></div>
+                        </div>
+                    </div>
+                    <div>
+                        <div
+                            style="display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 6px; font-weight: 500; color: var(--text-muted);">
+                            <span>MQTT Broker</span>
+                            <span style="color: var(--ios-green);">24ms</span>
+                        </div>
+                        <div style="height: 6px; background: var(--bg-color); border-radius: 3px; overflow: hidden;">
+                            <div style="width: 95%; height: 100%; background: var(--ios-blue); opacity: 0.6;"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Technician Status -->
+            <div style="flex: 1;" class="tech-list">
+                <div style="padding: 24px;">
+                    <h3
+                        style="margin-top: 0; margin-bottom: 20px; font-size: 15px; color: var(--text-color); font-weight: 600;">
+                        Technician Status</h3>
+                    <div style="display: flex; flex-direction: column; gap: 12px;">
+                        <div
+                            style="display: flex; justify-content: space-between; align-items: center; font-size: 13px; padding: 12px; background: var(--bg-color); border-radius: 12px;">
+                            <span style="color: var(--text-color); font-weight: 500;">Technician</span>
+                            <span style="color: var(--ios-green); font-weight: 600; font-size: 11px;">Active</span>
+                        </div>
+                        <div
+                            style="display: flex; justify-content: space-between; align-items: center; font-size: 13px; padding: 12px; background: var(--bg-color); border-radius: 12px;">
+                            <span style="color: var(--text-color); font-weight: 500;">Sarah Miller</span>
+                            <span style="color: var(--ios-orange); font-weight: 600; font-size: 11px;">On Break</span>
+                        </div>
+                        <div
+                            style="display: flex; justify-content: space-between; align-items: center; font-size: 13px; padding: 12px; background: var(--bg-color); border-radius: 12px;">
+                            <span style="color: var(--text-color); font-weight: 500;">David Chen</span>
+                            <span style="color: var(--text-muted); font-weight: 600; font-size: 11px;">Offline</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Activity & Simulation Control -->
+        <div style="display: flex; gap: 20px; margin-bottom: 20px;">
+            <div class="tech-list" style="flex: 1.5;">
+                <div style="padding: 24px;">
+                    <h3 style="margin: 0 0 20px 0; font-size: 15px; font-weight: 600;">System Events</h3>
+                    <div style="border-left: 3px solid var(--ios-blue); padding-left: 20px; margin-bottom: 24px;">
+                        <div style="display: flex; justify-content: space-between; align-items: baseline;">
+                            <span style="font-weight: 600; font-size: 13px; color: var(--ios-blue);">NEW USER
+                                REGISTERED</span>
+                            <span style="font-size: 11px; color: var(--text-muted);">JUST NOW</span>
+                        </div>
+                        <p style="font-size: 13px; color: var(--text-muted); margin: 6px 0;">john_doe successfully
+                            verified via Blockchain OIDC.</p>
+                    </div>
+                    <div style="border-left: 3px solid var(--divider-color); padding-left: 20px;">
+                        <div style="display: flex; justify-content: space-between; align-items: baseline;">
+                            <span style="font-weight: 600; font-size: 13px; color: var(--text-color);">BACKUP
+                                COMPLETED</span>
+                            <span style="font-size: 11px; color: var(--text-muted);">12 MIN AGO</span>
+                        </div>
+                        <p style="font-size: 13px; color: var(--text-muted); margin: 6px 0;">Automated backup cycle
+                            successful - 2.4 GB encrypted.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Simulation Control -->
+            <div class="tech-list technical-feature" style="flex: 1;">
+                <div style="padding: 24px;">
+                    <h3 style="margin: 0 0 20px 0; font-size: 15px; color: var(--text-color); font-weight: 600;">
+                        Simulation Control</h3>
+                    <div style="display: flex; flex-direction: column; gap: 12px;">
+                        <div
+                            style="display: flex; justify-content: space-between; align-items: center; background: var(--bg-color); padding: 12px; border-radius: 12px; border: 1px solid var(--divider-color);">
+                            <div>
+                                <div style="font-size: 13px; font-weight: 600; color: var(--text-color);">Blockchain
+                                    Sync</div>
+                                <div style="font-size: 11px; color: var(--text-muted);">Verify node transparency</div>
+                            </div>
+                            <button class="btn-primary"
+                                style="padding: 6px 16px; font-size: 11px; width: auto; margin: 0; border-radius: 8px;"
+                                onclick="adminLog('Simulation: Blockchain sync initiated.')">Start</button>
+                        </div>
+                        <div
+                            style="display: flex; justify-content: space-between; align-items: center; background: var(--bg-color); padding: 12px; border-radius: 12px; border: 1px solid var(--divider-color);">
+                            <div>
+                                <div style="font-size: 13px; font-weight: 600; color: var(--text-color);">Grid Load Test
+                                </div>
+                                <div style="font-size: 11px; color: var(--text-muted);">Stress test system endurance
+                                </div>
+                            </div>
+                            <button class="btn-primary"
+                                style="padding: 6px 16px; font-size: 11px; width: auto; margin: 0; border-radius: 8px; background-color: var(--ios-orange);"
+                                onclick="adminLog('Simulation: Load test active.')">Run</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Charts & Advanced Export -->
+        <div style="display: flex; gap: 20px; margin-bottom: 20px;">
+            <!-- Charts -->
+            <div style="flex: 1; display: flex; flex-direction: column; gap: 16px;">
+                <div class="tech-list" style="padding: 20px; height: 200px;">
+                    <h4 style="margin: 0 0 10px 0;">Live Power (kW)</h4>
+                    <canvas id="livePowerChart"></canvas>
+                </div>
+                <div class="tech-list technical-feature" style="padding: 20px; height: 200px;">
+                    <h4 style="margin: 0 0 10px 0;">Weekly History</h4>
+                    <canvas id="energyChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Advanced Data Export -->
+            <div style="flex: 1;" class="tech-list technical-feature">
+                <div style="padding: 20px;">
+                    <h3 style="margin-top: 0; margin-bottom: 16px;">Advanced Data Export</h3>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                        <div>
+                            <label
+                                style="font-size: 12px; color: #888; display: block; margin-bottom: 4px;">Category</label>
+                            <select id="exportCategory" class="input-field" style="width: 100%;"
+                                onchange="filterDevicesByCategory()">
+                                <option value="">All Categories</option>
+                                <option value="AC">AC</option>
+                                <option value="LIGHT">Lights</option>
+                                <option value="FAN">Fans</option>
+                                <option value="FRIDGE">Fridges</option>
+                                <option value="EV">EV Chargers</option>
+                                <option value="HEATER">Heaters</option>
+                                <option value="OTHER">Other</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label
+                                style="font-size: 12px; color: #888; display: block; margin-bottom: 4px;">Device</label>
+                            <select id="exportDevice" class="input-field" style="width: 100%;">
+                                <option value="">All Devices</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label style="font-size: 12px; color: #888; display: block; margin-bottom: 4px;">Start
+                                Time</label>
+                            <input type="datetime-local" id="exportStart" class="input-field" style="width: 100%;">
+                        </div>
+                        <div>
+                            <label style="font-size: 12px; color: #888; display: block; margin-bottom: 4px;">End
+                                Time</label>
+                            <input type="datetime-local" id="exportEnd" class="input-field" style="width: 100%;">
+                        </div>
+                    </div>
+                    <button onclick="downloadCustomReport()" class="btn-primary"
+                        style="width: 100%; margin-top: 16px; justify-content: center; padding: 12px;">
+                        Download Usage Report (CSV)
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Existing Content Below -->
+        <div style="display: flex; gap: 20px; margin-bottom: 20px;">
+            <!-- Summary Cards -->
+            <div style="flex: 1; display: flex; flex-direction: column; gap: 16px;">
+                <div class="tech-list"
+                    style="padding: 20px; display: flex; justify-content: space-between; align-items: center;">
+                    <div>
+                        <div class="summary-label">Today's Usage</div>
+                        <div class="summary-value" style="font-size: 24px; font-weight: bold;"><span
+                                id="energyUsage">--</span> <span style="font-size: 14px; color: #888;">kWh</span>
+                        </div>
+                    </div>
+                    <div>
+                        <div class="summary-label">Estimated Cost</div>
+                        <div class="summary-value" style="font-size: 24px; font-weight: bold; color: #FF9500;"><span
+                                id="costValue">--</span></div>
+                    </div>
+                </div>
+                <!-- Advanced Data Export (Moved or kept) -->
+            </div>
+        </div>
+
+        <!-- Device List (Filtered) -->
+        <div class="section-header">
+            <h3>Devices</h3>
+            <span id="deviceFilterLabel" class="badge"
+                style="background: var(--divider-color); color: var(--text-color); font-weight: 600;">All
+                Categories</span>
+        </div>
+        <div class="tech-list" id="deviceList" style="margin-bottom: 20px;">
+            <div style="padding: 20px; text-align: center; color: var(--text-muted);">Loading devices...</div>
+        </div>
+
+        <!-- Technicians Section -->
+        <div class="section-header">
+            <h3>Technicians</h3>
+            <button onclick="openAddTechModal()" class="btn-primary"
+                style="padding: 8px 16px; display: flex; align-items: center; gap: 8px;">
+                <span>+ Add Technician</span>
+            </button>
+        </div>
+        <div class="tech-list" id="techList">
+            <div style="padding: 20px; text-align: center; color: var(--text-muted);">Loading...</div>
+        </div>
+
+        <!-- System Diagnostics (Dev Mode Only) -->
+        <div class="technical-feature" style="flex-direction: column; margin-top: 30px;">
+            <div class="section-header">
+                <h3>System Diagnostics <span
+                        style="font-size: 10px; padding: 2px 8px; background: var(--ios-orange); color: #fff; border-radius: 4px; margin-left: 10px;">PRO</span>
+                </h3>
+            </div>
+            <div class="diagnostic-grid">
+                <div class="log-terminal" id="adminLogs">
+                    <div class="log-entry"><span style="color: var(--text-muted);">[System]</span> Diagnostics
+                        Initialized...
+                    </div>
+                </div>
+                <div class="object-inspector" id="adminInspector">
+                    <div style="color: #8E8E93; text-align: center; margin-top: 100px;">Click 'Inspect' on a device
+                        card to see data</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    </div>
+
+    <!-- Command Center Navigation -->
+    <div class="dock-container">
+        <a href="/admin" class="dock-item active">
+            <svg class="dock-icon" viewBox="0 0 24 24" fill="currentColor">
+                <path
+                    d="M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2M12,20C7.59,20 4,16.41 4,12C4,7.59 7.59,4 12,4C16.41,4 20,7.59 20,12C20,16.41 16.41,20 12,20Z" />
+            </svg>
+            <span class="dock-label">Overview</span>
+        </a>
+        <a href="/admin/control-panel" class="dock-item technical-feature">
+            <svg class="dock-icon" viewBox="0 0 24 24" fill="currentColor">
+                <path
+                    d="M12,15V17H18V15H12M12,11V13H18V11H12M12,7V9H18V7H12M6,16H9C9.55,16 10,15.55 10,15V9C10,8.45 9.55,8 9,8H6C5.45,8 5,8.45 5,9V15C5,15.55 5.45,16 6,16Z" />
+            </svg>
+            <span class="dock-label">Control</span>
+        </a>
+        <a href="/admin/ide" class="dock-item technical-feature">
+            <svg class="dock-icon" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M2,6V8H5.29L3.29,10H6V12H2V14H6.71L8.71,12H6V10H10V6H2M14,6V10H18V6H14M14,12V16H18V12H14Z" />
+            </svg>
+            <span class="dock-label">Console</span>
+        </a>
+    </div>
+
+    <!-- Add Technician Modal -->
+    <div id="addTechModal" class="modal">
+        <div class="modal-content">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                <h3 style="margin: 0;">Add Technician</h3>
+                <button onclick="closeAddTechModal()"
+                    style="background: none; border: none; font-size: 24px; color: var(--text-muted); cursor: pointer;">✕</button>
+            </div>
+            <form id="addTechForm" onsubmit="createTechnician(event)">
+                <div class="form-group">
+                    <label>Full Name</label>
+                    <input type="text" name="name" required placeholder="e.g. John Doe">
+                </div>
+                <div class="form-group">
+                    <label>Email Address</label>
+                    <input type="email" name="email" required placeholder="e.g. tech@smarthome.com">
+                </div>
+                <div class="form-group">
+                    <label>Mobile Number</label>
+                    <input type="tel" name="mobileNumber" required placeholder="e.g. +91 9876543210">
+                </div>
+                <div class="form-group">
+                    <label>Password</label>
+                    <input type="password" name="password" required placeholder="Default Password">
+                </div>
+                <button type="submit" class="btn-primary"
+                    style="width: 100%; padding: 12px; display: flex; justify-content: center; align-items: center; gap: 8px;">
+                    <span id="submitText">Create Account</span>
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <script th:inline="javascript">
+        (function () { document.documentElement.setAttribute('data-theme', 'light'); })();
+
+        let isDevMode = localStorage.getItem('isDevMode') !== 'false';
+
+        function toggleDevMode(save = true) {
+            const toggle = document.getElementById('devModeToggle');
+            if (toggle) {
+                if (save) {
+                    isDevMode = toggle.checked;
+                    localStorage.setItem('isDevMode', isDevMode);
+                } else {
+                    toggle.checked = isDevMode;
+                }
+            }
+            if (isDevMode) {
+                document.body.classList.add('dev-mode-active');
+                adminLog("Dev Mode ENABLED.");
+            } else {
+                document.body.classList.remove('dev-mode-active');
+                adminLog("Dev Mode DISABLED.");
+            }
+            if (typeof renderDeviceList === 'function') renderDeviceList(allDevices);
+        }
+
+        function adminLog(msg) {
+            const time = new Date().toLocaleTimeString();
+            const logDiv = document.getElementById('adminLogs');
+            if (!logDiv) return;
+            const entry = document.createElement('div');
+            entry.style.marginBottom = '4px';
+            entry.innerHTML = `<span style="color: #888; margin-right: 8px;">[${time}]</span> ${msg}`;
+            logDiv.appendChild(entry);
+            logDiv.scrollTop = logDiv.scrollHeight;
+        }
+
+        function inspectDevice(id) {
+            const dev = allDevices.find(d => d.id == id);
+            if (!dev) return;
+            const inspector = document.getElementById('adminInspector');
+            inspector.innerHTML = `<h4 style="margin-top:0; color:#64D2FF;">Device Spec: ${dev.name}</h4><pre style="color:#FFF; font-size:12px; line-height:1.4;">${JSON.stringify(dev, null, 2)}</pre>`;
+            adminLog(`Inspecting Device ID: ${id}`);
+        }
+
+        // Initialize Dev Mode
+        toggleDevMode(false);
+
+        fetchTechnicians(); fetchEnergyData(); fetchDevices();
+
+        let allDevices = [];
+
+        async function fetchEnergyData() {
+            try {
+                const summaryRes = await fetch('/api/energy/summary');
+                if (summaryRes.ok) {
+                    const summary = await summaryRes.json();
+                    document.getElementById('energyUsage').innerText = summary.usage;
+                    document.getElementById('costValue').innerText = summary.currency + summary.cost;
+                }
+                const historyRes = await fetch('/api/energy/history');
+                if (historyRes.ok) {
+                    const history = await historyRes.json();
+                    updateHistoryChart(history.labels, history.data, history.costData);
+                }
+            } catch (e) { console.error("Energy Fetch Error", e); }
+            initLiveGraph();
+        }
+
+        function initLiveGraph() {
+            const ctx = document.getElementById('livePowerChart').getContext('2d');
+            const liveChart = new Chart(ctx, {
+                type: 'line',
+                data: { labels: Array(60).fill(''), datasets: [{ label: 'Live (kW)', data: Array(60).fill(null), borderColor: 'var(--ios-blue)', backgroundColor: 'rgba(0,122,255,0.1)', borderWidth: 2, pointRadius: 0, fill: true, tension: 0.4 }] },
+                options: { responsive: true, maintainAspectRatio: false, animation: { duration: 0 }, plugins: { legend: { display: false } }, scales: { x: { display: false }, y: { display: false, beginAtZero: true } } }
+            });
+            setInterval(async () => {
+                try {
+                    const res = await fetch('/api/energy/summary');
+                    if (res.ok) {
+                        const d = await res.json();
+                        liveChart.data.labels.shift(); liveChart.data.labels.push('');
+                        liveChart.data.datasets[0].data.shift(); liveChart.data.datasets[0].data.push(d.currentWatts / 1000.0);
+                        liveChart.update('none');
+                    }
+                } catch (e) { }
+            }, 1000);
+        }
+
+        function updateHistoryChart(labels, usage, cost) {
+            const ctx = document.getElementById('energyChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'bar',
+                data: { labels, datasets: [{ label: 'Usage (kWh)', data: usage, backgroundColor: '#34C759', yAxisID: 'y' }, { label: 'Cost', data: cost, type: 'line', borderColor: '#FF9500', yAxisID: 'y1' }] },
+                options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true, display: false }, y1: { beginAtZero: true, display: false, position: 'right' }, x: { display: false } }, plugins: { legend: { display: false } } }
+            });
+        }
+
+        async function fetchDevices() {
+            try {
+                const res = await fetch('/api/devices');
+                if (res.ok) {
+                    allDevices = await res.json();
+                    populateDeviceDropdown(allDevices);
+                    renderDeviceList(allDevices);
+                }
+            } catch (e) { console.error(e); }
+        }
+
+        function populateDeviceDropdown(devices) {
+            const select = document.getElementById('exportDevice');
+            select.innerHTML = '<option value="">All Devices</option>';
+            devices.forEach(d => {
+                const opt = document.createElement('option');
+                opt.value = d.id; opt.innerText = d.name;
+                select.appendChild(opt);
+            });
+        }
+
+        function renderDeviceList(devices) {
+            const container = document.getElementById('deviceList');
+            if (!devices.length) { container.innerHTML = '<div style="padding: 24px; text-align: center; color: var(--text-muted);">No devices found.</div>'; return; }
+            container.innerHTML = devices.map(d => `
+                <div class="tech-item">
+                    <div style="display: flex; align-items: center; gap: 16px;">
+                        <div style="width: 44px; height: 44px; background: var(--bg-color); border: 1px solid var(--divider-color); border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; color: var(--text-muted);">
+                            ${d.type.substring(0, 3)}
+                        </div>
+                        <div class="tech-info">
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                                <h4 style="margin:0;">${d.name}</h4>
+                                <span style="font-size: 10px; color: var(--text-muted); font-weight: 600; background: var(--bg-color); padding: 2px 6px; border-radius: 4px; border: 1px solid var(--divider-color);">ID: ${d.id}</span>
+                            </div>
+                            <p>${d.location || 'GLOBAL'} • ${isDevMode ? `<span style="color: var(--ios-green); font-weight: 600;">Status: Healthy</span>` : `Firmware: v${d.firmwareVersion || '1.0.2'}`}</p>
+                        </div>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 16px;">
+                        ${isDevMode ? `
+                            <button class="btn-primary" onclick="inspectDevice('${d.id}')" style="padding: 6px 14px; font-size: 11px; width: auto; margin: 0; border-radius: 8px;">Inspect</button>
+                        ` : ''}
+                        <div style="text-align: right;">
+                            <div style="font-size: 15px; font-weight: 700; color: var(--text-color);">${d.powerRating}W</div>
+                            <div style="font-size: 11px; color: ${d.status ? 'var(--ios-green)' : 'var(--ios-red)'}; font-weight: 600; margin-top: 2px;">${d.status ? 'ONLINE' : 'OFFLINE'}</div>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function filterDevicesByCategory() {
+            const category = document.getElementById('exportCategory').value;
+            document.getElementById('deviceFilterLabel').innerText = category || 'All Categories';
+            const filtered = category ? allDevices.filter(d => d.type === category) : allDevices;
+            renderDeviceList(filtered);
+            populateDeviceDropdown(filtered);
+        }
+
+        function downloadCustomReport() {
+            const deviceId = document.getElementById('exportDevice').value;
+            const category = document.getElementById('exportCategory').value;
+            if (!document.getElementById('exportStart').value) {
+                const yesterday = new Date(Date.now() - 86400000);
+                yesterday.setMinutes(yesterday.getMinutes() - yesterday.getTimezoneOffset());
+                document.getElementById('exportStart').value = yesterday.toISOString().slice(0, 16);
+            }
+            if (!document.getElementById('exportEnd').value) {
+                const now = new Date();
+                now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+                document.getElementById('exportEnd').value = now.toISOString().slice(0, 16);
+            }
+            const start = document.getElementById('exportStart').value;
+            const end = document.getElementById('exportEnd').value;
+            const params = new URLSearchParams({ start, end });
+            if (deviceId) params.append('deviceId', deviceId);
+            if (category) params.append('category', category);
+            window.location.href = `/api/devices/energy/export/custom?${params.toString()}`;
+        }
+
+        async function fetchTechnicians() {
+            const res = await fetch('/api/admin/technicians');
+            if (res.ok) renderTechnicians(await res.json());
+        }
+
+        function renderTechnicians(techs) {
+            const container = document.getElementById('techList');
+            if (!techs.length) { container.innerHTML = '<div style="padding: 24px; text-align: center; color: var(--text-muted);">No technicians found.</div>'; return; }
+            container.innerHTML = techs.map(t => `
+                <div class="tech-item">
+                    <div style="display: flex; align-items: center; gap: 16px;">
+                        <div style="width: 44px; height: 44px; background: var(--bg-color); border: 1px solid var(--divider-color); border-radius: 22px; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; color: var(--text-muted);">
+                            USR
+                        </div>
+                        <div class="tech-info">
+                            <h4 style="font-weight: 600;">${t.name}</h4>
+                            <p>${t.email} • ID: ${t.id || 'TECH_' + Math.floor(Math.random() * 99)}</p>
+                        </div>
+                    </div>
+                    <div style="display: flex; gap: 32px; align-items: center;">
+                        <div style="text-align: center;">
+                            <div style="font-size: 15px; font-weight: 700; color: var(--text-color);">${Math.floor(Math.random() * 15) + 85}%</div>
+                            <div style="font-size: 10px; color: var(--text-muted); font-weight: 600; text-transform: uppercase;">Comp</div>
+                        </div>
+                        <div style="text-align: center;">
+                            <div style="font-size: 15px; font-weight: 700; color: var(--ios-orange);">${(Math.random() * 1 + 4).toFixed(1)} ★</div>
+                            <div style="font-size: 10px; color: var(--text-muted); font-weight: 600; text-transform: uppercase;">Rating</div>
+                        </div>
+                        <span class="badge badge-success" style="height: fit-content; border-radius: 6px; font-size: 10px;">Active</span>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function openAddTechModal() { document.getElementById('addTechModal').style.display = 'flex'; }
+        function closeAddTechModal() { document.getElementById('addTechModal').style.display = 'none'; document.getElementById('addTechForm').reset(); }
+
+        async function createTechnician(e) {
+            e.preventDefault();
+            const btn = document.querySelector('#addTechForm button');
+            btn.disabled = true;
+            document.getElementById('submitText').innerText = "Creating...";
+            const data = Object.fromEntries(new FormData(e.target).entries());
+            try {
+                const res = await fetch('/api/admin/technicians', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
+                if (res.ok) { alert('Technician Created Successfully!'); closeAddTechModal(); fetchTechnicians(); }
+                else { alert('Error: ' + await res.text()); }
+            } catch (err) { alert('Connection Error'); }
+            finally { btn.disabled = false; document.getElementById('submitText').innerText = "Create Account"; }
+        }
+    </script>
+</body>
+
+</html>

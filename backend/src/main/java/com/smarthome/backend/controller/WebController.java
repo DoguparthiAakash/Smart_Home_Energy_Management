@@ -21,17 +21,6 @@ public class WebController {
         return "forgot_password";
     }
 
-    @GetMapping("/admin/ide")
-    public String adminIde(Model model, Principal principal) {
-        if (principal != null) {
-            String role = principal.getName().equals("muterornament") ? "ROLE_ADMIN" : "ROLE_USER";
-            // For real security, we should check authorities, but this aligns with current
-            // pattern
-            model.addAttribute("userRole", role);
-        }
-        return "ide";
-    }
-
     @GetMapping("/login-2fa")
     public String login2fa() {
         return "login-2fa";
@@ -40,13 +29,31 @@ public class WebController {
     @Autowired
     private com.smarthome.backend.repository.UserRepository userRepository;
 
-    @GetMapping({ "/", "/home", "/dashboard", "/admin" })
+    @GetMapping("/admin/ide")
+    public String adminIde(Model model, Principal principal) {
+        if (principal != null)
+            model.addAttribute("userRole", "ROLE_ADMIN");
+        return "ide";
+    }
+
+    @GetMapping({ "/admin" })
+    public String admin(Model model, Principal principal) {
+        if (principal != null)
+            model.addAttribute("userRole", "ROLE_ADMIN");
+        return "admin";
+    }
+
+    @GetMapping("/admin/control-panel")
+    public String adminControlPanel(Model model, Principal principal) {
+        if (principal != null)
+            model.addAttribute("userRole", "ROLE_ADMIN");
+        return "control-panel";
+    }
+
+    @GetMapping({ "/", "/home", "/dashboard" })
     public String home(Model model, Authentication authentication) {
         if (authentication != null) {
-            String role = authentication.getAuthorities().toString();
-            model.addAttribute("userRole", role);
-
-            // Inject Max Wattage for Frontend
+            model.addAttribute("userRole", authentication.getAuthorities().toString());
             userRepository.findByEmail(authentication.getName()).ifPresent(user -> {
                 model.addAttribute("maxWattage", user.getMaxWattage() != null ? user.getMaxWattage() : 5000.0);
             });
