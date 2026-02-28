@@ -12,6 +12,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 
 @RestController
@@ -37,14 +38,18 @@ public class DeviceExportController {
 
         List<UsageLog> logs = usageLogRepository.findByFilters(userId, deviceId, category, start, end);
 
-        StringBuilder csv = new StringBuilder("ID,Device Name,Device Type,Location,Start Time,End Time,Energy (kWh)\n");
+        DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+        StringBuilder csv = new StringBuilder(
+                "\"ID\",\"Device Name\",\"Device Type\",\"Location\",\"Start Time\",\"End Time\",\"Energy (kWh)\"\n");
         for (UsageLog log : logs) {
-            csv.append(log.getId()).append(",");
-            csv.append("\"").append(log.getDevice().getName()).append("\",");
-            csv.append(log.getDevice().getType()).append(",");
-            csv.append(log.getDevice().getLocation() != null ? log.getDevice().getLocation() : "N/A").append(",");
-            csv.append(log.getStartTime() != null ? log.getStartTime() : "N/A").append(",");
-            csv.append(log.getEndTime() != null ? log.getEndTime() : "N/A").append(",");
+            csv.append("\"").append(log.getId()).append("\",");
+            csv.append("\"").append(log.getDevice().getName().replace("\"", "\"\"")).append("\",");
+            csv.append("\"").append(log.getDevice().getType()).append("\",");
+            csv.append("\"").append(
+                    log.getDevice().getLocation() != null ? log.getDevice().getLocation().replace("\"", "\"\"") : "")
+                    .append("\",");
+            csv.append("\"").append(log.getStartTime() != null ? log.getStartTime().format(dtf) : "").append("\",");
+            csv.append("\"").append(log.getEndTime() != null ? log.getEndTime().format(dtf) : "").append("\",");
             csv.append(String.format("%.4f", log.getEnergyKwh())).append("\n");
         }
 

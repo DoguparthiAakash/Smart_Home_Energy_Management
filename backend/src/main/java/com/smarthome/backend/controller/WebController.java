@@ -29,16 +29,6 @@ public class WebController {
     @Autowired
     private com.smarthome.backend.repository.UserRepository userRepository;
 
-    @GetMapping("/admin/ide")
-    public String adminIde(Model model, Authentication authentication) {
-        if (authentication != null) {
-            model.addAttribute("isAdmin",
-                    authentication.getAuthorities().stream().anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN")));
-            model.addAttribute("userRole", authentication.getAuthorities().toString());
-        }
-        return "ide";
-    }
-
     @GetMapping({ "/admin" })
     public String admin(Model model, Authentication authentication) {
         if (authentication != null) {

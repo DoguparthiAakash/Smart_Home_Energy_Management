@@ -30,5 +30,10 @@ public interface UsageLogRepository extends JpaRepository<UsageLog, Long> {
         List<Object[]> findUsagePerDevice(@Param("userId") Long userId, @Param("start") LocalDateTime start,
                         @Param("end") LocalDateTime end);
 
+        @Query("SELECT d.name, SUM(u.energyKwh) FROM UsageLog u JOIN u.device d WHERE u.timestamp BETWEEN :start AND :end GROUP BY d.name")
+        List<Object[]> findGlobalUsagePerDevice(@Param("start") LocalDateTime start, @Param("end") LocalDateTime end);
+
+        List<UsageLog> findByTimestampBetween(LocalDateTime start, LocalDateTime end);
+
         void deleteByDeviceId(Long deviceId);
 }

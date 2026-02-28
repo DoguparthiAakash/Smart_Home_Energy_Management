@@ -32,22 +32,42 @@ public class EnergyController {
         String userEmail = authentication.getName();
         com.smarthome.backend.model.User user = userRepository.findByEmail(userEmail).orElseThrow();
 
-        java.util.List<com.smarthome.backend.model.Device> devices = deviceRepository.findByUserId(user.getId());
+        boolean isAdmin = user.getRole() == com.smarthome.backend.model.User.Role.ADMIN;
 
-        double totalActiveWatts = devices.stream()
-                .filter(d -> Boolean.TRUE.equals(d.getStatus()))
-                .mapToDouble(d -> d.getPowerRating() != null ? d.getPowerRating() : 0.0)
-                .sum();
+        double totalActiveWatts;
+        if (isAdmin) {
+            totalActiveWatts = deviceRepository.findByStatusTrue().stream()
+                    .mapToDouble(d -> d.getPowerRating() != null ? d.getPowerRating() : 0.0)
+                    .sum();
+        } else {
+            totalActiveWatts = deviceRepository.findByUserId(user.getId()).stream()
+                    .filter(d -> Boolean.TRUE.equals(d.getStatus()))
+                    .mapToDouble(d -> d.getPowerRating() != null ? d.getPowerRating() : 0.0)
+                    .sum();
+        }
 
         LocalDateTime startOfDay = LocalDateTime.of(LocalDate.now(), LocalTime.MIN);
         LocalDateTime now = LocalDateTime.now();
 
-        Double dailyUsageKwh = usageLogService.getDailyUsage(userEmail, startOfDay, now);
+        Double dailyUsageKwh;
+        if (isAdmin) {
+            dailyUsageKwh = usageLogService.getGlobalDailyUsage(startOfDay, now);
+        } else {
+            dailyUsageKwh = usageLogService.getDailyUsage(userEmail, startOfDay, now);
+        }
+
         if (dailyUsageKwh == null)
             dailyUsageKwh = 0.0;
 
         double estimatedCost = usageLogService.calculateCost(dailyUsageKwh);
-        double totalPotentialWatts = user.getMaxWattage() != null ? user.getMaxWattage() : 5000.0;
+        double totalPotentialWatts;
+        if (isAdmin) {
+            totalPotentialWatts = userRepository.findAll().stream()
+                    .mapToDouble(u -> u.getMaxWattage() != null ? u.getMaxWattage() : 5000.0)
+                    .sum();
+        } else {
+            totalPotentialWatts = user.getMaxWattage() != null ? user.getMaxWattage() : 5000.0;
+        }
 
         Map<String, Object> response = new HashMap<>();
         response.put("usage", Math.round(dailyUsageKwh * 100.0) / 100.0);
@@ -68,6 +88,9 @@ public class EnergyController {
         double[] costData = new double[7];
 
         LocalDate today = LocalDate.now();
+        com.smarthome.backend.model.User user = userRepository.findByEmail(userEmail).orElseThrow();
+        boolean isAdmin = user.getRole() == com.smarthome.backend.model.User.Role.ADMIN;
+
         for (int i = 0; i < 7; i++) {
             LocalDate date = today.minusDays(6 - i);
             labels[i] = date.getDayOfWeek().getDisplayName(TextStyle.SHORT, Locale.ENGLISH);
@@ -75,7 +98,12 @@ public class EnergyController {
             LocalDateTime start = LocalDateTime.of(date, LocalTime.MIN);
             LocalDateTime end = LocalDateTime.of(date, LocalTime.MAX);
 
-            Double dailySum = usageLogService.getDailyUsage(userEmail, start, end);
+            Double dailySum;
+            if (isAdmin) {
+                dailySum = usageLogService.getGlobalDailyUsage(start, end);
+            } else {
+                dailySum = usageLogService.getDailyUsage(userEmail, start, end);
+            }
             double val = dailySum != null ? Math.round(dailySum * 100.0) / 100.0 : 0.0;
             data[i] = val;
             costData[i] = Math.round(usageLogService.calculateCost(val) * 100.0) / 100.0;
@@ -129,6 +157,9 @@ public class EnergyController {
         double[] costData = new double[(int) days];
 
         LocalDate startDate = start.toLocalDate();
+        com.smarthome.backend.model.User user = userRepository.findByEmail(userEmail).orElseThrow();
+        boolean isAdmin = user.getRole() == com.smarthome.backend.model.User.Role.ADMIN;
+
         for (int i = 0; i < days; i++) {
             LocalDate date = startDate.plusDays(i);
             labels[i] = date.getMonthValue() + "/" + date.getDayOfMonth();
@@ -136,7 +167,12 @@ public class EnergyController {
             LocalDateTime dayStart = LocalDateTime.of(date, LocalTime.MIN);
             LocalDateTime dayEnd = LocalDateTime.of(date, LocalTime.MAX);
 
-            Double dailySum = usageLogService.getDailyUsage(userEmail, dayStart, dayEnd);
+            Double dailySum;
+            if (isAdmin) {
+                dailySum = usageLogService.getGlobalDailyUsage(dayStart, dayEnd);
+            } else {
+                dailySum = usageLogService.getDailyUsage(userEmail, dayStart, dayEnd);
+            }
             double val = dailySum != null ? Math.round(dailySum * 100.0) / 100.0 : 0.0;
             data[i] = val;
             costData[i] = Math.round(usageLogService.calculateCost(val) * 100.0) / 100.0;
@@ -213,7 +249,17 @@ public class EnergyController {
             end = LocalDateTime.now();
         }
 
-        return usageLogService.getUsagePerDevice(userEmail, start, end).stream()
+        com.smarthome.backend.model.User user = userRepository.findByEmail(userEmail).orElseThrow();
+        boolean isAdmin = user.getRole() == com.smarthome.backend.model.User.Role.ADMIN;
+
+        List<Object[]> usageData;
+        if (isAdmin) {
+            usageData = usageLogService.getGlobalUsagePerDevice(start, end);
+        } else {
+            usageData = usageLogService.getUsagePerDevice(userEmail, start, end);
+        }
+
+        return usageData.stream()
                 .map(obj -> {
                     Map<String, Object> map = new HashMap<>();
                     map.put("name", obj[0]);
@@ -227,8 +273,13 @@ public class EnergyController {
     public java.util.Map<Integer, Double> getHourlyUsage(
             org.springframework.security.core.Authentication authentication) {
         String userEmail = authentication.getName();
+        com.smarthome.backend.model.User user = userRepository.findByEmail(userEmail).orElseThrow();
         LocalDateTime start = LocalDateTime.of(LocalDate.now(), LocalTime.MIN);
         LocalDateTime end = LocalDateTime.now();
+
+        if (user.getRole() == com.smarthome.backend.model.User.Role.ADMIN) {
+            return usageLogService.getGlobalHourlyUsage(start, end);
+        }
         return usageLogService.getHourlyUsageForUser(userEmail, start, end);
     }
 }

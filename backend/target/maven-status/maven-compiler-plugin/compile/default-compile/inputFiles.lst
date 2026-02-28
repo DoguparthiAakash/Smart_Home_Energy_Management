@@ -1,3 +1,4 @@
+/home/aakash/Downloads/Smart_Home_Energy_Management/backend/src/main/java/com/smarthome/backend/repository/SystemEventRepository.java
 /home/aakash/Downloads/Smart_Home_Energy_Management/backend/src/main/java/com/smarthome/backend/repository/TechnicianVisitRepository.java
 /home/aakash/Downloads/Smart_Home_Energy_Management/backend/src/main/java/com/smarthome/backend/controller/BlockchainController.java
 /home/aakash/Downloads/Smart_Home_Energy_Management/backend/src/main/java/com/smarthome/backend/controller/DeviceController.java
@@ -6,6 +7,7 @@
 /home/aakash/Downloads/Smart_Home_Energy_Management/backend/src/main/java/com/smarthome/backend/model/Device.java
 /home/aakash/Downloads/Smart_Home_Energy_Management/backend/src/main/java/com/smarthome/backend/service/DataGeneratorService.java
 /home/aakash/Downloads/Smart_Home_Energy_Management/backend/src/main/java/com/smarthome/backend/controller/AnalyticsController.java
+/home/aakash/Downloads/Smart_Home_Energy_Management/backend/src/main/java/com/smarthome/backend/model/SystemEvent.java
 /home/aakash/Downloads/Smart_Home_Energy_Management/backend/src/main/java/com/smarthome/backend/dto/DeviceDTO.java
 /home/aakash/Downloads/Smart_Home_Energy_Management/backend/src/main/java/com/smarthome/backend/model/User.java
 /home/aakash/Downloads/Smart_Home_Energy_Management/backend/src/main/java/com/smarthome/backend/model/UsageLog.java

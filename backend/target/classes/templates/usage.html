@@ -143,7 +143,20 @@
             style="margin-top: 10px; background: var(--card-bg); padding: 20px; border-radius: 20px;">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
                 <h2 style="font-size: 20px; margin: 0;">Energy Usage</h2>
-                <div style="display: flex; gap: 16px; align-items: center; font-size: 12px; color: var(--text-muted);">
+                <div style="display: flex; gap: 16px; align-items: center; font-size: 11px; color: var(--text-muted);">
+                    <div
+                        style="display: flex; gap: 8px; align-items: center; background: rgba(120, 120, 128, 0.08); padding: 4px 10px; border-radius: 8px;">
+                        <label style="font-weight: 500;">Max kWh:</label>
+                        <input type="number" id="limitMaxKwh" step="0.5" placeholder="Auto"
+                            onchange="applyChartLimits()"
+                            style="width: 50px; background: none; border: none; border-bottom: 1px solid rgba(128,128,128,0.3); color: var(--text-color); font-size: 11px; font-weight: 600; text-align: center; outline: none;">
+                    </div>
+                    <div
+                        style="display: flex; gap: 8px; align-items: center; background: rgba(120, 120, 128, 0.08); padding: 4px 10px; border-radius: 8px;">
+                        <label style="font-weight: 500;">Max Cost:</label>
+                        <input type="number" id="limitMaxCost" step="5" placeholder="Auto" onchange="applyChartLimits()"
+                            style="width: 50px; background: none; border: none; border-bottom: 1px solid rgba(128,128,128,0.3); color: var(--text-color); font-size: 11px; font-weight: 600; text-align: center; outline: none;">
+                    </div>
                     <span
                         style="background: rgba(88,86,214,0.1); color: #5856D6; padding: 4px 8px; border-radius: 6px; font-weight: 600; font-size: 10px; display: flex; align-items: center; gap: 4px;">
                         <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
@@ -153,12 +166,6 @@
                         Blockchain Verified
                     </span>
                     <span id="chartUpdatedAt" style="font-size: 11px; opacity: 0.6;"></span>
-                    <span style="display: flex; align-items: center; gap: 4px;"><span
-                            style="width: 12px; height: 12px; background: #34C759; border-radius: 3px; display: inline-block;"></span>
-                        kWh Used</span>
-                    <span style="display: flex; align-items: center; gap: 4px;"><span
-                            style="width: 18px; height: 2px; background: #FF9500; display: inline-block;"></span> ₹
-                        Cost</span>
                 </div>
             </div>
             <div style="height: 260px;">
@@ -272,13 +279,6 @@
                         d="M12,15V17H18V15H12M12,11V13H18V11H12M12,7V9H18V7H12M6,16H9C9.55,16 10,15.55 10,15V9C10,8.45 9.55,8 9,8H6C5.45,8 5,8.45 5,9V15C5,15.55 5.45,16 6,16Z" />
                 </svg>
                 <span class="dock-label">Control</span>
-            </a>
-            <a href="/admin/ide" class="dock-item">
-                <svg class="dock-icon" viewBox="0 0 24 24" fill="currentColor">
-                    <path
-                        d="M2,6V8H5.29L3.29,10H6V12H2V14H6.71L8.71,12H6V10H10V6H2M14,6V10H18V6H14M14,12V16H18V12H14Z" />
-                </svg>
-                <span class="dock-label">Console</span>
             </a>
         </th:block>
 
@@ -644,6 +644,37 @@
                     }
                 }
             });
+            applyChartLimits();
+        }
+
+        function applyChartLimits() {
+            if (!energyChart) return;
+            const maxKwh = document.getElementById('limitMaxKwh').value;
+            const maxCost = document.getElementById('limitMaxCost').value;
+
+            if (maxKwh) {
+                energyChart.options.scales.yUsage.max = parseFloat(maxKwh);
+                localStorage.setItem('chartMaxKwh', maxKwh);
+            } else {
+                delete energyChart.options.scales.yUsage.max;
+                localStorage.removeItem('chartMaxKwh');
+            }
+
+            if (maxCost) {
+                energyChart.options.scales.yCost.max = parseFloat(maxCost);
+                localStorage.setItem('chartMaxCost', maxCost);
+            } else {
+                delete energyChart.options.scales.yCost.max;
+                localStorage.removeItem('chartMaxCost');
+            }
+            energyChart.update();
+        }
+
+        function initChartLimits() {
+            const savedKwh = localStorage.getItem('chartMaxKwh');
+            const savedCost = localStorage.getItem('chartMaxCost');
+            if (savedKwh) document.getElementById('limitMaxKwh').value = savedKwh;
+            if (savedCost) document.getElementById('limitMaxCost').value = savedCost;
         }
 
         let hourlyTimeFormat = localStorage.getItem('preferredTimeFormat') || '24h';
@@ -747,6 +778,7 @@
         }
 
         window.onload = () => {
+            initChartLimits();
             // Initial load
             refreshSummary();
             refreshWeekly();

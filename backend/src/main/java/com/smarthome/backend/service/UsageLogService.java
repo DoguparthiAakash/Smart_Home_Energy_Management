@@ -130,7 +130,15 @@ public class UsageLogService {
             LocalDateTime end) {
         User user = userRepository.findByEmail(userEmail).orElseThrow();
         List<UsageLog> logs = usageLogRepository.findByUserIdAndTimestampBetween(user.getId(), start, end);
+        return aggregateHourly(logs);
+    }
 
+    public java.util.Map<Integer, Double> getGlobalHourlyUsage(LocalDateTime start, LocalDateTime end) {
+        List<UsageLog> logs = usageLogRepository.findByTimestampBetween(start, end);
+        return aggregateHourly(logs);
+    }
+
+    private java.util.Map<Integer, Double> aggregateHourly(List<UsageLog> logs) {
         java.util.Map<Integer, Double> hourlyMap = new java.util.TreeMap<>();
         for (int i = 0; i < 24; i++)
             hourlyMap.put(i, 0.0);
@@ -140,5 +148,14 @@ public class UsageLogService {
             hourlyMap.put(hour, hourlyMap.get(hour) + log.getEnergyKwh());
         }
         return hourlyMap;
+    }
+
+    public Double getGlobalDailyUsage(LocalDateTime start, LocalDateTime end) {
+        Double sum = usageLogRepository.sumEnergyBetween(start, end);
+        return sum != null ? sum : 0.0;
+    }
+
+    public List<Object[]> getGlobalUsagePerDevice(LocalDateTime start, LocalDateTime end) {
+        return usageLogRepository.findGlobalUsagePerDevice(start, end);
     }
 }

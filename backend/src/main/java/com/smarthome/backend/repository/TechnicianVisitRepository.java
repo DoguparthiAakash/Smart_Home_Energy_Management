@@ -7,6 +7,12 @@ import java.util.List;
 
 public interface TechnicianVisitRepository extends JpaRepository<TechnicianVisit, Long> {
     List<LocalDate> findDistinctVisitDateByOrderByVisitDateDesc();
+
     List<TechnicianVisit> findByVisitDateBetweenOrderByVisitDateDescStartTimeDesc(LocalDate start, LocalDate end);
+
     List<TechnicianVisit> findTop10ByOrderByStartTimeDesc();
+
+    long countByTechnicianId(Long technicianId);
+
+    long countByTechnicianIdAndStatus(Long technicianId, String status);
 }

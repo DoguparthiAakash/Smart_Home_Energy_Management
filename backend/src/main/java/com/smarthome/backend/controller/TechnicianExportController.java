@@ -9,6 +9,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 
 @RestController
@@ -23,17 +24,20 @@ public class TechnicianExportController {
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate start,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate end) {
 
-        List<TechnicianVisit> visits = visitRepository.findByVisitDateBetweenOrderByVisitDateDescStartTimeDesc(start, end);
+        List<TechnicianVisit> visits = visitRepository.findByVisitDateBetweenOrderByVisitDateDescStartTimeDesc(start,
+                end);
 
-        StringBuilder csv = new StringBuilder("ID,Technician Name,Email,Visit Date,Start Time,End Time,Status\n");
+        DateTimeFormatter dtf = DateTimeFormatter.ofPattern("HH:mm:ss");
+        StringBuilder csv = new StringBuilder(
+                "\"ID\",\"Technician Name\",\"Email\",\"Visit Date\",\"Start Time\",\"End Time\",\"Status\"\n");
         for (TechnicianVisit v : visits) {
-            csv.append(v.getId()).append(",");
-            csv.append("\"").append(v.getTechnician().getName()).append("\",");
-            csv.append(v.getTechnician().getEmail()).append(",");
-            csv.append(v.getVisitDate()).append(",");
-            csv.append(v.getStartTime()).append(",");
-            csv.append(v.getEndTime() != null ? v.getEndTime() : "N/A").append(",");
-            csv.append(v.getStatus()).append("\n");
+            csv.append("\"").append(v.getId()).append("\",");
+            csv.append("\"").append(v.getTechnician().getName().replace("\"", "\"\"")).append("\",");
+            csv.append("\"").append(v.getTechnician().getEmail()).append("\",");
+            csv.append("\"").append(v.getVisitDate()).append("\",");
+            csv.append("\"").append(v.getStartTime() != null ? v.getStartTime().format(dtf) : "").append("\",");
+            csv.append("\"").append(v.getEndTime() != null ? v.getEndTime().format(dtf) : "").append("\",");
+            csv.append("\"").append(v.getStatus()).append("\"\n");
         }
 
         byte[] csvBytes = csv.toString().getBytes();

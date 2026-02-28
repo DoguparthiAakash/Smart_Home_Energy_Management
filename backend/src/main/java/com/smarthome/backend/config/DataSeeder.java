@@ -8,6 +8,8 @@ import com.smarthome.backend.repository.DeviceRepository;
 import com.smarthome.backend.repository.TechnicianVisitRepository;
 import com.smarthome.backend.repository.UsageLogRepository;
 import com.smarthome.backend.repository.UserRepository;
+import com.smarthome.backend.repository.SystemEventRepository;
+import com.smarthome.backend.model.SystemEvent;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Bean;
@@ -35,6 +37,8 @@ public class DataSeeder {
     private UsageLogRepository usageLogRepository;
     @Autowired
     private TechnicianVisitRepository visitRepository;
+    @Autowired
+    private SystemEventRepository systemEventRepository;
 
     @Bean
     public CommandLineRunner loadData() {
@@ -73,14 +77,17 @@ public class DataSeeder {
 
             seedHistoricalUsage(homeUser);
             seedTechnicianVisits();
+            seedSystemEvents();
         };
     }
 
     private void seedTechnicianVisits() {
-        if (visitRepository.count() > 0) return;
+        if (visitRepository.count() > 0)
+            return;
 
         User tech = userRepository.findByEmail("technician").orElse(null);
-        if (tech == null) return;
+        if (tech == null)
+            return;
 
         Random rnd = new Random(55);
         LocalDate today = LocalDate.now();
@@ -92,6 +99,18 @@ public class DataSeeder {
         active.setStartTime(LocalDateTime.of(today, LocalTime.of(9, 30)));
         active.setStatus("ACTIVE");
         visitRepository.save(active);
+
+        // Add visit for 'technition' (requested by user)
+        User technition = userRepository.findByEmail("technition").orElse(null);
+        if (technition != null) {
+            TechnicianVisit v2 = new TechnicianVisit();
+            v2.setTechnician(technition);
+            v2.setVisitDate(today.minusDays(1));
+            v2.setStartTime(LocalDateTime.of(today.minusDays(1), LocalTime.of(14, 0)));
+            v2.setEndTime(LocalDateTime.of(today.minusDays(1), LocalTime.of(16, 30)));
+            v2.setStatus("COMPLETED");
+            visitRepository.save(v2);
+        }
 
         // 2 Completed visits
         for (int i = 1; i <= 2; i++) {
@@ -196,6 +215,35 @@ public class DataSeeder {
             user.setMaxWattage(5000.0);
         userRepository.save(user);
         System.out.println("UPSERTED USER: " + email + " (" + role + ")");
+    }
+
+    private void seedSystemEvents() {
+        if (systemEventRepository.count() > 0)
+            return;
+
+        createSystemEvent("USER_REGISTRATION", "New user 'muterornament' registered as ADMIN",
+                SystemEvent.Severity.INFO, 5);
+        createSystemEvent("USER_REGISTRATION", "New user 'john_homeowner' registered as HOMEOWNER",
+                SystemEvent.Severity.INFO, 4);
+        createSystemEvent("SECURITY", "Blockchain node OIDC verification successful for all users",
+                SystemEvent.Severity.INFO, 3);
+        createSystemEvent("SYSTEM", "Automated database backup completed successfully", SystemEvent.Severity.INFO, 2);
+        createSystemEvent("SIMULATION", "Grid stress test simulation completed - 0 failures", SystemEvent.Severity.INFO,
+                1);
+        createSystemEvent("SECURITY", "Unauthorized login attempt from 192.168.1.105 blocked",
+                SystemEvent.Severity.WARNING, 0);
+
+        System.out.println("SYSTEM EVENTS SEEDED");
+    }
+
+    private void createSystemEvent(String type, String message, SystemEvent.Severity severity, int hoursAgo) {
+        SystemEvent event = SystemEvent.builder()
+                .type(type)
+                .message(message)
+                .severity(severity)
+                .timestamp(LocalDateTime.now().minusHours(hoursAgo))
+                .build();
+        systemEventRepository.save(event);
     }
 
     private Device createDevice(User user, String name, String type, Double power,

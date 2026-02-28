@@ -1,5 +1,7 @@
 com/smarthome/backend/service/TotpService.class
+com/smarthome/backend/model/SystemEvent.class
 com/smarthome/backend/model/Device.class
+com/smarthome/backend/model/SystemEvent$SystemEventBuilder.class
 com/smarthome/backend/dto/AuthRequest.class
 com/smarthome/backend/SmartHomeApplication.class
 com/smarthome/backend/service/DeviceService.class
@@ -23,6 +25,7 @@ com/smarthome/backend/repository/BlockchainBlockRepository.class
 com/smarthome/backend/service/DeviceSimulatorService.class
 com/smarthome/backend/model/Schedule.class
 com/smarthome/backend/model/User$Role.class
+com/smarthome/backend/model/SystemEvent$Severity.class
 com/smarthome/backend/controller/BlockchainController.class
 com/smarthome/backend/model/TechnicianVisit.class
 com/smarthome/backend/repository/UsageLogRepository.class
@@ -40,6 +43,7 @@ com/smarthome/backend/controller/UserController.class
 com/smarthome/backend/model/Device$Priority.class
 com/smarthome/backend/repository/DeviceEventRepository.class
 com/smarthome/backend/model/DeviceEvent.class
+com/smarthome/backend/repository/SystemEventRepository.class
 com/smarthome/backend/controller/TechnicianController.class
 com/smarthome/backend/controller/DeviceController.class
 com/smarthome/backend/dto/AuthResponse.class

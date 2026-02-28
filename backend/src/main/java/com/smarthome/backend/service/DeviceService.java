@@ -9,6 +9,8 @@ import com.smarthome.backend.repository.DeviceRepository;
 import com.smarthome.backend.repository.DeviceScheduleRepository;
 import com.smarthome.backend.repository.UsageLogRepository;
 import com.smarthome.backend.repository.UserRepository;
+import com.smarthome.backend.model.SystemEvent;
+import com.smarthome.backend.repository.SystemEventRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -39,6 +41,9 @@ public class DeviceService {
 
     @Autowired
     private DeviceScheduleRepository scheduleRepository;
+
+    @Autowired
+    private SystemEventRepository systemEventRepository;
 
     public List<DeviceDTO> getDevicesForUser(String userEmail) {
         User user = userRepository.findByEmail(userEmail).orElseThrow(() -> new RuntimeException("User not found"));
@@ -73,6 +78,9 @@ public class DeviceService {
         }
 
         Device saved = deviceRepository.save(device);
+        logSystemEvent("DEVICE_ADDED",
+                "New device '" + saved.getName() + "' (" + saved.getType() + ") added by " + userEmail,
+                SystemEvent.Severity.INFO);
         return convertToDTO(saved);
     }
 
@@ -95,7 +103,10 @@ public class DeviceService {
         if (deviceDTO.getCustomIcon() != null) {
             device.setCustomIcon(deviceDTO.getCustomIcon());
         }
-        return convertToDTO(deviceRepository.save(device));
+        Device updated = deviceRepository.save(device);
+        logSystemEvent("DEVICE_UPDATED", "Device '" + updated.getName() + "' configuration updated",
+                SystemEvent.Severity.INFO);
+        return convertToDTO(updated);
     }
 
     public DeviceDTO updateDeviceIcon(Long deviceId, String base64Icon) {
@@ -192,6 +203,9 @@ public class DeviceService {
             deviceRepository.save(d);
 
             shedAmount += d.getPowerRating();
+            logSystemEvent("ENERGY_MANAGEMENT",
+                    "Smart throttle: " + d.getName() + " was deactivated to maintain grid stability.",
+                    SystemEvent.Severity.INFO);
             if (shedAmount >= requiredWattage) {
                 return true;
             }
@@ -208,6 +222,18 @@ public class DeviceService {
         eventRepository.deleteByDeviceId(deviceId);
         scheduleRepository.deleteByDeviceId(deviceId);
         deviceRepository.delete(device);
+        logSystemEvent("DEVICE_DELETED", "Device '" + device.getName() + "' removed from system",
+                SystemEvent.Severity.WARNING);
+    }
+
+    private void logSystemEvent(String type, String message, SystemEvent.Severity severity) {
+        SystemEvent event = SystemEvent.builder()
+                .type(type)
+                .message(message)
+                .severity(severity)
+                .timestamp(LocalDateTime.now())
+                .build();
+        systemEventRepository.save(event);
     }
 
     private DeviceDTO convertToDTO(Device device) {

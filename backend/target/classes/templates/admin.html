@@ -386,21 +386,45 @@
     </header>
 
     <div class="metrics-grid">
+        <div class="stat-card" style="grid-column: span 2; position: relative; overflow: hidden;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                <div>
+                    <div class="stat-label" style="text-transform: uppercase; letter-spacing: 0.5px;">Global System Load
+                    </div>
+                    <div style="display: flex; align-items: baseline; gap: 4px;">
+                        <span id="statCurrentLoad"
+                            style="font-size: 32px; font-weight: 800; letter-spacing: -1px;">0</span>
+                        <span style="font-size: 14px; font-weight: 600; color: var(--text-muted);">W</span>
+                    </div>
+                </div>
+                <div style="text-align: right;">
+                    <div class="stat-label">Capacity</div>
+                    <div style="font-weight: 700; color: var(--text-color);"><span id="statMaxLoad">0</span>W</div>
+                </div>
+            </div>
+            <div
+                style="width: 100%; height: 12px; background: rgba(120, 120, 128, 0.1); border-radius: 6px; position: relative; overflow: hidden;">
+                <div id="globalLoadBar"
+                    style="width: 0%; height: 100%; background: var(--ios-green); transition: width 1s cubic-bezier(0.4, 0, 0.2, 1); border-radius: 6px;">
+                </div>
+            </div>
+        </div>
+
         <div class="metric-card">
             <div class="metric-label">Total Users</div>
-            <div class="metric-value">124</div>
+            <div id="statTotalUsers" class="metric-value">--</div>
         </div>
         <div class="metric-card">
             <div class="metric-label">Active Systems</div>
-            <div class="metric-value">98</div>
+            <div id="statActiveSystems" class="metric-value">--</div>
         </div>
         <div class="metric-card">
             <div class="metric-label">System Health</div>
-            <div class="metric-value" style="color: var(--ios-green);">99.9%</div>
+            <div id="statSystemHealth" class="metric-value" style="color: var(--ios-green);">--</div>
         </div>
         <div class="metric-card">
             <div class="metric-label">Energy Throttled</div>
-            <div class="metric-value" style="color: var(--ios-orange);">12.4 kW</div>
+            <div id="statEnergyThrottled" class="metric-value" style="color: var(--ios-orange);">--</div>
         </div>
     </div>
 
@@ -416,12 +440,12 @@
                     <div
                         style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; padding: 12px; background: var(--bg-color); border-radius: 12px;">
                         <span style="color: var(--text-muted); font-size: 13px;">Failed Logins (24h)</span>
-                        <span style="font-weight: 600; color: var(--ios-red);">3</span>
+                        <span id="statFailedLogins" style="font-weight: 600; color: var(--ios-red);">--</span>
                     </div>
                     <div
                         style="display: flex; justify-content: space-between; align-items: center; padding: 12px; background: var(--bg-color); border-radius: 12px;">
                         <span style="color: var(--text-muted); font-size: 13px;">Active Sessions</span>
-                        <span style="font-weight: 600; color: var(--ios-blue);">234</span>
+                        <span id="statActiveSessions" style="font-weight: 600; color: var(--ios-blue);">--</span>
                     </div>
                 </div>
             </div>
@@ -435,30 +459,36 @@
                         <div
                             style="display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 6px; font-weight: 500; color: var(--text-muted);">
                             <span>Database</span>
-                            <span style="color: var(--ios-green);">Connected</span>
+                            <span id="healthDbStatus" style="color: var(--ios-green);">--</span>
                         </div>
                         <div style="height: 6px; background: var(--bg-color); border-radius: 3px; overflow: hidden;">
-                            <div style="width: 100%; height: 100%; background: var(--ios-blue);"></div>
+                            <div id="healthDbBar"
+                                style="width: 0%; height: 100%; background: var(--ios-blue); transition: width 0.5s;">
+                            </div>
                         </div>
                     </div>
                     <div style="margin-bottom: 20px;">
                         <div
                             style="display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 6px; font-weight: 500; color: var(--text-muted);">
                             <span>API Gateway</span>
-                            <span style="color: var(--ios-green);">Stable</span>
+                            <span id="healthApiStatus" style="color: var(--ios-green);">--</span>
                         </div>
                         <div style="height: 6px; background: var(--bg-color); border-radius: 3px; overflow: hidden;">
-                            <div style="width: 85%; height: 100%; background: var(--ios-blue); opacity: 0.8;"></div>
+                            <div id="healthApiBar"
+                                style="width: 0%; height: 100%; background: var(--ios-blue); opacity: 0.8; transition: width 0.5s;">
+                            </div>
                         </div>
                     </div>
                     <div>
                         <div
                             style="display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 6px; font-weight: 500; color: var(--text-muted);">
                             <span>MQTT Broker</span>
-                            <span style="color: var(--ios-green);">24ms</span>
+                            <span id="healthMqttStatus" style="color: var(--ios-green);">--</span>
                         </div>
                         <div style="height: 6px; background: var(--bg-color); border-radius: 3px; overflow: hidden;">
-                            <div style="width: 95%; height: 100%; background: var(--ios-blue); opacity: 0.6;"></div>
+                            <div id="healthMqttBar"
+                                style="width: 0%; height: 100%; background: var(--ios-blue); opacity: 0.6; transition: width 0.5s;">
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -492,23 +522,9 @@
             <div class="tech-list" style="flex: 1.5;">
                 <div style="padding: 24px;">
                     <h3 style="margin: 0 0 20px 0; font-size: 15px; font-weight: 600;">System Events</h3>
-                    <div style="border-left: 3px solid var(--ios-blue); padding-left: 20px; margin-bottom: 24px;">
-                        <div style="display: flex; justify-content: space-between; align-items: baseline;">
-                            <span style="font-weight: 600; font-size: 13px; color: var(--ios-blue);">NEW USER
-                                REGISTERED</span>
-                            <span style="font-size: 11px; color: var(--text-muted);">JUST NOW</span>
+                    <div id="systemEventTimeline" style="display: flex; flex-direction: column; gap: 16px;">
+                        <div style="text-align: center; color: var(--text-muted); font-size: 13px;">Loading events...
                         </div>
-                        <p style="font-size: 13px; color: var(--text-muted); margin: 6px 0;">john_doe successfully
-                            verified via Blockchain OIDC.</p>
-                    </div>
-                    <div style="border-left: 3px solid var(--divider-color); padding-left: 20px;">
-                        <div style="display: flex; justify-content: space-between; align-items: baseline;">
-                            <span style="font-weight: 600; font-size: 13px; color: var(--text-color);">BACKUP
-                                COMPLETED</span>
-                            <span style="font-size: 11px; color: var(--text-muted);">12 MIN AGO</span>
-                        </div>
-                        <p style="font-size: 13px; color: var(--text-muted); margin: 6px 0;">Automated backup cycle
-                            successful - 2.4 GB encrypted.</p>
                     </div>
                 </div>
             </div>
@@ -690,12 +706,6 @@
             </svg>
             <span class="dock-label">Control</span>
         </a>
-        <a href="/admin/ide" class="dock-item">
-            <svg class="dock-icon" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M2,6V8H5.29L3.29,10H6V12H2V14H6.71L8.71,12H6V10H10V6H2M14,6V10H18V6H14M14,12V16H18V12H14Z" />
-            </svg>
-            <span class="dock-label">Console</span>
-        </a>
         <a href="/settings" class="dock-item">
             <svg class="dock-icon" viewBox="0 0 24 24" fill="currentColor">
                 <path
@@ -797,6 +807,72 @@
             logDiv.scrollTop = logDiv.scrollHeight;
         }
 
+        async function refreshAdminStats() {
+            try {
+                const res = await fetch('/api/admin/stats');
+                if (res.ok) {
+                    const stats = await res.json();
+                    document.getElementById('statTotalUsers').innerText = stats.totalUsers;
+                    document.getElementById('statActiveSystems').innerText = stats.activeSystems;
+                    document.getElementById('statSystemHealth').innerText = stats.systemHealth + '%';
+                    document.getElementById('statEnergyThrottled').innerText = stats.energyThrottled.toFixed(1);
+                    document.getElementById('statFailedLogins').innerText = stats.failedLogins;
+                    document.getElementById('statActiveSessions').innerText = stats.activeSessions;
+
+                    // Global Load Bar
+                    if (stats.currentLoad !== undefined && stats.maxLoad !== undefined) {
+                        document.getElementById('statCurrentLoad').innerText = Math.round(stats.currentLoad);
+                        document.getElementById('statMaxLoad').innerText = Math.round(stats.maxLoad);
+                        const percentage = stats.maxLoad > 0 ? (stats.currentLoad / stats.maxLoad) * 100 : 0;
+                        const bar = document.getElementById('globalLoadBar');
+                        bar.style.width = Math.min(percentage, 100) + '%';
+
+                        if (percentage < 60) bar.style.background = 'var(--ios-green)';
+                        else if (percentage < 85) bar.style.background = 'var(--ios-orange)';
+                        else bar.style.background = 'var(--ios-red)';
+                    }
+                }
+            } catch (e) { }
+        }
+
+        async function refreshHealth() {
+            try {
+                const res = await fetch('/api/admin/health');
+                if (res.ok) {
+                    const health = await res.json();
+                    document.getElementById('healthDbStatus').innerText = health.database;
+                    document.getElementById('healthApiStatus').innerText = health.apiGateway;
+                    document.getElementById('healthMqttStatus').innerText = health.mqttBroker;
+                    document.getElementById('healthDbBar').style.width = health.dbLoad + '%';
+                    document.getElementById('healthApiBar').style.width = health.apiLoad + '%';
+                    document.getElementById('healthMqttBar').style.width = health.mqttLoad + '%';
+                }
+            } catch (e) { }
+        }
+
+        async function refreshSystemEvents() {
+            try {
+                const res = await fetch('/api/admin/events');
+                if (res.ok) {
+                    const events = await res.json();
+                    const container = document.getElementById('systemEventTimeline');
+                    if (!events.length) {
+                        container.innerHTML = '<div style="text-align: center; color: var(--text-muted); font-size: 13px;">No events logged.</div>';
+                        return;
+                    }
+                    container.innerHTML = events.map(e => `
+                        <div style="border-left: 3px solid ${e.severity === 'WARNING' ? 'var(--ios-orange)' : e.severity === 'ERROR' || e.severity === 'CRITICAL' ? 'var(--ios-red)' : 'var(--ios-blue)'}; padding-left: 20px;">
+                            <div style="display: flex; justify-content: space-between; align-items: baseline;">
+                                <span style="font-weight: 600; font-size: 13px; color: ${e.severity === 'WARNING' ? 'var(--ios-orange)' : e.severity === 'ERROR' || e.severity === 'CRITICAL' ? 'var(--ios-red)' : 'var(--ios-blue)'}">${e.type}</span>
+                                <span style="font-size: 11px; color: var(--text-muted);">${formatTime(e.timestamp)}</span>
+                            </div>
+                            <p style="font-size: 13px; color: var(--text-color); margin: 6px 0;">${e.message}</p>
+                        </div>
+                    `).join('');
+                }
+            } catch (e) { }
+        }
+
         function inspectDevice(id) {
             const dev = allDevices.find(d => d.id == id);
             if (!dev) return;
@@ -808,8 +884,14 @@
         // Initialize Dev Mode
         toggleDevMode(false);
 
+        refreshAdminStats();
+        refreshSystemEvents();
+        refreshHealth();
         fetchTechnicians(); fetchEnergyData(); fetchDevices(); fetchTechnicianVisits();
 
+        setInterval(refreshAdminStats, 10000);
+        setInterval(refreshSystemEvents, 15000);
+        setInterval(refreshHealth, 5000);
         let allDevices = [];
 
         async function fetchEnergyData() {
@@ -896,17 +978,23 @@
                             <p>${d.location || 'GLOBAL'} • ${isDevMode ? `<span style="color: var(--ios-green); font-weight: 600;">Status: Healthy</span>` : `Firmware: v${d.firmwareVersion || '1.0.2'}`}</p>
                         </div>
                     </div>
-                    <div style="display: flex; align-items: center; gap: 16px;">
-                        ${isDevMode ? `
-                            <button class="btn-primary" onclick="inspectDevice('${d.id}')" style="padding: 6px 14px; font-size: 11px; width: auto; margin: 0; border-radius: 8px;">Inspect</button>
-                        ` : ''}
+                    <div style="display: flex; align-items: center; gap: 24px;">
                         <div style="text-align: right;">
                             <div style="font-size: 15px; font-weight: 700; color: var(--text-color);">${d.powerRating}W</div>
                             <div style="font-size: 11px; color: ${d.status ? 'var(--ios-green)' : 'var(--ios-red)'}; font-weight: 600; margin-top: 2px;">${d.status ? 'ONLINE' : 'OFFLINE'}</div>
                         </div>
+                        <label class="toggle-switch">
+                            <input type="checkbox" ${d.status ? 'checked' : ''} onchange="toggleDevice(${d.id})">
+                            <span class="slider"></span>
+                        </label>
                     </div>
                 </div>
             `).join('');
+        }
+
+        async function toggleDevice(id) {
+            const res = await fetch(`/api/devices/${id}/status`, { method: 'PUT' });
+            if (res.ok) { fetchDevices(); refreshAdminStats(); }
         }
 
         function filterDevicesByCategory() {
@@ -935,7 +1023,7 @@
             const params = new URLSearchParams({ start, end });
             if (deviceId) params.append('deviceId', deviceId);
             if (category) params.append('category', category);
-            window.location.href = `/api/devices/energy/export/custom?${params.toString()}`;
+            window.location.href = `/api/energy/export/custom?${params.toString()}`;
         }
 
         async function fetchTechnicians() {
@@ -984,19 +1072,21 @@
                         </div>
                         <div class="tech-info">
                             <h4 style="font-weight: 600;">${t.name}</h4>
-                            <p>${t.email} • ID: ${t.id || 'TECH_' + Math.floor(Math.random() * 99)}</p>
+                            <p>${t.email} • ID: ${t.id}</p>
                         </div>
                     </div>
                     <div style="display: flex; gap: 32px; align-items: center;">
                         <div style="text-align: center;">
-                            <div style="font-size: 15px; font-weight: 700; color: var(--text-color);">${Math.floor(Math.random() * 15) + 85}%</div>
+                            <div style="font-size: 15px; font-weight: 700; color: var(--text-color);">${t.completionRate}%</div>
                             <div style="font-size: 10px; color: var(--text-muted); font-weight: 600; text-transform: uppercase;">Comp</div>
                         </div>
                         <div style="text-align: center;">
-                            <div style="font-size: 15px; font-weight: 700; color: var(--ios-orange);">${(Math.random() * 1 + 4).toFixed(1)} ★</div>
+                            <div style="font-size: 15px; font-weight: 700; color: var(--ios-orange);">${t.rating.toFixed(1)} ★</div>
                             <div style="font-size: 10px; color: var(--text-muted); font-weight: 600; text-transform: uppercase;">Rating</div>
                         </div>
-                        <span class="badge badge-success" style="height: fit-content; border-radius: 6px; font-size: 10px;">Active</span>
+                        <span class="badge ${t.totalVisits > 0 ? 'badge-success' : 'badge-warning'}" style="height: fit-content; border-radius: 6px; font-size: 10px;">
+                            ${t.totalVisits > 0 ? 'Active' : 'Idle'}
+                        </span>
                     </div>
                 </div>
             `).join('');

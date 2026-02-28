@@ -6,4 +6,8 @@ import java.util.List;
 
 public interface DeviceRepository extends JpaRepository<Device, Long> {
     List<Device> findByUserId(Long userId);
+
+    List<Device> findByStatusTrue();
+
+    long countByStatus(Boolean status);
 }
