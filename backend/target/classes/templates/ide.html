@@ -7,13 +7,19 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
         :root {
-            --ide-bg: #1e1e1e;
-            --ide-sidebar: #252526;
-            --ide-activity: #333333;
-            --ide-header: #3c3c3c;
-            --ide-text: #cccccc;
-            --ide-accent: #007acc;
-            --ide-border: #333;
+            --ide-bg: var(--bg-color);
+            --ide-sidebar: rgba(255, 255, 255, 0.4);
+            --ide-activity: rgba(255, 255, 255, 0.2);
+            --ide-header: rgba(255, 255, 255, 0.8);
+            --ide-text: var(--text-color);
+            --ide-accent: var(--accent-color);
+            --ide-border: var(--divider-color);
+        }
+
+        [data-theme="dark"] {
+            --ide-sidebar: rgba(28, 28, 30, 0.4);
+            --ide-activity: rgba(28, 28, 30, 0.6);
+            --ide-header: rgba(28, 28, 30, 0.8);
         }
 
         body {
@@ -21,7 +27,7 @@
             padding: 0;
             background: var(--ide-bg);
             color: var(--ide-text);
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif;
             height: 100vh;
             overflow: hidden;
             display: flex;
@@ -30,98 +36,120 @@
 
         /* Top Bar */
         .ide-header {
-            height: 30px;
+            height: 44px;
             background: var(--ide-header);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
             display: flex;
             align-items: center;
-            padding: 0 10px;
-            font-size: 13px;
+            padding: 0 20px;
+            font-size: 14px;
+            font-weight: 600;
+            border-bottom: 1px solid var(--ide-border);
+            z-index: 100;
         }
 
         .back-btn {
-            color: #fff;
+            color: var(--ide-accent);
             text-decoration: none;
             margin-right: 20px;
-            font-size: 12px;
-            opacity: 0.8;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            transition: opacity 0.2s;
         }
 
         .back-btn:hover {
-            opacity: 1;
+            opacity: 0.7;
         }
 
         /* Main Layout */
         .ide-body {
             flex: 1;
             display: flex;
-            height: calc(100vh - 30px - 22px);
-            /* Minus header and status bar */
+            height: calc(100vh - 44px - 24px);
+            background: url('https://images.unsplash.com/photo-1614850523296-d8c1af93d400?q=80&w=2070&auto=format&fit=crop') center/cover no-repeat;
         }
 
-        /* Activity Bar (Left Icons) */
+        /* Activity Bar */
         .activity-bar {
-            width: 48px;
+            width: 64px;
             background: var(--ide-activity);
+            backdrop-filter: blur(30px);
+            -webkit-backdrop-filter: blur(30px);
             display: flex;
             flex-direction: column;
             align-items: center;
-            padding-top: 10px;
+            padding-top: 20px;
+            border-right: 1px solid var(--ide-border);
         }
 
         .activity-icon {
-            width: 48px;
-            height: 48px;
+            width: 44px;
+            height: 44px;
             display: flex;
             justify-content: center;
             align-items: center;
             cursor: pointer;
-            color: #858585;
-            font-size: 24px;
-            border-left: 2px solid transparent;
+            color: var(--text-muted);
+            font-size: 20px;
+            border-radius: 12px;
+            margin-bottom: 12px;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
         .activity-icon.active {
+            background: var(--ide-accent);
             color: #fff;
-            border-left: 2px solid #fff;
+            box-shadow: 0 4px 12px rgba(0, 122, 255, 0.3);
         }
 
-        .activity-icon:hover {
-            color: #fff;
+        .activity-icon:hover:not(.active) {
+            background: rgba(0, 0, 0, 0.05);
+            color: var(--ide-text);
         }
 
-        /* Sidebar (File Explorer) */
+        /* Sidebar */
         .sidebar {
-            width: 250px;
+            width: 260px;
             background: var(--ide-sidebar);
+            backdrop-filter: blur(40px);
+            -webkit-backdrop-filter: blur(40px);
             border-right: 1px solid var(--ide-border);
             display: flex;
             flex-direction: column;
         }
 
         .sidebar-title {
-            padding: 10px;
+            padding: 20px 16px 10px;
             font-size: 11px;
-            font-weight: bold;
+            font-weight: 700;
             text-transform: uppercase;
-            color: #bbbbbb;
+            letter-spacing: 1px;
+            color: var(--text-muted);
         }
 
         .file-item {
-            padding: 5px 10px 5px 20px;
+            padding: 8px 16px;
+            margin: 2px 8px;
             cursor: pointer;
-            font-size: 13px;
+            font-size: 14px;
+            font-weight: 500;
             display: flex;
             align-items: center;
-            gap: 8px;
+            gap: 10px;
+            border-radius: 8px;
+            transition: background 0.2s;
         }
 
         .file-item:hover {
-            background: #2a2d2e;
+            background: rgba(0, 0, 0, 0.03);
         }
 
         .file-item.active {
-            background: #37373d;
-            color: #fff;
+            background: rgba(0, 122, 255, 0.1);
+            color: var(--ide-accent);
         }
 
         /* Editor Area */
@@ -129,98 +157,98 @@
             flex: 1;
             display: flex;
             flex-direction: column;
-            background: var(--ide-bg);
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(10px);
         }
 
         .tab-bar {
-            height: 35px;
-            background: var(--ide-sidebar);
+            height: 40px;
+            background: rgba(255, 255, 255, 0.3);
             display: flex;
             align-items: center;
-            overflow-x: auto;
+            padding: 0 4px;
+            border-bottom: 1px solid var(--ide-border);
         }
 
         .tab {
-            padding: 0 15px;
-            height: 100%;
+            padding: 0 16px;
+            height: 32px;
             display: flex;
             align-items: center;
-            background: var(--ide-bg);
-            color: #fff;
+            background: rgba(255, 255, 255, 0.5);
+            color: var(--ide-text);
             font-size: 13px;
-            border-right: 1px solid var(--ide-border);
-            border-top: 1px solid var(--ide-accent);
+            font-weight: 500;
+            border-radius: 8px;
+            margin: 0 2px;
+            border: 1px solid var(--ide-border);
             cursor: pointer;
         }
 
         .tab-close {
-            margin-left: 8px;
+            margin-left: 10px;
             font-size: 10px;
-            opacity: 0.7;
-        }
-
-        .tab-close:hover {
-            opacity: 1;
+            opacity: 0.5;
         }
 
         #monaco-editor {
             flex: 1;
-            /* Occupy remaining space */
         }
 
         /* Bottom Panel (Terminal) */
         .panel {
-            height: 200px;
-            background: var(--ide-bg);
-            border-top: 1px solid var(--ide-border);
+            height: 240px;
+            background: rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(20px);
+            color: #fff;
             display: flex;
             flex-direction: column;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
         }
 
         .panel-header {
-            height: 30px;
+            height: 36px;
             display: flex;
             align-items: center;
-            padding: 0 15px;
-            font-size: 11px;
+            padding: 0 20px;
+            font-size: 12px;
+            font-weight: 600;
             text-transform: uppercase;
-            border-bottom: 1px solid var(--ide-border);
-            gap: 20px;
+            letter-spacing: 0.5px;
+            background: rgba(255, 255, 255, 0.05);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            gap: 24px;
         }
 
         .panel-tab {
             cursor: pointer;
-            padding: 5px 0;
-            border-bottom: 1px solid transparent;
+            opacity: 0.5;
+            transition: opacity 0.2s;
         }
 
         .panel-tab.active {
-            border-bottom: 1px solid #fff;
-            color: #fff;
+            opacity: 1;
+            color: var(--ide-accent);
         }
 
         .terminal-content {
             flex: 1;
-            background: #1e1e1e;
-            padding: 10px;
-            font-family: 'Consolas', 'Courier New', monospace;
+            padding: 16px;
+            font-family: "SF Mono", Menlo, Consolas, monospace;
             font-size: 13px;
+            line-height: 1.5;
             overflow-y: auto;
-            color: #cccccc;
-        }
-
-        .terminal-line {
-            margin-bottom: 2px;
         }
 
         .prompt {
-            color: #00ff00;
+            color: #34C759;
+            font-weight: bold;
         }
 
         .cmd-input {
             background: transparent;
             border: none;
-            color: #cccccc;
+            color: #fff;
             font-family: inherit;
             font-size: inherit;
             outline: none;
@@ -229,12 +257,13 @@
 
         /* Status Bar */
         .status-bar {
-            height: 22px;
+            height: 24px;
             background: var(--ide-accent);
             display: flex;
             align-items: center;
-            padding: 0 10px;
-            font-size: 12px;
+            padding: 0 15px;
+            font-size: 11px;
+            font-weight: 600;
             color: #fff;
             justify-content: space-between;
         }
@@ -245,7 +274,7 @@
 
     <!-- Header -->
     <div class="ide-header">
-        <a href="/home" class="back-btn"><i class="fas fa-arrow-left"></i> Exit to Dashboard</a>
+        <a href="/admin" class="back-btn"><i class="fas fa-arrow-left"></i> Exit to Admin Portal</a>
         <span>SmartHome System - Admin Workspace</span>
     </div>
 
@@ -493,6 +522,36 @@ body {
             }
         }
     </script>
+    <!-- Navigation Dock -->
+    <div class="dock-container">
+        <a href="/admin" class="dock-item">
+            <svg class="dock-icon" viewBox="0 0 24 24" fill="currentColor">
+                <path
+                    d="M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2M12,20C7.59,20 4,16.41 4,12C4,7.59 7.59,4 12,4C16.41,4 20,7.59 20,12C20,16.41 16.41,20 12,20Z" />
+            </svg>
+            <span class="dock-label">Overview</span>
+        </a>
+        <a href="/admin/control-panel" class="dock-item">
+            <svg class="dock-icon" viewBox="0 0 24 24" fill="currentColor">
+                <path
+                    d="M12,15V17H18V15H12M12,11V13H18V11H12M12,7V9H18V7H12M6,16H9C9.55,16 10,15.55 10,15V9C10,8.45 9.55,8 9,8H6C5.45,8 5,8.45 5,9V15C5,15.55 5.45,16 6,16Z" />
+            </svg>
+            <span class="dock-label">Control</span>
+        </a>
+        <a href="/admin/ide" class="dock-item active">
+            <svg class="dock-icon" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M2,6V8H5.29L3.29,10H6V12H2V14H6.71L8.71,12H6V10H10V6H2M14,6V10H18V6H14M14,12V16H18V12H14Z" />
+            </svg>
+            <span class="dock-label">Console</span>
+        </a>
+        <a href="/settings" class="dock-item">
+            <svg class="dock-icon" viewBox="0 0 24 24" fill="currentColor">
+                <path
+                    d="M12,15.5A3.5,3.5 0 0,1 8.5,12A3.5,3.5 0 0,1 12,8.5A3.5,3.5 0 0,1 15.5,12A3.5,3.5 0 0,1 12,15.5M19.43,12.97C19.47,12.65 19.5,12.33 19.5,12C19.5,11.67 19.47,11.34 19.43,11L21.54,9.37C21.73,9.22 21.78,8.95 21.66,8.73L19.66,5.27C19.54,5.05 19.27,4.97 19.05,5.05L16.56,6.05C16.04,5.66 15.5,5.32 14.87,5.07L14.5,2.42C14.46,2.18 14.25,2 14,2H10C9.75,2 9.54,2.18 9.5,2.42L9.13,5.07C8.5,5.32 7.96,5.66 7.44,6.05L4.95,5.05C4.73,4.97 4.46,5.05 4.34,5.27L2.34,8.73C2.21,8.95 2.27,9.22 2.46,9.37L4.57,11C4.53,11.34 4.5,11.67 4.5,12C4.5,12.33 4.53,12.65 4.57,12.97L2.46,14.63C2.27,14.78 2.21,15.05 2.34,15.27L4.34,18.73C4.46,18.95 4.73,19.03 4.95,18.95L7.44,17.94C7.96,18.34 8.5,18.68 9.13,18.93L9.5,21.58C9.54,21.82 9.75,22 10,22H14C14.25,22 14.46,21.82 14.5,21.58L14.87,18.93C15.5,18.67 16.04,18.34 16.56,17.94L19.05,18.95C19.27,19.03 19.54,18.95 19.66,18.73L21.66,15.27C21.78,15.05 21.73,14.78 21.54,14.63L19.43,12.97Z" />
+            </svg>
+            <span class="dock-label">Settings</span>
+        </a>
+    </div>
 </body>
 
 </html>

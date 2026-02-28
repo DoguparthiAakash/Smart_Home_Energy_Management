@@ -1,9 +1,11 @@
 package com.smarthome.backend.config;
 
 import com.smarthome.backend.model.Device;
+import com.smarthome.backend.model.TechnicianVisit;
 import com.smarthome.backend.model.UsageLog;
 import com.smarthome.backend.model.User;
 import com.smarthome.backend.repository.DeviceRepository;
+import com.smarthome.backend.repository.TechnicianVisitRepository;
 import com.smarthome.backend.repository.UsageLogRepository;
 import com.smarthome.backend.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -31,6 +33,8 @@ public class DataSeeder {
     private PasswordEncoder passwordEncoder;
     @Autowired
     private UsageLogRepository usageLogRepository;
+    @Autowired
+    private TechnicianVisitRepository visitRepository;
 
     @Bean
     public CommandLineRunner loadData() {
@@ -42,6 +46,7 @@ public class DataSeeder {
                     .forEach(u -> System.out.println("User: " + u.getEmail() + " | Role: " + u.getRole()));
             System.out.println("----------------------------------------");
 
+            upsertUser("muterornament", "Head Admin", "password", User.Role.ADMIN);
             upsertUser("admin_user", "Admin User", "password", User.Role.ADMIN);
             upsertUser("john_homeowner", "John Homeowner", "password", User.Role.HOMEOWNER);
             upsertUser("guest", "Guest User", "guest", User.Role.GUEST);
@@ -67,7 +72,39 @@ public class DataSeeder {
             }
 
             seedHistoricalUsage(homeUser);
+            seedTechnicianVisits();
         };
+    }
+
+    private void seedTechnicianVisits() {
+        if (visitRepository.count() > 0) return;
+
+        User tech = userRepository.findByEmail("technician").orElse(null);
+        if (tech == null) return;
+
+        Random rnd = new Random(55);
+        LocalDate today = LocalDate.now();
+
+        // 1 Active visit
+        TechnicianVisit active = new TechnicianVisit();
+        active.setTechnician(tech);
+        active.setVisitDate(today);
+        active.setStartTime(LocalDateTime.of(today, LocalTime.of(9, 30)));
+        active.setStatus("ACTIVE");
+        visitRepository.save(active);
+
+        // 2 Completed visits
+        for (int i = 1; i <= 2; i++) {
+            LocalDate date = today.minusDays(i);
+            TechnicianVisit complete = new TechnicianVisit();
+            complete.setTechnician(tech);
+            complete.setVisitDate(date);
+            complete.setStartTime(LocalDateTime.of(date, LocalTime.of(10, 0)));
+            complete.setEndTime(LocalDateTime.of(date, LocalTime.of(14, 30)));
+            complete.setStatus("LOGGED_OUT");
+            visitRepository.save(complete);
+        }
+        System.out.println("TECHNICIAN VISITS SEEDED");
     }
 
     private void seedHistoricalUsage(User homeUser) {

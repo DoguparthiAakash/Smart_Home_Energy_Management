@@ -119,10 +119,10 @@
             display: flex;
             align-items: center;
             gap: 12px;
-            background: rgba(255, 255, 255, 0.05);
+            background: var(--glass-bg);
             padding: 6px 16px;
             border-radius: 20px;
-            border: 1px solid rgba(255, 255, 255, 0.1);
+            border: 1px solid var(--glass-border);
             margin-right: 12px;
         }
 
@@ -132,10 +132,105 @@
             color: #8E8E93;
             letter-spacing: 1px;
         }
+
+        /* Wizard Category Grid */
+        .category-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+            margin-bottom: 24px;
+        }
+
+        .category-item {
+            background: #F2F2F7;
+            border-radius: 12px;
+            padding: 12px 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: 2px solid transparent;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .category-item:hover {
+            background: #E5E5EA;
+        }
+
+        .category-item.selected {
+            border-color: #007AFF;
+            background: rgba(0, 122, 255, 0.1);
+        }
+
+        .category-icon {
+            font-size: 24px;
+            margin-bottom: 4px;
+        }
+
+        .category-label {
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--text-color);
+        }
+
+        .wizard-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 24px;
+        }
+
+        .wizard-btn-secondary {
+            background: none;
+            border: none;
+            color: #8E8E93;
+            font-size: 15px;
+            cursor: pointer;
+            padding: 8px;
+        }
+
+        .wizard-btn-primary {
+            background: #007AFF;
+            color: white;
+            border: none;
+            padding: 10px 24px;
+            border-radius: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            min-width: 100px;
+        }
+
+        .wizard-btn-primary:disabled {
+            background: #C7C7CC;
+            cursor: not-allowed;
+        }
+
+        .success-checkmark {
+            width: 80px;
+            height: 80px;
+            background: #34C759;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            margin: 20px auto;
+            font-size: 40px;
+        }
     </style>
 </head>
 
 <body class="">
+    <!-- Immediate Theme Init (Prevent Flash) -->
+    <script>
+        (function () {
+            const savedTheme = localStorage.getItem('theme');
+            if (savedTheme === 'dark') {
+                document.documentElement.setAttribute('data-theme', 'dark');
+            }
+        })();
+    </script>
     <!-- Wrapper for Centered Content -->
     <div class="main-content-wrapper">
         <div class="header">
@@ -150,19 +245,22 @@
             </div>
             <div style="display: flex; align-items: center; gap: 10px;">
                 <span id="homeownerUserName" th:if="${userRole.contains('HOMEOWNER')}"
-                    style="color: #64D2FF; font-weight: 600; margin-right: 10px;">JOHN_HOMEOWNER</span>
+                    style="color: var(--accent-color); font-weight: 700; margin-right: 15px; font-size: 14px; text-transform: uppercase; letter-spacing: 0.5px;">JOHN_HOMEOWNER</span>
                 <!-- Load & Progress Bar -->
-                <div style="flex: 1; margin: 0 20px;">
+                <div style="flex: 1; margin: 0 24px;">
                     <div
-                        style="display: flex; justify-content: space-between; align-items: center; font-size: 12px; color: #666; margin-bottom: 4px;">
-                        <span>Load: <b id="currentLoad">0</b>W / <b id="maxLoad"
-                                th:text="${maxWattage}">3000</b>W</span>
+                        style="display: flex; justify-content: space-between; align-items: baseline; font-size: 13px; color: var(--text-muted); margin-bottom: 8px; font-weight: 500;">
+                        <span>System Load: <b id="currentLoad"
+                                style="color: var(--text-color); font-weight: 600;">0</b>W <span
+                                style="opacity: 0.5; font-size: 11px;">/ <span id="maxLoad"
+                                    th:text="${maxWattage}">3000</span>W</span></span>
                         <span th:if="${!userRole.contains('GUEST')}" onclick="editMaxWattage()"
-                            style="color: #007AFF; cursor: pointer; font-weight: 600;">Edit</span>
+                            style="color: var(--accent-color); cursor: pointer; font-weight: 600; font-size: 12px; letter-spacing: 0.2px;">Edit</span>
                     </div>
-                    <div style="width: 100%; height: 8px; background: #E5E5EA; border-radius: 4px; overflow: hidden;">
+                    <div
+                        style="width: 100%; height: 6px; background: var(--input-bg); border-radius: 10px; overflow: hidden;">
                         <div id="loadBar"
-                            style="width: 0%; height: 100%; background: #34C759; transition: width 0.3s, background 0.3s;">
+                            style="width: 0%; height: 100%; background: #34C759; transition: width 0.6s cubic-bezier(0.2, 1, 0.2, 1); border-radius: 10px;">
                         </div>
                     </div>
                 </div>
@@ -186,91 +284,17 @@
             </div>
         </div>
 
-        <!-- Homeowner Dashboard Grid (2x2) -->
-        <div th:if="${userRole.contains('HOMEOWNER')}"
-            style="display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: auto auto; gap: 20px; margin-bottom: 30px;">
 
-            <!-- Verified Energy Credits (Top Left) -->
-            <div
-                style="background: linear-gradient(135deg, #1d4ed8, #1e40af); border-radius: 28px; padding: 24px; color: white; display: flex; flex-direction: column; justify-content: space-between; box-shadow: 0 10px 30px rgba(29, 78, 216, 0.3);">
-                <div style="display: flex; justify-content: space-between; align-items: flex-start;">
-                    <div>
-                        <div
-                            style="font-size: 11px; text-transform: uppercase; letter-spacing: 1.5px; opacity: 0.8; margin-bottom: 6px; font-weight: 600;">
-                            Energy Credits</div>
-                        <div style="font-size: 38px; font-weight: 800; letter-spacing: -1px;">₹420.50</div>
-                    </div>
-                    <div
-                        style="background: rgba(255,255,255,0.15); padding: 10px; border-radius: 14px; backdrop-filter: blur(10px);">
-                        <svg width="24" height="24" viewBox="0 0 24 24" fill="white">
-                            <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2" fill="none"
-                                opacity="0.5" />
-                            <circle cx="12" cy="12" r="6" stroke="currentColor" stroke-width="2" fill="none" />
-                            <circle cx="12" cy="12" r="2" fill="currentColor" />
-                        </svg>
-                    </div>
-                </div>
-                <div
-                    style="margin-top: 24px; display: flex; align-items: center; gap: 8px; font-size: 10px; background: rgba(0,0,0,0.2); padding: 6px 12px; border-radius: 12px; width: fit-content; font-weight: 700; letter-spacing: 0.5px;">
-                    <div
-                        style="width: 6px; height: 6px; background: #34C759; border-radius: 50%; box-shadow: 0 0 8px #34C759;">
-                    </div>
-                    BLOCKCHAIN VERIFIED
-                </div>
-            </div>
 
-            <!-- Monthly Budgeting (Top Right) -->
-            <div
-                style="background: #1C1C1E; border-radius: 28px; padding: 24px; border: 1px solid rgba(255,255,255,0.08); display: flex; flex-direction: column; justify-content: space-between;">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-                    <h3 style="margin: 0; font-size: 15px; color: #64D2FF; font-weight: 700; letter-spacing: 0.5px;">
-                        MONTHLY BUDGET</h3>
-                    <span style="font-size: 13px; color: #8E8E93; font-weight: 500;">75% Used</span>
-                </div>
-                <div
-                    style="height: 10px; background: #2C2C2E; border-radius: 5px; overflow: hidden; margin-bottom: 16px;">
-                    <div
-                        style="width: 75%; height: 100%; background: linear-gradient(90deg, #64D2FF, #007AFF); border-radius: 5px; box-shadow: 0 0 15px rgba(100, 210, 255, 0.4);">
-                    </div>
-                </div>
-                <div style="display: flex; justify-content: space-between; font-size: 14px; align-items: baseline;">
-                    <span style="color: #64D2FF; font-weight: 700; font-size: 18px;">150 kWh</span>
-                    <span style="color: #8E8E93; font-weight: 500;">Limit: 200 kWh</span>
-                </div>
-            </div>
 
-            <!-- Hourly Consumption (Bottom Left) -->
-            <div
-                style="background: #1C1C1E; border-radius: 28px; padding: 24px; border: 1px solid rgba(255,255,255,0.08);">
-                <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 16px;">
-                    <span style="font-size: 18px;">📊</span>
-                    <h3
-                        style="color: #64D2FF; font-size: 15px; margin: 0; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 700;">
-                        HOURLY CONSUMPTION (TODAY)</h3>
-                </div>
-                <div style="font-size: 12px; color: #8E8E93; margin-bottom: 16px; font-weight: 500;">Morning Energy
-                    Usage (6 AM - 12 PM)</div>
-                <div style="height: 160px;">
-                    <canvas id="hourlyConsumptionChart"></canvas>
-                </div>
-            </div>
 
-            <!-- Daily Consumption (Bottom Right) -->
-            <div
-                style="background: #1C1C1E; border-radius: 28px; padding: 24px; border: 1px solid rgba(255,255,255,0.08);">
-                <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 16px;">
-                    <span style="font-size: 18px;">📈</span>
-                    <h3
-                        style="color: #64D2FF; font-size: 15px; margin: 0; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 700;">
-                        DAILY CONSUMPTION (30 DAYS)</h3>
-                </div>
-                <div style="font-size: 12px; color: #8E8E93; margin-bottom: 16px; font-weight: 500;">Last 7 Days Energy
-                    Consumption</div>
-                <div style="height: 160px;">
-                    <canvas id="dailyConsumptionChart"></canvas>
-                </div>
-            </div>
-        </div>
+
+
+
+
+
+
+
 
         <!-- Devices Header & Add Button (Hidden for GUEST) -->
         <div
@@ -328,11 +352,12 @@
 
     <!-- Add Device Modal (Wizard) -->
     <div id="addDeviceModal"
-        style="display:none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; justify-content: center; align-items: center;">
-        <div style="background: white; padding: 24px; border-radius: 20px; width: 340px; text-align: center;">
-            <h2 id="wizardTitle" style="margin-bottom: 8px;">Add Device</h2>
-            <p id="wizardSub" style="color: #8E8E93; font-size: 14px; margin-bottom: 24px;">Searching for nearby
-                devices...</p>
+        style="display:none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 3000; justify-content: center; align-items: center; backdrop-filter: blur(5px); -webkit-backdrop-filter: blur(5px);">
+        <div
+            style="background: var(--card-bg); padding: 24px; border-radius: 28px; width: 360px; text-align: center; box-shadow: 0 20px 40px rgba(0,0,0,0.3); border: 1px solid var(--divider-color);">
+            <h2 id="wizardTitle" style="margin-bottom: 8px; font-size: 20px; font-weight: 700;">Add Device</h2>
+            <p id="wizardSub" style="color: var(--text-muted); font-size: 14px; margin-bottom: 24px; line-height: 1.4;">
+                Searching for nearby devices...</p>
 
             <div id="wizardContent" class="wizard-content">
                 <!-- Dynamic Content Injected via JS -->
@@ -353,10 +378,33 @@
             <!-- Device header -->
             <div
                 style="display:flex;flex-direction:column;align-items:center;text-align:center;margin-bottom:28px;padding-top:8px;">
-                <div id="dmIcon" class="glass-icon-bg"
-                    style="width:72px;height:72px;border-radius:20px;display:flex;align-items:center;justify-content:center;margin-bottom:16px;box-shadow: 0 8px 16px rgba(0,0,0,0.2);">
-                    <svg id="dmIconSvg" width="36" height="36" viewBox="0 0 24 24" fill="currentColor"></svg>
+                <div id="dmIcon"
+                    style="width:80px;height:80px;border-radius:50%;display:flex;align-items:center;justify-content:center;margin-bottom:16px;box-shadow: 0 8px 16px rgba(0,0,0,0.2); background: rgba(255,255,255,0.05); overflow: hidden; border: 2px solid rgba(255,255,255,0.1);">
+                    <!-- Symbol or custom image -->
                 </div>
+
+                <div
+                    style="text-align: center; margin-top: -8px; margin-bottom: 20px; display: flex; justify-content: center; gap: 12px;">
+                    <button onclick="document.getElementById('dmIconInput').click()"
+                        style="background: none; border: none; color: #007AFF; font-weight: 500; font-size: 13px; cursor: pointer;">
+                        Photo
+                    </button>
+                    <button onclick="dmPickSymbol()"
+                        style="background: none; border: none; color: #007AFF; font-weight: 500; font-size: 13px; cursor: pointer;">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" style="margin-right:8px;">
+                            <path
+                                d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z" />
+                        </svg>
+                        Symbol
+                    </button>
+                    <button onclick="dmRemoveIcon()" id="dmRemoveIconBtn"
+                        style="background: none; border: none; color: #FF3B30; font-weight: 500; font-size: 13px; cursor: pointer;">
+                        Remove
+                    </button>
+                    <input type="file" id="dmIconInput" accept="image/*" style="display: none;"
+                        onchange="dmUploadIcon(this)">
+                </div>
+
                 <div id="dmName" style="font-size:24px;font-weight:700;letter-spacing:-0.5px;"></div>
                 <div id="dmType" style="font-size:14px;color:rgba(255,255,255,0.5);margin-top:4px;font-weight:500;">
                 </div>
@@ -382,7 +430,16 @@
                 <div class="ios-list-group">
                     <div class="ios-list-item">
                         <span class="ios-list-label">Power Rating</span>
-                        <span id="dmPower" class="ios-list-value bold"></span>
+                        <div style="display:flex;align-items:center;gap:6px;">
+                            <span id="dmPower" class="ios-list-value bold"></span>
+                            <button onclick="dmEditPower()"
+                                style="background:none;border:none;cursor:pointer;color:#007AFF;font-size:15px;padding:0;">Edit</button>
+                        </div>
+                    </div>
+                    <div class="ios-list-item">
+                        <span class="ios-list-label">Energy Used (Today)</span>
+                        <span id="dmEnergyToday" class="ios-list-value" style="color:#30D158;font-weight:600;">0.000
+                            kWh</span>
                     </div>
                     <div class="ios-list-item">
                         <span class="ios-list-label">Priority</span>
@@ -647,26 +704,78 @@
                     bar.style.width = percentage + '%';
 
                     // Color Code
-                    if (percentage < 70) bar.style.background = '#34C759'; // Green
-                    else if (percentage < 90) bar.style.background = '#FF9500'; // Orange
-                    else bar.style.background = '#FF3B30'; // Red
+                    if (percentage < 70) bar.style.backgroundColor = '#34C759'; // Green
+                    else if (percentage < 90) bar.style.backgroundColor = '#FF9500'; // Orange
+                    else bar.style.backgroundColor = '#FF3B30'; // Red
                 }
 
                 renderDevices(devices);
             }
         }
 
+        const svgIcons = {
+            'AC': '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/></svg>',
+            'LIGHT': '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C8.14 2 5 5.14 5 9c0 2.38 1.19 4.47 3 5.74V17c0 .55.45 1 1 1h6c.55 0 1-.45 1-1v-2.26c1.81-1.27 3-3.36 3-5.74 0-3.86-3.14-7-7-7zm2.85 11.1l-.85.6V16h-4v-2.3l-.85-.6C7.8 12.16 7 10.63 7 9c0-2.76 2.24-5 5-5s5 2.24 5 5c0 1.63-.8 3.16-2.15 4.1zM10 20h4c0 1.1-.9 2-2 2s-2-.9-2-2z"/></svg>',
+            'FAN': '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-1-14h2v5h-2zm0 7h2v5h-2z"/></svg>', // Simplified fan icon
+            'TV': '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M21 3H3c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h5v2h8v-2h5c1.1 0 1.99-.9 1.99-2L23 5c0-1.1-.9-2-2-2zm0 14H3V5h18v12z"/></svg>',
+            'FRIDGE': '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M17 2H7c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h10c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm0 18H7V11h10v9zm0-11H7V4h10v5zM8 5h2v3H8V5zm0 7h2v4H8v-4z"/></svg>',
+            'WASHING': '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M18 2.01L6 2c-1.1 0-2 .89-2 2v16c0 1.11.9 2 2 2h12c1.1 0 2-.89 2-2V4c0-1.11-.9-1.99-2-1.99zM18 20H6V9h12v11zm0-13H6V4h12v3zM8.5 10.5c-.83 0-1.5.67-1.5 1.5s.67 1.5 1.5 1.5 1.5-.67 1.5-1.5-.67-1.5-1.5-1.5zm3.5 1.5c0 1.66 1.34 3 3 3s3-1.34 3-3-1.34-3-3-3-3 1.34-3 3z"/></svg>',
+            'EV': '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M16 4h-1V2h-2v2H9c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm-3.5 12h-2V9.5h-1L12 6l2 3h-1.5v7zM23 1H1v2h22V1z"/></svg>', // Adjusted EV plug
+            'HEATER': '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M15 13V5c0-1.66-1.34-3-3-3S9 3.34 9 5v8c-1.21.91-2 2.37-2 4 0 2.76 2.24 5 5 5s5-2.24 5-5c0-1.63-.79-3.09-2-4zm-3 7c-1.65 0-3-1.35-3-3 0-1.1.6-2.09 1.5-2.61V5c0-.83.67-1.5 1.5-1.5s1.5.67 1.5 1.5v9.39c.9.52 1.5 1.51 1.5 2.61 0 1.65-1.35 3-3 3z"/></svg>',
+            'OTHER': '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M19.34 8H22v2h-2.66c-.36 1.19-1.09 2.23-2.04 3.01L19.56 15l-1.41 1.41-2.25-2.25c-1.19.64-2.5 1.01-3.9 1.01s-2.71-.37-3.9-1.01L5.85 16.41 4.44 15l2.25-2.25C5.74 11.97 5 10.57 5 9H2.66V7H5c0-1.57.74-2.97 1.91-3.75L4.66.99 6.07-.43 8.32 1.83C9.52 1.18 10.82.82 12 .82s2.48.36 3.68 1l2.25-2.25 1.41 1.41-2.25 2.25c.95.78 1.68 1.82 2.04 3V6h2.66v2zM12 11c1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3 1.34 3 3 3z"/></svg>', // Plug
+            'LIVING_ROOM': '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M20 10V7c0-1.1-.9-2-2-2H6c-1.1 0-2 .9-2 2v3c-1.1 0-2 .9-2 2v5h1.33L4 19h1l.67-2h12.67l.66 2h1l.67-2H22v-5c0-1.1-.9-2-2-2zm-9 0H6V7h5v3zm7 0h-5V7h5v3z"/></svg>',
+            'KITCHEN': '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M19.73 11.15l-2.04-8.08C17.44 2.11 16.58 1.5 15.6 1.5H8.4c-.98 0-1.84.61-2.09 1.57L4.27 11.15C3.38 14.67 5.96 18.5 9.77 18.5h4.45c3.81 0 6.39-3.83 5.51-7.35zM7.18 9l1.17-5.52C8.42 3.19 8.68 3 9.02 3h5.96c.34 0 .61.19.68.48L16.82 9H7.18z"/></svg>',
+            'BEDROOM': '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M20 10V7A2 2 0 0018 5H6a2 2 0 00-2 2v3a2 2 0 00-2 2v5h1.33L4 19h1l.67-2h12.67l.66 2h1l.67-2H22v-5a2 2 0 00-2-2zm-9 0H6V7h5v3zm7 0h-5V7h5v3z"/></svg>',
+            'BATHROOM': '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M20 14v-1c0-1.1-.9-2-2-2h-2c-.55 0-1-.45-1-1s.45-1 1-1h1c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2h-3c-1.1 0-2 .9-2 2v1c0 1.1.9 2 2 2h1c.55 0 1 .45 1 1s-.45 1-1 1h-2c-1.1 0-2 .9-2 2v1H5v5l-2 2v1h18v-1l-2-2v-5zM9 16h6v2H9v-2z"/></svg>',
+            'OFFICE': '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M20 18c1.1 0 1.99-.9 1.99-2L22 6c0-1.1-.9-2-2-2H4c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2H0v2h24v-2h-4zM4 6h16v10H4V6z"/></svg>',
+            'GARAGE': '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M20 7H4V5h16v2zM4 11h16V9H4v2zm13 3H7c-1.1 0-2 .9-2 2v2c0 1.1.9 2 2 2h10c1.1 0 2-.9 2-2v-2c0-1.1-.9-2-2-2zm1 4H6v-2h12v2z"/></svg>',
+            'DINING_ROOM': '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M11 9H9V2H7v7H5V2H3v7c0 2.12 1.66 3.86 3.75 3.97V22h2.5v-9.03C11.34 12.86 13 11.12 13 9V2h-2v7zm5-3v8h2.5v8H21V2c-2.76 0-5 2.24-5 4z"/></svg>',
+            'ENTRANCE': '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M19 19V5c0-1.1-.9-2-2-2H7c-1.1 0-2 .9-2 2v14H3v2h18v-2h-2zm-2 0H7V5h10v14zm-4-8h2v-2h-2v2z"/></svg>',
+            'OUTSIDE': '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 3L2 12h3v8h6v-6h2v6h6v-8h3L12 3zm5 15h-2v-6H9v6H7v-7.81l5-4.5 5 4.5V18z"/></svg>' // Using house outline but styled nicely as environment
+        };
+
+        const categoryDefaults = {
+            'AC': { icon: svgIcons.AC, power: 1500 },
+            'LIGHT': { icon: svgIcons.LIGHT, power: 10 },
+            'FAN': { icon: svgIcons.FAN, power: 60 },
+            'TV': { icon: svgIcons.TV, power: 100 },
+            'FRIDGE': { icon: svgIcons.FRIDGE, power: 200 },
+            'WASHING': { icon: svgIcons.WASHING, power: 500 },
+            'EV': { icon: svgIcons.EV, power: 3000 },
+            'HEATER': { icon: svgIcons.HEATER, power: 1200 },
+            'OTHER': { icon: svgIcons.OTHER, power: 50 }
+        };
+
+        const roomDefaults = [
+            { name: 'Living Room', icon: svgIcons.LIVING_ROOM },
+            { name: 'Kitchen', icon: svgIcons.KITCHEN },
+            { name: 'Bedroom', icon: svgIcons.BEDROOM },
+            { name: 'Bathroom', icon: svgIcons.BATHROOM },
+            { name: 'Office', icon: svgIcons.OFFICE },
+            { name: 'Garage', icon: svgIcons.GARAGE },
+            { name: 'Dining Room', icon: svgIcons.DINING_ROOM },
+            { name: 'Entrance', icon: svgIcons.ENTRANCE },
+            { name: 'Outside', icon: svgIcons.OUTSIDE }
+        ];
+
+        const iconMap = {};
+        Object.keys(categoryDefaults).forEach(k => iconMap[k] = categoryDefaults[k].icon);
+
         function renderDevices(devices) {
             const grid = document.getElementById('deviceGrid');
             grid.innerHTML = '';
 
             devices.forEach(device => {
-                const isAc = device.type === 'AC';
-                const isLight = device.type === 'LIGHT';
-                const icon = isAc ?
-                    `<path d="M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2M12,4A8,8 0 0,1 20,12A8,8 0 0,1 12,20A8,8 0 0,1 4,12A8,8 0 0,1 12,4M12,6V12L16,16L17.41,14.59L14,11V6H12Z" />` :
-                    (isLight ? `<path d="M12,2A7,7 0 0,0 5,9C5,12.86 8,15.64 8,19A2,2 0 0,0 10,21H14A2,2 0 0,0 16,19C16,15.64 19,12.86 19,9A7,7 0 0,0 12,2M12,4A5,5 0 0,1 17,9C17,11.5 15,13.75 14.5,16H9.5C9,13.75 7,11.5 7,9A5,5 0 0,1 12,4M9,22H15V23H9V22Z" />` :
-                        `<path d="M5,3H19A2,2 0 0,1 21,5V19A2,2 0 0,1 19,21H5A2,2 0 0,1 3,19V5A2,2 0 0,1 5,3M5,5V19H19V5H5Z" />`);
+                let iconContent;
+                if (device.customIcon && device.customIcon.startsWith('data:image')) {
+                    iconContent = `<img src="${device.customIcon}" style="width: 100%; height: 100%; object-fit: cover;">`;
+                } else if (device.customIcon) {
+                    iconContent = `<span style="font-size: 24px;">${device.customIcon}</span>`;
+                } else {
+                    const svgIcon = iconMap[device.type] || iconMap['OTHER'];
+                    // Scale down the SVG slightly to fit nicely in the circular container and use the container's color
+                    iconContent = `<div style="width: 24px; height: 24px; display: flex; align-items: center; justify-content: center;">${svgIcon}</div>`;
+                }
 
                 // GUEST Check: If Guest, no delete button, no click toggle
                 const deleteBtn = !isGuest ?
@@ -690,8 +799,8 @@
                 card.innerHTML = `
                         ${deleteBtn}
                         <div style="height: 100%; display: flex; flex-direction: column; justify-content: flex-start;">
-                            <div class="icon-container ${device.status ? 'on' : 'off'}" style="margin-bottom: 12px;">
-                                <svg width="32" height="32" viewBox="0 0 24 24" fill="currentColor">${icon}</svg>
+                            <div class="icon-container ${device.status ? 'on' : 'off'}" style="margin-bottom: 12px; overflow: hidden; display: flex; align-items: center; justify-content: center;">
+                                ${iconContent}
                             </div>
                             <h3 style="margin-bottom: 8px;">${device.name}</h3>
                             ${toggleSwitch}
@@ -727,74 +836,35 @@
             fetchDevices();
         }
 
-        // Modal functions
         function openModal() {
+            setWizardState('SCANNING');
             document.getElementById('addDeviceModal').style.display = 'flex';
-            switchTab('manual');
         }
 
         function closeModal() {
             document.getElementById('addDeviceModal').style.display = 'none';
         }
 
-        function switchTab(tab) {
-            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-            if (tab === 'manual') {
-                document.querySelectorAll('.tab')[0].classList.add('active');
-                document.getElementById('manualTab').style.display = 'block';
-                document.getElementById('pairTab').style.display = 'none';
-            } else {
-                document.querySelectorAll('.tab')[1].classList.add('active');
-                document.getElementById('manualTab').style.display = 'none';
-                document.getElementById('pairTab').style.display = 'block';
-                document.getElementById('scanBox').style.display = 'flex';
-                document.getElementById('pairCode').style.display = 'none';
-                document.getElementById('scanText').innerText = "Looking for devices...";
-                document.getElementById('pairBtn').innerText = "Enter Code";
-                document.getElementById('pairBtn').onclick = startPairing;
-            }
-        }
-
-        function startPairing() {
-            document.getElementById('scanBox').style.display = 'none';
-            document.getElementById('pairCode').style.display = 'block';
-            document.getElementById('scanText').innerText = "Enter the setup code found on your device.";
-            const btn = document.getElementById('pairBtn');
-            btn.innerText = "Connect";
-            btn.onclick = async () => await addDevice('pair');
+        function foundDirectly(name, type) {
+            foundDeviceMock = { name: name, type: type, priority: 'HIGH' };
+            setWizardState('FOUND');
         }
 
         // --- Wizard Logic ---
-        let wizardState = 'QR_ENTRY'; // QR_ENTRY, PROCESSING, FOUND, MANUAL
-        let foundDeviceMock = null;
-
-        function openModal() {
-            const modal = document.getElementById('addDeviceModal');
-            modal.style.display = 'flex';
-            setWizardState('QR_ENTRY');
-        }
-
-        function closeModal() {
-            document.getElementById('addDeviceModal').style.display = 'none';
-        }
-
-        function triggerUpload() {
-            document.getElementById('qrInput').click();
-        }
+        function triggerUpload() { document.getElementById('qrInput').click(); }
 
         function handleFile(input) {
             if (input.files && input.files[0]) {
                 setWizardState('PROCESSING');
-                // Simulate processing time
                 setTimeout(() => {
                     foundDeviceMock = { name: "Samsung Smart Fridge", type: "FRIDGE", priority: "HIGH" };
                     setWizardState('FOUND');
-                }, 2000);
+                }, 1500);
             }
         }
 
         function submitCode() {
-            const code = document.getElementById('setupCode').value;
+            const code = document.getElementById('wizCode').value;
             if (code && code.length >= 4) {
                 setWizardState('PROCESSING');
                 setTimeout(() => {
@@ -802,7 +872,7 @@
                     setWizardState('FOUND');
                 }, 1500);
             } else {
-                alert("Please enter a valid code");
+                alert("Please enter a valid code (at least 4 digits)");
             }
         }
 
@@ -812,58 +882,237 @@
             const title = document.getElementById('wizardTitle');
             const sub = document.getElementById('wizardSub');
 
-            if (state === 'QR_ENTRY') {
-                title.innerText = "Add Device";
-                sub.innerText = "Scan a QR code or enter setup code.";
+            if (state === 'SCANNING') {
+                title.innerText = "Scanning...";
+                sub.innerText = "Searching for nearby devices.";
                 content.innerHTML = `
-                    <input type="file" id="qrInput" hidden accept="image/*" onchange="handleFile(this)">
-                    
-                    <div class="qr-upload-box" onclick="triggerUpload()">
-                        <svg width="40" height="40" viewBox="0 0 24 24" fill="#007AFF" style="margin-bottom: 8px;">
-                            <path d="M4,4H10V10H4V4M20,4V10H14V4H20M14,14H20V20H14V14M4,14H10V20H4V14M2,2V12H12V2H2M14,2V12H22V2H14M2,14V24H12V14H2M14,14V24H22V14H14Z" />
+                    <div class="radar-container">
+                        <div class="radar-circle"></div>
+                        <div class="radar-circle"></div>
+                        <div class="radar-circle"></div>
+                        <div class="radar-sweep"></div>
+                        <span style="font-size: 32px; z-index: 2;">🔍</span>
+                    </div>
+                    <div id="nearbyList" class="nearby-device-list">
+                        <!-- Discovered devices will appear here -->
+                    </div>
+                    <div class="wizard-footer" style="margin-top: 20px;">
+                        <button class="wizard-btn-secondary" onclick="closeModal()">Cancel</button>
+                        <button class="wizard-btn-secondary" style="color: #007AFF; font-weight: 600;" onclick="setWizardState('CHOOSER')">Add Manually</button>
+                    </div>
+                `;
+                // Mock discovery
+                setTimeout(() => {
+                    const list = document.getElementById('nearbyList');
+                    if (list && wizardState === 'SCANNING') {
+                        const mockDevices = [
+                            { name: 'Samsung Smart TV', type: 'TV', icon: svgIcons.TV },
+                            { name: 'Living Room AC', type: 'AC', icon: svgIcons.AC },
+                            { name: 'Smart Fridge', type: 'FRIDGE', icon: svgIcons.FRIDGE },
+                            { name: 'Hue Smart Light', type: 'LIGHT', icon: svgIcons.LIGHT },
+                            { name: 'Tesla Wall Connector', type: 'EV', icon: svgIcons.EV },
+                            { name: 'Dyson Air Purifier', type: 'FAN', icon: svgIcons.FAN }
+                        ];
+                        // Select 1 to 2 random devices
+                        const numDevices = Math.floor(Math.random() * 2) + 1;
+                        const shuffled = [...mockDevices].sort(() => 0.5 - Math.random());
+                        const selected = shuffled.slice(0, numDevices);
+
+                        let html = '<p style="font-size: 11px; font-weight: 700; color: #8E8E93; margin-bottom: 12px; text-transform: uppercase; letter-spacing: 0.5px;">Nearby Devices</p>';
+                        selected.forEach(dev => {
+                            html += `
+                                <div class="nearby-item" onclick="foundDirectly('${dev.name}', '${dev.type}')">
+                                    <span style="width: 24px; height: 24px; margin-right: 12px; display: flex; align-items: center; justify-content: center; color: var(--text-color);">${dev.icon}</span>
+                                    <div style="flex: 1;">
+                                        <div style="font-weight: 600; font-size: 14px;">${dev.name}</div>
+                                        <div style="font-size: 11px; color: #8E8E93;">Ready to pair</div>
+                                    </div>
+                                    <span style="color: var(--accent-color); font-weight: 700; font-size: 12px;">ADD</span>
+                                </div>
+                            `;
+                        });
+                        list.innerHTML = html;
+                    }
+                }, 2000);
+
+            } else if (state === 'CHOOSER') {
+                title.innerText = "Add Device";
+                sub.innerText = "How would you like to add your device?";
+                content.innerHTML = `
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px;">
+                        <div class="qr-upload-box" onclick="triggerUpload()" style="height: 100px; margin-bottom: 0;">
+                            <svg width="28" height="28" viewBox="0 0 24 24" fill="#007AFF" style="margin-bottom: 4px;">
+                                <path d="M4,4H10V10H4V4M20,4V10H14V4H20M14,14H20V20H14V14M4,14H10V20H4V14M2,2V12H12V2H2M14,2V12H22V2H14M2,14V24H12V14H2M14,14V24H22V14H14Z" />
+                            </svg>
+                            <span style="font-weight: 600; color: #007AFF; font-size: 13px;">Scan QR</span>
+                        </div>
+                        <div class="qr-upload-box" onclick="setWizardState('CODE_ENTRY')" style="height: 100px; margin-bottom: 0; border-color: #34C759; background: rgba(52, 199, 89, 0.05);">
+                            <svg width="28" height="28" viewBox="0 0 24 24" fill="#34C759" style="margin-bottom: 4px;">
+                                <path d="M12.89,3L14.85,3.4L11.11,21L9.15,20.6L12.89,3M7,7V9H5V15H7V17H3V7H7M17,7H21V17H17V15H19V9H17V7Z" />
+                            </svg>
+                            <span style="font-weight: 600; color: #34C759; font-size: 13px;">Setup Code</span>
+                        </div>
+                    </div>
+                    <div class="qr-upload-box" onclick="setWizardState('MANUAL_TYPE')" style="height: 80px; border-color: #8E8E93; background: none;">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="#8E8E93" style="margin-bottom: 4px;">
+                            <path d="M19,13H13V19H11V13H5V11H11V5H13V11H19V13Z" />
                         </svg>
-                        <span style="font-weight: 600; color: #007AFF;">Upload QR Code</span>
+                        <span style="font-weight: 600; color: #8E8E93; font-size: 13px;">Add Manually</span>
                     </div>
+                    <input type="file" id="qrInput" hidden accept="image/*" onchange="handleFile(this)">
+                    <button class="wizard-btn-secondary" style="margin-top: 16px;" onclick="closeModal()">Cancel</button>
+                `;
 
-                    <div class="or-divider">OR</div>
-
-                    <div style="width: 100%; display: flex; gap: 8px;">
-                        <input type="text" id="setupCode" placeholder="Enter Setup Code" class="input-field" style="margin-bottom: 0; flex: 2; height: 44px; padding: 0 12px;">
-                        <button onclick="submitCode()" style="flex: 1; background: #007AFF; color: white; border: none; border-radius: 12px; font-weight: 600; cursor: pointer;">Connect</button>
+            } else if (state === 'CODE_ENTRY') {
+                title.innerText = "Setup Code";
+                sub.innerText = "Enter the 4-8 digit code found on your device.";
+                content.innerHTML = `
+                    <div style="margin-bottom: 24px;">
+                        <input type="number" id="wizCode" placeholder="000000" class="input-field" style="text-align: center; font-size: 24px; letter-spacing: 8px; font-weight: 700;">
                     </div>
+                    <div class="wizard-footer">
+                        <button class="wizard-btn-secondary" onclick="setWizardState('CHOOSER')">Back</button>
+                        <button class="wizard-btn-primary" onclick="submitCode()">Verify</button>
+                    </div>
+                `;
 
-                    <div style="margin-top: 16px; font-size: 14px; color: #8E8E93; cursor: pointer;" onclick="closeModal()">
-                        Cancel
+            } else if (state === 'MANUAL_TYPE') {
+                title.innerText = "Select Type";
+                sub.innerText = "Choose the category of your device.";
+                let gridHtml = '<div class="category-tile-grid">';
+                Object.keys(categoryDefaults).forEach(type => {
+                    gridHtml += `
+                        <div class="category-tile" onclick="selectWizardType('${type}')">
+                            <span class="category-tile-icon" style="width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; color: var(--text-color);">${categoryDefaults[type].icon}</span>
+                            <span class="category-tile-label">${type}</span>
+                        </div>
+                    `;
+                });
+                gridHtml += '</div>';
+                content.innerHTML = gridHtml + `
+                    <button class="wizard-btn-secondary" onclick="setWizardState('SCANNING')">Back</button>
+                `;
+
+            } else if (state === 'MANUAL_INFO') {
+                title.innerText = "Device Info";
+                sub.innerText = "Give your " + wizardDraft.type + " a name.";
+                const suggestions = [
+                    wizardDraft.type + " 1",
+                    "Master " + wizardDraft.type,
+                    "Guest " + wizardDraft.type,
+                    "Smart " + wizardDraft.type
+                ];
+                let sugHtml = '<div style="display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 20px; padding: 0 12px;">';
+                suggestions.forEach(s => {
+                    sugHtml += `<span onclick="document.getElementById('wizName').value='${s}'" style="background: var(--input-bg); padding: 4px 12px; border-radius: 20px; font-size: 11px; cursor: pointer; color: var(--accent-color); font-weight: 600;">${s}</span>`;
+                });
+                sugHtml += '</div>';
+
+                content.innerHTML = `
+                    <div style="text-align: left; margin-bottom: 12px;">
+                        <label style="font-size: 11px; font-weight: 700; color: #8E8E93; margin-left:12px; margin-bottom:4px; display:block; letter-spacing: 0.5px;">NAME</label>
+                        <input type="text" id="wizName" placeholder="e.g. Master Bedroom" class="input-field" value="${wizardDraft.name || ''}">
+                    </div>
+                    ${sugHtml}
+                    <div class="wizard-footer">
+                        <button class="wizard-btn-secondary" onclick="setWizardState('MANUAL_TYPE')">Back</button>
+                        <button class="wizard-btn-primary" onclick="saveWizardName()">Next</button>
+                    </div>
+                `;
+
+            } else if (state === 'MANUAL_LOCATION') {
+                title.innerText = "Select Room";
+                sub.innerText = "Where is this device located?";
+                let gridHtml = '<div class="category-grid" style="grid-template-columns: repeat(3, 1fr);">';
+                roomDefaults.forEach(room => {
+                    gridHtml += `
+                        <div class="category-item ${wizardDraft.location === room.name ? 'selected' : ''}" onclick="selectWizardRoom('${room.name}')">
+                            <span class="category-icon" style="width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; margin-bottom: 4px;">${room.icon}</span>
+                            <span class="category-label">${room.name}</span>
+                        </div>
+                    `;
+                });
+                gridHtml += '</div>';
+                content.innerHTML = gridHtml + `
+                    <div class="wizard-footer">
+                        <button class="wizard-btn-secondary" onclick="setWizardState('MANUAL_INFO')">Back</button>
+                    </div>
+                `;
+
+            } else if (state === 'MANUAL_POWER') {
+                title.innerText = "Power Rating";
+                sub.innerText = "Estimate the power consumption.";
+                content.innerHTML = `
+                    <div style="text-align: left; margin-bottom: 20px;">
+                        <label style="font-size: 12px; font-weight: 600; color: #8E8E93; margin-left:12px; margin-bottom:4px; display:block;">WATTS (W)</label>
+                        <input type="number" id="wizPower" class="input-field" value="${wizardDraft.powerRating}">
+                        <p style="font-size: 12px; color: #8E8E93; margin-top: 8px; padding: 0 12px;">We've suggested a default for ${wizardDraft.type}. Adjust if needed.</p>
+                    </div>
+                    <div class="wizard-footer">
+                        <button class="wizard-btn-secondary" onclick="setWizardState('MANUAL_LOCATION')">Back</button>
+                        <button class="wizard-btn-primary" onclick="addDevice('manual')">Finish</button>
                     </div>
                 `;
 
             } else if (state === 'PROCESSING') {
-                title.innerText = "Verifying...";
-                sub.innerText = "Connecting to device...";
+                title.innerText = "Adding Device...";
+                sub.innerText = "Initializing connection...";
                 content.innerHTML = `
                     <div style="position: relative; width: 100px; height: 100px; display: flex; justify-content: center; align-items: center; margin: 40px auto;">
                         <div class="pulse-ring"></div>
                         <div class="pulse-ring" style="animation-delay: 0.5s;"></div>
                     </div>
+                    <p id="procStatus" style="font-size: 10px; color: #8E8E93; font-weight: 700; text-transform: uppercase; letter-spacing: 1px;">Requesting IP Address...</p>
                 `;
-
+                const phases = ["Binding to Hub...", "Syncing cloud parameters...", "Applying security keys...", "Finalizing setup..."];
+                let pIdx = 0;
+                const pInterval = setInterval(() => {
+                    const el = document.getElementById('procStatus');
+                    if (el && pIdx < phases.length) el.innerText = phases[pIdx++];
+                    else clearInterval(pInterval);
+                }, 600);
             } else if (state === 'FOUND') {
                 title.innerText = "Device Found";
                 sub.innerText = "We found a new device!";
+                const foundIcon = iconMap[foundDeviceMock.type] || iconMap['OTHER'];
                 content.innerHTML = `
-                    <div class="found-device-item">
-                        <div style="background: white; padding: 8px; border-radius: 50%;">
-                            <svg width="24" height="24" viewBox="0 0 24 24" fill="#34C759"><path d="M12,2A7,7 0 0,1 19,9C19,11.38 17.81,13.47 16,14.74V17A1,1 0 0,1 15,18H9A1,1 0 0,1 8,17V14.74C6.19,13.47 5,11.38 5,9A7,7 0 0,1 12,2M9,21V20H15V21A1,1 0 0,1 14,22H10A1,1 0 0,1 9,21Z" /></svg>
+                    <div class="found-device-item" style="background: var(--input-bg);">
+                        <div style="background: var(--card-bg); padding: 8px; border-radius: 50%; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; color: #34C759;">
+                            ${foundIcon}
                         </div>
                         <div style="text-align: left;">
                             <div style="font-weight: 600;">${foundDeviceMock.name}</div>
                             <div style="font-size: 12px; color: #8E8E93;">Type: ${foundDeviceMock.type}</div>
                         </div>
                     </div>
-                    <button onclick="addDevice('auto')" style="width: 100%; padding: 14px; background: #007AFF; color: white; border: none; border-radius: 12px; font-weight: 600; cursor: pointer;">Add Name & Finish</button>
+                    <button onclick="addDevice('auto')" style="width: 100%; padding: 14px; background: #007AFF; color: white; border: none; border-radius: 12px; font-weight: 600; cursor: pointer;">Connect Device</button>
+                    <button class="wizard-btn-secondary" style="margin-top: 12px;" onclick="setWizardState('CHOOSER')">Cancel</button>
                 `;
-
+            } else if (state === 'SUCCESS') {
+                title.innerText = "All Set!";
+                sub.innerText = "Your device is ready to use.";
+                content.innerHTML = `
+                    <div class="success-checkmark">✓</div>
+                    <button class="wizard-btn-primary" style="width: 100%; margin-top: 20px;" onclick="closeModal()">Done</button>
+                `;
             }
+        }
+
+        function selectWizardType(type) {
+            wizardDraft = { type: type, powerRating: categoryDefaults[type].power };
+            setWizardState('MANUAL_INFO');
+        }
+
+        function saveWizardName() {
+            const name = document.getElementById('wizName').value;
+            if (!name) return alert("Please enter a name");
+            wizardDraft.name = name;
+            setWizardState('MANUAL_LOCATION');
+        }
+
+        function selectWizardRoom(room) {
+            wizardDraft.location = room;
+            setWizardState('MANUAL_POWER');
         }
 
         async function addDevice(mode) {
@@ -878,37 +1127,40 @@
                     priority: foundDeviceMock.priority || 'LOW'
                 };
             } else {
-                const name = document.getElementById('devName').value;
-                const type = document.getElementById('devType').value;
-                const power = document.getElementById('devPower').value;
-                const priority = document.getElementById('devPriority').value;
-
-                if (!name || !power) {
-                    alert('Please fill all fields');
-                    return;
-                }
+                const power = document.getElementById('wizPower').value;
+                if (!power || isNaN(power)) return alert("Please enter valid power rating");
 
                 deviceData = {
-                    name: name,
-                    type: type,
+                    name: wizardDraft.name,
+                    type: wizardDraft.type,
+                    location: wizardDraft.location,
                     powerRating: parseFloat(power),
                     status: false,
-                    priority: priority
+                    priority: 'MEDIUM'
                 };
             }
 
-            const res = await fetch('/api/devices', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(deviceData)
-            });
+            setWizardState('PROCESSING');
 
-            if (res.ok) {
-                closeModal();
-                fetchDevices();
-                alert("Device Added Successfully!");
-            } else {
-                alert('Failed to add device');
+            try {
+                const res = await fetch('/api/devices', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(deviceData)
+                });
+
+                if (res.ok) {
+                    setTimeout(() => {
+                        fetchDevices();
+                        setWizardState('SUCCESS');
+                    }, 1500);
+                } else {
+                    alert('Failed to add device');
+                    setWizardState(mode === 'auto' ? 'FOUND' : 'MANUAL_POWER');
+                }
+            } catch (e) {
+                alert('Connection error');
+                setWizardState(mode === 'auto' ? 'FOUND' : 'MANUAL_POWER');
             }
         }
 
@@ -925,15 +1177,17 @@
             const dev = dmCurrentDevice;
 
             // Icon
-            const isAc = dev.type === 'AC';
-            const isLight = dev.type === 'LIGHT';
-            const iconPath = isAc
-                ? `<path d="M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2M12,4A8,8 0 0,1 20,12A8,8 0 0,1 12,20A8,8 0 0,1 4,12A8,8 0 0,1 12,4M12,6V12L16,16L17.41,14.59L14,11V6H12Z" />`
-                : (isLight ? `<path d="M12,2A7,7 0 0,0 5,9C5,12.86 8,15.64 8,19A2,2 0 0,0 10,21H14A2,2 0 0,0 16,19C16,15.64 19,12.86 19,9A7,7 0 0,0 12,2M12,4A5,5 0 0,1 17,9C17,11.5 15,13.75 14.5,16H9.5C9,13.75 7,11.5 7,9A5,5 0 0,1 12,4M9,22H15V23H9V22Z" />`
-                    : `<path d="M5,3H19A2,2 0 0,1 21,5V19A2,2 0 0,1 19,21H5A2,2 0 0,1 3,19V5A2,2 0 0,1 5,3M5,5V19H19V5H5Z" />`);
-            document.getElementById('dmIconSvg').innerHTML = iconPath;
-            const iconBg = dev.status ? 'rgba(52,199,89,0.15)' : 'rgba(142,142,147,0.15)';
-            document.getElementById('dmIcon').style.background = iconBg;
+            const dmIcon = document.getElementById('dmIcon');
+            if (dev.customIcon && dev.customIcon.startsWith('data:image')) {
+                dmIcon.innerHTML = `<img src="${dev.customIcon}" style="width: 100%; height: 100%; object-fit: cover;">`;
+            } else if (dev.customIcon) {
+                dmIcon.innerHTML = `<span style="font-size: 32px;">${dev.customIcon}</span>`;
+            } else {
+                const icon = iconMap[dev.type] || iconMap['OTHER'];
+                dmIcon.innerHTML = `<div style="width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; color: var(--text-color);">${icon}</div>`;
+            }
+            dmIcon.style.opacity = dev.status ? '1' : '0.6';
+            document.getElementById('dmRemoveIconBtn').style.display = dev.customIcon ? 'block' : 'none';
 
             // Header info
             document.getElementById('dmName').innerText = dev.name;
@@ -963,6 +1217,7 @@
 
             dmSwitchTab('info');
             document.getElementById('deviceDetailModal').style.display = 'flex';
+            dmLoadUsage();
         }
 
         function closeDeviceModal() {
@@ -1023,6 +1278,27 @@
             } catch (e) { console.error(e); }
         }
 
+        async function dmEditPower() {
+            if (!dmCurrentDevice) return;
+            const current = dmCurrentDevice.powerRating || 0;
+            const newVal = prompt('Fix Power Rating (Watts):', current);
+            if (newVal === null || newVal.trim() === '' || isNaN(newVal)) return;
+
+            try {
+                const res = await fetch('/api/devices/' + dmCurrentDevice.id, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ ...dmCurrentDevice, powerRating: parseFloat(newVal) })
+                });
+                if (res.ok) {
+                    const updated = await res.json();
+                    dmCurrentDevice.powerRating = updated.powerRating;
+                    document.getElementById('dmPower').innerText = updated.powerRating + ' W';
+                    fetchDevices();
+                }
+            } catch (e) { console.error(e); }
+        }
+
         async function dmRename() {
             if (!dmCurrentDevice) return;
             const newName = prompt('Rename device:', dmCurrentDevice.name);
@@ -1040,6 +1316,75 @@
                     fetchDevices();
                 }
             } catch (e) { console.error(e); }
+        }
+
+        async function dmUploadIcon(input) {
+            if (!input.files || !input.files[0]) return;
+            if (!dmCurrentDevice) return;
+
+            const file = input.files[0];
+            const reader = new FileReader();
+            reader.onload = async (e) => {
+                const base64 = e.target.result;
+                try {
+                    const res = await fetch(`/api/devices/${dmCurrentDevice.id}/icon`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ icon: base64 })
+                    });
+                    if (res.ok) {
+                        dmCurrentDevice.customIcon = base64;
+                        // Update UI immediately
+                        document.getElementById('dmIcon').innerHTML = `<img src="${base64}" style="width: 100%; height: 100%; object-fit: cover;">`;
+                        renderDevices(currentDevices);
+                    } else {
+                        alert("Failed to upload icon.");
+                    }
+                } catch (err) {
+                    alert("Error uploading icon.");
+                }
+            };
+            reader.readAsDataURL(file);
+        }
+
+        async function dmPickSymbol() {
+            if (!dmCurrentDevice) return;
+            const symbol = prompt('Enter a symbol or emoji:');
+            if (!symbol) return;
+
+            try {
+                const res = await fetch(`/api/devices/${dmCurrentDevice.id}/icon`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ icon: symbol })
+                });
+                if (res.ok) {
+                    dmCurrentDevice.customIcon = symbol;
+                    document.getElementById('dmIcon').innerHTML = `<span style="font-size: 32px;">${symbol}</span>`;
+                    document.getElementById('dmRemoveIconBtn').style.display = 'block';
+                    renderDevices(currentDevices);
+                }
+            } catch (e) { console.error(e); }
+        }
+
+        async function dmRemoveIcon() {
+            if (!dmCurrentDevice) return;
+            if (!confirm('Revert to default icon?')) return;
+
+            try {
+                const res = await fetch(`/api/devices/${dmCurrentDevice.id}/icon`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ icon: null })
+                });
+                if (res.ok) {
+                    dmCurrentDevice.customIcon = null;
+                    const icon = iconMap[dmCurrentDevice.type] || iconMap['OTHER'];
+                    document.getElementById('dmIcon').innerHTML = `<div style="width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; color: var(--text-color);">${icon}</div>`;
+                    document.getElementById('dmRemoveIconBtn').style.display = 'none';
+                    renderDevices(currentDevices);
+                }
+            } catch (e) { }
         }
 
         async function dmSaveSchedule() {
@@ -1111,7 +1456,7 @@
                                 <div class="ios-list-item">
                                     <div style="display:flex;flex-direction:column;gap:2px;">
                                         <span style="font-size:15px;font-weight:600;">Managed Consumption</span>
-                                        <span style="font-size:12px;color:rgba(255,255,255,0.4);">${dateStr}, ${timeStr}</span>
+                                        <span style="font-size:12px;color:var(--glass-text-muted);">${dateStr}, ${timeStr}</span>
                                     </div>
                                     <div style="text-align:right;">
                                         <div style="font-size:16px;font-weight:700;">${log.energyKwh} kWh</div>
@@ -1125,19 +1470,23 @@
 
                     container.innerHTML = `
                         <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
-                            <div style="display:flex;flex-direction:column;gap:6px;padding:16px;background:rgba(255,255,255,0.05);border-radius:20px;border:1px solid rgba(255,255,255,0.05);">
-                                <span style="font-size:11px;color:rgba(255,255,255,0.4);text-transform:uppercase;letter-spacing:0.5px;font-weight:600;">Today</span>
-                                <span style="font-size:22px;font-weight:800;letter-spacing:-0.5px;">${data.todayKwh || '0.000'}<small style="font-size:12px;margin-left:3px;font-weight:400;color:rgba(255,255,255,0.4);">kWh</small></span>
+                            <div style="display:flex;flex-direction:column;gap:6px;padding:16px;background:var(--glass-bg);border-radius:20px;border:1px solid var(--glass-border);">
+                                <span style="font-size:11px;color:var(--glass-text-muted);text-transform:uppercase;letter-spacing:0.5px;font-weight:600;">Today</span>
+                                <span style="font-size:22px;font-weight:800;letter-spacing:-0.5px;">${data.todayKwh || '0.000'}<small style="font-size:12px;margin-left:3px;font-weight:400;color:var(--glass-text-muted);">kWh</small></span>
                                 <span style="font-size:13px;color:#30D158;font-weight:600;">₹${data.todayCost || '0.00'}</span>
                             </div>
-                            <div style="display:flex;flex-direction:column;gap:6px;padding:16px;background:rgba(255,255,255,0.05);border-radius:20px;border:1px solid rgba(255,255,255,0.05);">
-                                <span style="font-size:11px;color:rgba(255,255,255,0.4);text-transform:uppercase;letter-spacing:0.5px;font-weight:600;">This Week</span>
-                                <span style="font-size:22px;font-weight:800;letter-spacing:-0.5px;">${data.weekKwh || '0.000'}<small style="font-size:12px;margin-left:3px;font-weight:400;color:rgba(255,255,255,0.4);">kWh</small></span>
+                            <div style="display:flex;flex-direction:column;gap:6px;padding:16px;background:var(--glass-bg);border-radius:20px;border:1px solid var(--glass-border);">
+                                <span style="font-size:11px;color:var(--glass-text-muted);text-transform:uppercase;letter-spacing:0.5px;font-weight:600;">This Week</span>
+                                <span style="font-size:22px;font-weight:800;letter-spacing:-0.5px;">${data.weekKwh || '0.000'}<small style="font-size:12px;margin-left:3px;font-weight:400;color:var(--glass-text-muted);">kWh</small></span>
                                 <span style="font-size:13px;color:#30D158;font-weight:600;">₹${data.weekCost || '0.00'}</span>
                             </div>
                         </div>
                         ${historyHtml}
                     `;
+
+                    // Sync Info Tab energy field
+                    const infoEnergy = document.getElementById('dmEnergyToday');
+                    if (infoEnergy) infoEnergy.innerText = (data.todayKwh || '0.000') + ' kWh';
                 } else {
                     container.innerHTML = '<div style="text-align:center;color:rgba(255,255,255,0.4);padding:40px;">No usage data available.</div>';
                 }
@@ -1161,56 +1510,11 @@
         };
 
         function initHomeownerCharts() {
-            const hourlyCtx = document.getElementById('hourlyConsumptionChart').getContext('2d');
-            const dailyCtx = document.getElementById('dailyConsumptionChart').getContext('2d');
 
-            new Chart(hourlyCtx, {
-                type: 'line',
-                data: {
-                    labels: ['06:00', '08:00', '10:00', '12:00', '14:00', '16:00'],
-                    datasets: [{
-                        label: 'Energy Consumed (kWh)',
-                        data: [0.28, 0.12, 0.05, 0.02, 0.03, 0.04],
-                        borderColor: '#64D2FF',
-                        backgroundColor: 'rgba(100, 210, 255, 0.1)',
-                        tension: 0.4,
-                        fill: true,
-                        pointBackgroundColor: '#64D2FF',
-                        pointRadius: 4
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: { legend: { display: false } },
-                    scales: {
-                        y: { beginAtZero: true, grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#8E8E93' } },
-                        x: { grid: { display: false }, ticks: { color: '#8E8E93' } }
-                    }
-                }
-            });
 
-            new Chart(dailyCtx, {
-                type: 'bar',
-                data: {
-                    labels: ['Feb 11', 'Feb 12', 'Feb 13', 'Feb 14', 'Feb 15', 'Feb 16', 'Feb 17'],
-                    datasets: [{
-                        label: 'Daily Energy (kWh)',
-                        data: [1, 10, 5, 18, 6, 38, 8],
-                        backgroundColor: '#64D2FF',
-                        borderRadius: 6
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: { legend: { display: false } },
-                    scales: {
-                        y: { beginAtZero: true, grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#8E8E93' } },
-                        x: { grid: { display: false }, ticks: { color: '#8E8E93' } }
-                    }
-                }
-            });
+
+
+
         }
     </script>
 </body>

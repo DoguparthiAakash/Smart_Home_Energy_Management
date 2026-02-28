@@ -84,12 +84,23 @@ public class DeviceService {
             device.setLocation(deviceDTO.getLocation());
         if (deviceDTO.getPowerLimit() != null)
             device.setPowerLimit(deviceDTO.getPowerLimit());
+        if (deviceDTO.getPowerRating() != null)
+            device.setPowerRating(deviceDTO.getPowerRating());
         if (deviceDTO.getPriority() != null) {
             try {
                 device.setPriority(Device.Priority.valueOf(deviceDTO.getPriority()));
             } catch (Exception ignored) {
             }
         }
+        if (deviceDTO.getCustomIcon() != null) {
+            device.setCustomIcon(deviceDTO.getCustomIcon());
+        }
+        return convertToDTO(deviceRepository.save(device));
+    }
+
+    public DeviceDTO updateDeviceIcon(Long deviceId, String base64Icon) {
+        Device device = deviceRepository.findById(deviceId).orElseThrow(() -> new RuntimeException("Device not found"));
+        device.setCustomIcon(base64Icon);
         return convertToDTO(deviceRepository.save(device));
     }
 
@@ -211,6 +222,7 @@ public class DeviceService {
         dto.setPowerLimit(device.getPowerLimit());
         dto.setFirmwareVersion(device.getFirmwareVersion() != null ? device.getFirmwareVersion() : "1.0.0");
         dto.setHealthStatus(device.getHealthStatus() != null ? device.getHealthStatus() : "EXCELLENT");
+        dto.setCustomIcon(device.getCustomIcon());
         return dto;
     }
 

@@ -120,4 +120,25 @@ public class UsageLogService {
     public List<UsageLog> getLogsForDevice(Long deviceId, LocalDateTime start, LocalDateTime end) {
         return usageLogRepository.findByDeviceIdAndTimestampBetween(deviceId, start, end);
     }
+
+    public List<Object[]> getUsagePerDevice(String userEmail, LocalDateTime start, LocalDateTime end) {
+        User user = userRepository.findByEmail(userEmail).orElseThrow();
+        return usageLogRepository.findUsagePerDevice(user.getId(), start, end);
+    }
+
+    public java.util.Map<Integer, Double> getHourlyUsageForUser(String userEmail, LocalDateTime start,
+            LocalDateTime end) {
+        User user = userRepository.findByEmail(userEmail).orElseThrow();
+        List<UsageLog> logs = usageLogRepository.findByUserIdAndTimestampBetween(user.getId(), start, end);
+
+        java.util.Map<Integer, Double> hourlyMap = new java.util.TreeMap<>();
+        for (int i = 0; i < 24; i++)
+            hourlyMap.put(i, 0.0);
+
+        for (UsageLog log : logs) {
+            int hour = log.getTimestamp().getHour();
+            hourlyMap.put(hour, hourlyMap.get(hour) + log.getEnergyKwh());
+        }
+        return hourlyMap;
+    }
 }

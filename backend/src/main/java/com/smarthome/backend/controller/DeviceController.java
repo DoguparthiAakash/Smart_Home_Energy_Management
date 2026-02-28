@@ -63,4 +63,11 @@ public class DeviceController {
         deviceService.saveSchedule(id, dto);
         return ResponseEntity.ok().build();
     }
+
+    @PutMapping("/{id}/icon")
+    public ResponseEntity<?> updateIcon(@PathVariable Long id, @RequestBody java.util.Map<String, String> body) {
+        String base64Icon = body.get("icon");
+        DeviceDTO updated = deviceService.updateDeviceIcon(id, base64Icon);
+        return ResponseEntity.ok(updated);
+    }
 }

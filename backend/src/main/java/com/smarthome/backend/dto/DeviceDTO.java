@@ -14,4 +14,5 @@ public class DeviceDTO {
     private Double powerLimit;
     private String firmwareVersion;
     private String healthStatus;
+    private String customIcon;
 }

@@ -4,9 +4,61 @@
 <head>
     <title>Energy Usage</title>
     <link rel="stylesheet" href="/css/style.css">
+    <style>
+        .charts-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            margin-top: 10px;
+        }
+
+        @media (max-width: 768px) {
+            .charts-row {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* iOS-inspired Segmented Control */
+        .segmented-control {
+            display: flex;
+            position: relative;
+            background: rgba(120, 120, 128, 0.12);
+            border-radius: 8px;
+            padding: 2px;
+            user-select: none;
+            width: fit-content;
+        }
+
+        .segmented-control button {
+            border: none;
+            background: none;
+            padding: 4px 12px;
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--text-color);
+            cursor: pointer;
+            z-index: 1;
+            transition: color 0.15s;
+            border-radius: 6px;
+        }
+
+        .segmented-control button.active {
+            background: var(--card-bg);
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+    </style>
 </head>
 
 <body class="">
+    <!-- Immediate Theme Init (Prevent Flash) -->
+    <script>
+        (function () {
+            const savedTheme = localStorage.getItem('theme');
+            if (savedTheme === 'dark') {
+                document.documentElement.setAttribute('data-theme', 'dark');
+            }
+        })();
+    </script>
     <!-- Wrapper for Centered Content -->
     <div class="main-content-wrapper">
         <div class="header">
@@ -45,11 +97,52 @@
             <canvas id="livePowerChart"></canvas>
         </div>
 
-        <!-- Weekly Usage Combo Chart -->
+        <div class="charts-row">
+            <!-- Hourly Consumption -->
+            <div class="summary-card">
+                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px;">
+                    <h3
+                        style="color: var(--text-color); font-size: 14px; margin: 0; text-transform: uppercase; letter-spacing: 1px; font-weight: 700;">
+                        Hourly Usage</h3>
+                    <div class="segmented-control">
+                        <button onclick="setHourlyFormat('24h')" id="btn24h" class="active">24h</button>
+                        <button onclick="setHourlyFormat('ampm')" id="btnAMPM">AM/PM</button>
+                    </div>
+                </div>
+                <div id="peakWindowText"
+                    style="font-size: 12px; color: var(--text-muted); margin-bottom: 16px; font-weight: 500;">
+                    Peak window: Calculating...</div>
+                <div style="height: 180px;">
+                    <canvas id="hourlyConsumptionChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Energy per Device Pie Chart -->
+            <div class="summary-card">
+                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px;">
+                    <h3
+                        style="color: var(--text-color); font-size: 14px; margin: 0; text-transform: uppercase; letter-spacing: 1px; font-weight: 700;">
+                        Usage per Device</h3>
+                    <div class="segmented-control">
+                        <button onclick="setDeviceUsagePhase('today')" id="btnPhaseToday" class="active">Today</button>
+                        <button onclick="setDeviceUsagePhase('total')" id="btnPhaseTotal">Total</button>
+                    </div>
+                </div>
+                <div id="deviceUsageSubtitle"
+                    style="font-size: 12px; color: var(--text-muted); margin-bottom: 16px; font-weight: 500;">
+                    Today (00:00 - 23:59)
+                </div>
+                <div style="height: 180px; display: flex; justify-content: center;">
+                    <canvas id="deviceEnergyChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Energy Usage Combo Chart -->
         <div id="chartSection"
             style="margin-top: 10px; background: var(--card-bg); padding: 20px; border-radius: 20px;">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
-                <h2 style="font-size: 20px; margin: 0;">Weekly Usage</h2>
+                <h2 style="font-size: 20px; margin: 0;">Energy Usage</h2>
                 <div style="display: flex; gap: 16px; align-items: center; font-size: 12px; color: var(--text-muted);">
                     <span
                         style="background: rgba(88,86,214,0.1); color: #5856D6; padding: 4px 8px; border-radius: 6px; font-weight: 600; font-size: 10px; display: flex; align-items: center; gap: 4px;">
@@ -87,31 +180,15 @@
                 </div>
                 <button onclick="applyDateFilter()" class="btn-primary"
                     style="padding: 10px 20px; white-space: nowrap;">Apply Filter</button>
-            </div>
-            <!-- Filter Results -->
-            <div id="filterResults" style="margin-top: 16px; display: none;">
-                <div style="display: flex; gap: 12px; flex-wrap: wrap;">
-                    <div class="summary-card" style="flex: 1; min-width: 130px;">
-                        <div class="summary-label">Total Usage</div>
-                        <div class="summary-value" style="font-size: 20px;"><span id="filteredUsage">--</span> kWh</div>
-                    </div>
-                    <div class="summary-card" style="flex: 1; min-width: 130px;">
-                        <div class="summary-label">Estimated Cost</div>
-                        <div class="summary-value" style="font-size: 20px; color: #FF9500;">₹<span
-                                id="filteredCost">--</span></div>
-                    </div>
-                    <div class="summary-card" style="flex: 1; min-width: 130px;">
-                        <div class="summary-label">Avg per Day</div>
-                        <div class="summary-value" style="font-size: 20px;"><span id="filteredAvg">--</span> kWh</div>
-                    </div>
-                </div>
+                <button onclick="resetDateFilter()" class="btn-secondary"
+                    style="padding: 10px 20px; white-space: nowrap; background: rgba(142,142,147,0.1); color: var(--text-color); border: none; border-radius: 12px; font-weight: 600; cursor: pointer;">Reset</button>
             </div>
         </div>
 
         <!-- Weekly Stats Grid -->
         <div id="weeklyStatsSection" class="summary-container" style="margin-top: 16px; gap: 10px; flex-wrap: wrap;">
             <div class="summary-card" style="flex: 1; min-width: 140px;">
-                <div class="summary-label">7-Day Total</div>
+                <div id="totalUsageLabel" class="summary-label">7-Day Total</div>
                 <div class="summary-value" style="font-size: 18px;"><span id="totalUsage">--</span> kWh</div>
                 <div style="font-size: 12px; color: #888; margin-top: 4px;">Cost: ₹<span id="totalCost">--</span></div>
             </div>
@@ -180,23 +257,52 @@
 
     <!-- Bottom Navigation Dock -->
     <div class="dock-container">
-        <a href="/home" class="dock-item">
-            <svg class="dock-icon" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M10,20V14H14V20H19V12H22L12,3L2,12H5V20H10Z" />
-            </svg>
-            <span class="dock-label">Home</span>
-        </a>
-        <a th:if="${!userRole.contains('GUEST')}" href="/usage" class="dock-item active">
-            <svg class="dock-icon" viewBox="0 0 24 24" fill="currentColor">
-                <path
-                    d="M16 6L18.29 8.29L13.41 13.17L9.41 9.17L2 16.59L3.41 18L9.41 12L13.41 16L19.71 9.71L22 12V6H16Z" />
-            </svg>
-            <span class="dock-label">Usage</span>
-        </a>
+        <!-- Admin specific items -->
+        <th:block th:if="${isAdmin}">
+            <a href="/admin" class="dock-item">
+                <svg class="dock-icon" viewBox="0 0 24 24" fill="currentColor">
+                    <path
+                        d="M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2M12,20C7.59,20 4,16.41 4,12C4,7.59 7.59,4 12,4C16.41,4 20,7.59 20,12C20,16.41 16.41,20 12,20Z" />
+                </svg>
+                <span class="dock-label">Overview</span>
+            </a>
+            <a href="/admin/control-panel" class="dock-item">
+                <svg class="dock-icon" viewBox="0 0 24 24" fill="currentColor">
+                    <path
+                        d="M12,15V17H18V15H12M12,11V13H18V11H12M12,7V9H18V7H12M6,16H9C9.55,16 10,15.55 10,15V9C10,8.45 9.55,8 9,8H6C5.45,8 5,8.45 5,9V15C5,15.55 5.45,16 6,16Z" />
+                </svg>
+                <span class="dock-label">Control</span>
+            </a>
+            <a href="/admin/ide" class="dock-item">
+                <svg class="dock-icon" viewBox="0 0 24 24" fill="currentColor">
+                    <path
+                        d="M2,6V8H5.29L3.29,10H6V12H2V14H6.71L8.71,12H6V10H10V6H2M14,6V10H18V6H14M14,12V16H18V12H14Z" />
+                </svg>
+                <span class="dock-label">Console</span>
+            </a>
+        </th:block>
+
+        <!-- Homeowner specific items -->
+        <th:block th:if="${!isAdmin}">
+            <a href="/home" class="dock-item">
+                <svg class="dock-icon" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M10,20V14H14V20H19V12H22L12,3L2,12H5V20H10Z" />
+                </svg>
+                <span class="dock-label">Home</span>
+            </a>
+            <a th:if="${userRole != null && !userRole.contains('GUEST')}" href="/usage" class="dock-item active">
+                <svg class="dock-icon" viewBox="0 0 24 24" fill="currentColor">
+                    <path
+                        d="M16 6L18.29 8.29L13.41 13.17L9.41 9.17L2 16.59L3.41 18L9.41 12L13.41 16L19.71 9.71L22 12V6H16Z" />
+                </svg>
+                <span class="dock-label">Usage</span>
+            </a>
+        </th:block>
+
         <a href="/settings" class="dock-item">
             <svg class="dock-icon" viewBox="0 0 24 24" fill="currentColor">
                 <path
-                    d="M19.14,12.94c0.04-0.3,0.06-0.61,0.06-0.94c0-0.32-0.02-0.64-0.07-0.94l2.03-1.58c0.18-0.14,0.23-0.41,0.12-0.61 l-1.92-3.32c-0.12-0.22-0.37-0.29-0.59-0.22l-2.39,0.96c-0.5-0.38-1.03-0.7-1.62-0.94L14.4,2.81c-0.04-0.24-0.24-0.41-0.48-0.41 h-3.84c-0.24,0-0.43,0.17-0.47,0.41L9.25,5.35C8.66,5.59,8.12,5.92,7.63,6.29L5.24,5.33c-0.22-0.08-0.47,0-0.59,0.22L2.74,8.87 C2.62,9.08,2.66,9.34,2.86,9.48l2.03,1.58C4.84,11.36,4.8,11.69,4.8,12s0.02,0.64,0.07,0.94l-2.03,1.58 c-0.18,0.14-0.23,0.41-0.12,0.61l1.92,3.32c0.12,0.22,0.37,0.29,0.59,0.22l2.39-0.96c0.5,0.38,1.03,0.7,1.62,0.94l0.36,2.54 c0.05,0.24,0.24,0.41,0.48,0.41h3.84c0.24,0,0.44-0.17,0.47-0.41l0.36-2.54c0.59-0.24,1.13-0.56,1.62-0.94l2.39,0.96 c0.22,0.08,0.47,0,0.59-0.22l1.92-3.32c0.12-0.22,0.07-0.47-0.12-0.61L19.14,12.94z M12,15.6c-1.98,0-3.6-1.62-3.6-3.6 s1.62-3.6,3.6-3.6s3.6,1.62,3.6,3.6S13.98,15.6,12,15.6z" />
+                    d="M12,15.5A3.5,3.5 0 0,1 8.5,12A3.5,3.5 0 0,1 12,8.5A3.5,3.5 0 0,1 15.5,12A3.5,3.5 0 0,1 12,15.5M19.43,12.97C19.47,12.65 19.5,12.33 19.5,12C19.5,11.67 19.47,11.34 19.43,11L21.54,9.37C21.73,9.22 21.78,8.95 21.66,8.73L19.66,5.27C19.54,5.05 19.27,4.97 19.05,5.05L16.56,6.05C16.04,5.66 15.5,5.32 14.87,5.07L14.5,2.42C14.46,2.18 14.25,2 14,2H10C9.75,2 9.54,2.18 9.5,2.42L9.13,5.07C8.5,5.32 7.96,5.66 7.44,6.05L4.95,5.05C4.73,4.97 4.46,5.05 4.34,5.27L2.34,8.73C2.21,8.95 2.27,9.22 2.46,9.37L4.57,11C4.53,11.34 4.5,11.67 4.5,12C4.5,12.33 4.53,12.65 4.57,12.97L2.46,14.63C2.27,14.78 2.21,15.05 2.34,15.27L4.34,18.73C4.46,18.95 4.73,19.03 4.95,18.95L7.44,17.94C7.96,18.34 8.5,18.68 9.13,18.93L9.5,21.58C9.54,21.82 9.75,22 10,22H14C14.25,22 14.46,21.82 14.5,21.58L14.87,18.93C15.5,18.67 16.04,18.34 16.56,17.94L19.05,18.95C19.27,19.03 19.54,18.95 19.66,18.73L21.66,15.27C21.78,15.05 21.73,14.78 21.54,14.63L19.43,12.97Z" />
             </svg>
             <span class="dock-label">Settings</span>
         </a>
@@ -222,16 +328,143 @@
                 const summary = await res.json();
                 document.getElementById('energyUsage').innerText = summary.usage;
                 document.getElementById('costValue').innerText = summary.currency + summary.cost;
+
+                // Also refresh device usage pie chart
+                refreshDeviceUsage();
             } catch (e) {
                 if (e instanceof SyntaxError) window.location.href = '/login?expired';
             }
         }
 
+        let deviceEnergyChart = null;
+        let deviceUsagePhase = 'today';
+
+        function setDeviceUsagePhase(phase) {
+            deviceUsagePhase = phase;
+            document.getElementById('btnPhaseToday').classList.toggle('active', phase === 'today');
+            document.getElementById('btnPhaseTotal').classList.toggle('active', phase === 'total');
+            refreshDeviceUsage();
+        }
+
+        async function refreshDeviceUsage() {
+            try {
+                let url = '/api/energy/device-usage';
+                const subtitle = document.getElementById('deviceUsageSubtitle');
+
+                const now = new Date();
+                // Local date string in YYYY-MM-DD
+                const offset = now.getTimezoneOffset();
+                const localNow = new Date(now.getTime() - (offset * 60 * 1000));
+                const todayStr = localNow.toISOString().split('T')[0];
+
+                if (deviceUsagePhase === 'today') {
+                    const start = todayStr + 'T00:00:00';
+                    const end = localNow.toISOString().split('.')[0];
+                    url += `?start=${start}&end=${end}`;
+                    subtitle.innerText = 'Today (00:00 - 23:59)';
+                } else {
+                    if (currentFilter) {
+                        url += `?start=${currentFilter.start}&end=${currentFilter.end}`;
+                        subtitle.innerText = `Filtered Range (Total)`;
+                    } else {
+                        // Default to last 7 days to match bar chart
+                        const sevenDaysAgo = new Date(now.getTime() - (offset * 60 * 1000));
+                        sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 6);
+                        const start = sevenDaysAgo.toISOString().split('T')[0] + 'T00:00:00';
+                        const end = todayStr + 'T23:59:59';
+                        url += `?start=${start}&end=${end}`;
+                        subtitle.innerText = 'Last 7 Days (Total)';
+                    }
+                }
+
+                const res = await fetch(url);
+                if (!res.ok) return;
+                const data = await res.json();
+
+                const chartContainer = document.getElementById('deviceEnergyChart').parentElement;
+
+                if (data.length === 0) {
+                    if (window.deviceEnergyChart) {
+                        window.deviceEnergyChart.destroy();
+                        window.deviceEnergyChart = null;
+                    }
+                    if (!document.getElementById('chartNoData')) {
+                        const div = document.createElement('div');
+                        div.id = 'chartNoData';
+                        div.style.cssText = 'position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);color:var(--text-muted);font-size:14px;font-weight:500;';
+                        div.innerText = 'No usage recorded for this period.';
+                        chartContainer.style.position = 'relative';
+                        chartContainer.appendChild(div);
+                    }
+                    return;
+                } else {
+                    const noData = document.getElementById('chartNoData');
+                    if (noData) noData.remove();
+                }
+
+                const ctx = document.getElementById('deviceEnergyChart').getContext('2d');
+                const labels = data.map(d => d.name);
+                const values = data.map(d => d.usage);
+
+                if (deviceEnergyChart) {
+                    deviceEnergyChart.data.labels = labels;
+                    deviceEnergyChart.data.datasets[0].data = values;
+                    deviceEnergyChart.update();
+                } else {
+                    const style = getComputedStyle(document.documentElement);
+                    const textColor = style.getPropertyValue('--text-color').trim();
+
+                    deviceEnergyChart = new Chart(ctx, {
+                        type: 'doughnut',
+                        data: {
+                            labels: labels,
+                            datasets: [{
+                                data: values,
+                                backgroundColor: [
+                                    '#FF3B30', '#FF9500', '#FFCC00', '#34C759', '#007AFF', '#5856D6', '#AF52DE'
+                                ],
+                                borderWidth: 0,
+                                hoverOffset: 10
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            cutout: '70%',
+                            plugins: {
+                                legend: {
+                                    display: true,
+                                    position: 'right',
+                                    labels: {
+                                        color: textColor,
+                                        font: { size: 10, weight: '500' },
+                                        usePointStyle: true,
+                                        pointStyle: 'circle',
+                                        padding: 10
+                                    }
+                                }
+                            }
+                        }
+                    });
+                }
+            } catch (e) {
+                console.error("Error refreshing device usage", e);
+            }
+        }
+
         // Refresh Weekly Chart + Summary Cards (every 30 seconds)
+        let currentFilter = null;
+
         async function refreshWeekly() {
             try {
                 document.getElementById('chartSection').style.display = 'block';
-                const res = await fetch('/api/energy/history');
+
+                let url = '/api/energy/history';
+                if (currentFilter) {
+                    url = `/api/energy/history/custom?start=${currentFilter.start}&end=${currentFilter.end}`;
+                }
+
+                const res = await fetch(url);
                 if (!res.ok) return;
                 const history = await res.json();
 
@@ -394,11 +627,11 @@
                     scales: {
                         x: {
                             grid: { display: false },
-                            ticks: { color: 'var(--text-muted)' }
+                            ticks: { color: getComputedStyle(document.documentElement).getPropertyValue('--text-muted').trim() || '#8E8E93' }
                         },
                         yUsage: {
                             type: 'linear', position: 'left', beginAtZero: true,
-                            grid: { color: 'rgba(128,128,128,0.08)' },
+                            grid: { color: getComputedStyle(document.documentElement).getPropertyValue('--chart-grid').trim() || 'rgba(128,128,128,0.08)' },
                             ticks: { color: '#34C759', callback: v => v.toFixed(2) + ' kWh' },
                             title: { display: true, text: 'kWh', color: '#34C759', font: { size: 11 } }
                         },
@@ -413,14 +646,121 @@
             });
         }
 
+        let hourlyTimeFormat = localStorage.getItem('preferredTimeFormat') || '24h';
+        function setHourlyFormat(format) {
+            hourlyTimeFormat = format;
+            localStorage.setItem('preferredTimeFormat', format);
+            document.getElementById('btn24h').classList.toggle('active', format === '24h');
+            document.getElementById('btnAMPM').classList.toggle('active', format === 'ampm');
+            refreshHourlyChart();
+        }
+
+        let hourlyChart = null;
+        async function refreshHourlyChart() {
+            try {
+                const res = await fetch('/api/energy/hourly');
+                if (!res.ok) return;
+                const data = await res.json(); // Map<Integer, Double>
+
+                const labels = [];
+                const values = [];
+                let maxVal = -1;
+                let peakHour = 0;
+
+                for (let i = 0; i < 24; i++) {
+                    const val = data[i] || 0;
+                    if (hourlyTimeFormat === '24h') {
+                        labels.push((i < 10 ? '0' + i : i) + ':00');
+                    } else {
+                        const ampm = i >= 12 ? 'PM' : 'AM';
+                        const h12 = i % 12 || 12;
+                        labels.push(h12 + ' ' + ampm);
+                    }
+                    values.push(Math.round(val * 1000.0) / 1000.0);
+                    if (val > maxVal) {
+                        maxVal = val;
+                        peakHour = i;
+                    }
+                }
+
+                // Update Peak Window Text
+                const startPeak = peakHour;
+                const endPeak = (peakHour + 1) % 24;
+                const formatHour = (h) => {
+                    if (hourlyTimeFormat === '24h') {
+                        return (h < 10 ? '0' + h : h) + ':00';
+                    } else {
+                        const ampm = h >= 12 ? 'PM' : 'AM';
+                        const h12 = h % 12 || 12;
+                        return h12 + ' ' + ampm;
+                    }
+                };
+                document.getElementById('peakWindowText').innerText = `Peak window: ${formatHour(startPeak)} - ${formatHour(endPeak)}`;
+
+                const hourlyCtx = document.getElementById('hourlyConsumptionChart').getContext('2d');
+                if (hourlyChart) {
+                    hourlyChart.data.labels = labels;
+                    hourlyChart.data.datasets[0].data = values;
+                    hourlyChart.update();
+                } else {
+                    hourlyChart = new Chart(hourlyCtx, {
+                        type: 'line',
+                        data: {
+                            labels: labels,
+                            datasets: [{
+                                label: 'Energy Consumed (kWh)',
+                                data: values,
+                                borderColor: '#5856D6',
+                                backgroundColor: 'rgba(88, 86, 214, 0.08)',
+                                tension: 0.4,
+                                fill: true,
+                                pointBackgroundColor: '#5856D6',
+                                pointRadius: 2,
+                                borderWidth: 2
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: { legend: { display: false } },
+                            scales: {
+                                y: {
+                                    beginAtZero: true,
+                                    grid: { color: getComputedStyle(document.documentElement).getPropertyValue('--chart-grid').trim() || 'rgba(0,0,0,0.04)', drawBorder: false },
+                                    ticks: { color: getComputedStyle(document.documentElement).getPropertyValue('--text-muted').trim() || '#8E8E93', font: { size: 9 } }
+                                },
+                                x: {
+                                    grid: { display: false },
+                                    ticks: {
+                                        color: getComputedStyle(document.documentElement).getPropertyValue('--text-muted').trim() || '#8E8E93',
+                                        font: { size: 9 },
+                                        maxRotation: 0,
+                                        autoSkip: true,
+                                        maxTicksLimit: 8
+                                    }
+                                }
+                            }
+                        }
+                    });
+                }
+            } catch (e) { console.error("Hourly chart error", e); }
+        }
+
         window.onload = () => {
             // Initial load
             refreshSummary();
             refreshWeekly();
+
+            // Sync UI toggle with state
+            document.getElementById('btn24h').classList.toggle('active', hourlyTimeFormat === '24h');
+            document.getElementById('btnAMPM').classList.toggle('active', hourlyTimeFormat === 'ampm');
+
+            refreshHourlyChart();
             loadExportDevices();
             // Auto-refresh intervals
             setInterval(refreshSummary, 30_000);   // Today's usage + cost every 30s
             setInterval(refreshWeekly, 30_000);   // Weekly chart + totals every 30s
+            setInterval(refreshHourlyChart, 30_000); // Hourly chart every 30s
         };
 
 
@@ -489,43 +829,42 @@
             const toVal = document.getElementById('filterTo').value;
             if (!fromVal || !toVal) { alert('Please select both From and To dates.'); return; }
 
-            const start = fromVal + 'T00:00';
-            const end = toVal + 'T23:59';
-            const params = new URLSearchParams({ start, end });
+            const start = fromVal + 'T00:00:00';
+            const end = toVal + 'T23:59:59';
+            currentFilter = { start, end };
 
             const btn = document.querySelector('button[onclick="applyDateFilter()"]');
             if (btn) { btn.disabled = true; btn.innerText = 'Loading...'; }
 
             try {
-                const res = await fetch(`/api/devices/energy/export/custom?${params.toString()}`);
-                if (!res.ok) { alert('Failed to fetch data.'); return; }
-                const text = await res.text();
-                const lines = text.trim().split('\n').slice(1); // skip CSV header
+                await refreshWeekly();
 
-                let totalKwh = 0;
-                for (const line of lines) {
-                    if (!line.trim()) continue;
-                    const parts = line.split(',');
-                    const kwh = parseFloat(parts[parts.length - 1]);
-                    if (!isNaN(kwh)) totalKwh += kwh;
-                }
+                const totalLabel = document.getElementById('totalUsageLabel');
+                if (totalLabel) totalLabel.innerText = 'Range Total';
 
-                const fromDate = new Date(fromVal);
-                const toDate = new Date(toVal);
-                const days = Math.max(1, Math.round((toDate - fromDate) / 86400000) + 1);
-                const cost = calcCost(totalKwh);
-                const avg = totalKwh / days;
+                const ts = document.getElementById('chartUpdatedAt');
+                if (ts) ts.innerText = 'Filtered: ' + fromVal + ' to ' + toVal;
 
-                document.getElementById('filteredUsage').innerText = totalKwh.toFixed(3);
-                document.getElementById('filteredCost').innerText = cost.toFixed(2);
-                document.getElementById('filteredAvg').innerText = avg.toFixed(3);
-                document.getElementById('filterResults').style.display = 'block';
+                // Sync device usage chart if it's in Total mode
+                refreshDeviceUsage();
             } catch (e) {
                 console.error('Filter error', e);
-                alert('Error calculating range. Please try again.');
+                alert('Error fetching data for this range.');
             } finally {
                 if (btn) { btn.disabled = false; btn.innerText = 'Apply Filter'; }
             }
+        }
+
+        function resetDateFilter() {
+            document.getElementById('filterFrom').value = '';
+            document.getElementById('filterTo').value = '';
+
+            const totalLabel = document.getElementById('totalUsageLabel');
+            if (totalLabel) totalLabel.innerText = '7-Day Total';
+
+            currentFilter = null;
+            refreshWeekly();
+            refreshDeviceUsage();
         }
     </script>
 </body>

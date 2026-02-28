@@ -8,6 +8,7 @@
 }
 
 :root {
+    /* Base Colors (Light Mode) */
     --bg-color: #F2F2F7;
     --card-bg: #FFFFFF;
     --text-color: #000000;
@@ -17,6 +18,22 @@
     --input-bg: #E5E5EA;
     --dock-bg: rgba(255, 255, 255, 0.85);
     --dock-border: rgba(255, 255, 255, 0.2);
+
+    /* iOS Specific Tokens from settings.html */
+    --ios-bg: #F2F2F7;
+    --ios-group-bg: #FFFFFF;
+    --ios-label: #000000;
+    --ios-muted: #8E8E93;
+    --ios-separator: rgba(60, 60, 67, 0.36);
+
+    /* Chart Colors */
+    --chart-grid: rgba(0, 0, 0, 0.05);
+    --chart-text: #8E8E93;
+
+    /* Translucent Tokens (Glass Effects) */
+    --glass-bg: rgba(0, 0, 0, 0.05);
+    --glass-border: rgba(0, 0, 0, 0.1);
+    --glass-text-muted: rgba(0, 0, 0, 0.4);
 }
 
 [data-theme="dark"] {
@@ -29,6 +46,22 @@
     --input-bg: #2C2C2E;
     --dock-bg: rgba(28, 28, 30, 0.85);
     --dock-border: rgba(255, 255, 255, 0.1);
+
+    /* iOS Specific Tokens in Dark Mode */
+    --ios-bg: #000000;
+    --ios-group-bg: #1C1C1E;
+    --ios-label: #FFFFFF;
+    --ios-muted: #8E8E93;
+    --ios-separator: rgba(84, 84, 88, 0.65);
+
+    /* Chart Colors in Dark Mode */
+    --chart-grid: rgba(255, 255, 255, 0.1);
+    --chart-text: #8E8E93;
+
+    /* Translucent Tokens in Dark Mode */
+    --glass-bg: rgba(255, 255, 255, 0.05);
+    --glass-border: rgba(255, 255, 255, 0.1);
+    --glass-text-muted: rgba(255, 255, 255, 0.4);
 }
 
 body {
@@ -327,47 +360,73 @@ h3 {
     text-align: center;
 }
 
-/* Bottom Navigation Dock */
+/* Bottom Navigation Dock (Premium iOS Style) */
 .dock-container {
     position: fixed;
-    bottom: 34px;
+    bottom: 24px;
     left: 50%;
     transform: translateX(-50%);
     background: var(--dock-bg);
-    backdrop-filter: blur(25px);
-    -webkit-backdrop-filter: blur(25px);
-    border-radius: 40px;
-    padding: 14px 40px;
+    backdrop-filter: blur(40px) saturate(180%);
+    -webkit-backdrop-filter: blur(40px) saturate(180%);
+    border-radius: 32px;
+    padding: 10px 12px;
     display: flex;
-    gap: 40px;
-    box-shadow: 0 15px 40px rgba(0, 0, 0, 0.15);
-    z-index: 1000;
-    border: 1px solid var(--dock-border);
+    gap: 8px;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.1),
+        inset 0 0 0 1px var(--dock-border);
+    z-index: 2000;
+    transition: all 0.4s cubic-bezier(0.2, 1, 0.2, 1);
 }
 
 .dock-item {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 4px;
+    justify-content: center;
+    width: 64px;
+    height: 64px;
     text-decoration: none;
-    color: #8E8E93;
-    transition: all 0.2s;
+    color: var(--text-muted);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    border-radius: 18px;
+    position: relative;
+}
+
+.dock-item:hover {
+    background: rgba(120, 120, 128, 0.1);
+    color: var(--text-color);
+    transform: translateY(-4px) scale(1.05);
 }
 
 .dock-item.active {
-    color: #007AFF;
-    transform: translateY(-2px);
+    color: var(--accent-color);
+    background: rgba(0, 122, 255, 0.1);
 }
 
 .dock-icon {
-    width: 24px;
-    height: 24px;
+    width: 26px;
+    height: 26px;
+    transition: transform 0.3s ease;
+}
+
+.dock-item:active .dock-icon {
+    transform: scale(0.9);
 }
 
 .dock-label {
-    font-size: 12px;
+    font-size: 10px;
     font-weight: 600;
+    margin-top: 4px;
+    opacity: 0;
+    transform: translateY(4px);
+    transition: all 0.2s ease;
+}
+
+.dock-item:hover .dock-label,
+.dock-item.active .dock-label {
+    opacity: 1;
+    transform: translateY(0);
 }
 
 /* Wizard Styles */
@@ -561,4 +620,123 @@ input:checked+.slider {
 
 input:checked+.slider:before {
     transform: translateX(20px);
+}
+/* Samsung-style Device Discovery */
+.radar-container {
+    position: relative;
+    width: 160px;
+    height: 160px;
+    margin: 30px auto;
+    background: radial-gradient(circle, rgba(0, 122, 255, 0.05) 0%, transparent 70%);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+}
+
+.radar-circle {
+    position: absolute;
+    border: 1px solid rgba(0, 122, 255, 0.2);
+    border-radius: 50%;
+    animation: radar-pulse 4s infinite linear;
+}
+
+.radar-circle:nth-child(1) { width: 40px; height: 40px; animation-delay: 0s; }
+.radar-circle:nth-child(2) { width: 80px; height: 80px; animation-delay: 1s; }
+.radar-circle:nth-child(3) { width: 120px; height: 120px; animation-delay: 2s; }
+
+.radar-sweep {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    background: conic-gradient(from 0deg, rgba(0, 122, 255, 0.4) 0deg, transparent 90deg);
+    border-radius: 50%;
+    animation: radar-rotate 2s infinite linear;
+    mask: radial-gradient(circle, transparent 30%, black 31%);
+    -webkit-mask: radial-gradient(circle, transparent 30%, black 31%);
+}
+
+@keyframes radar-pulse {
+    0% { transform: scale(1); opacity: 0.8; }
+    100% { transform: scale(1.8); opacity: 0; }
+}
+
+@keyframes radar-rotate {
+    from { transform: rotate(360deg); }
+    to { transform: rotate(0deg); }
+}
+
+.nearby-device-list {
+    margin-top: 20px;
+    text-align: left;
+    max-height: 220px;
+    overflow-y: auto;
+    padding: 4px;
+}
+
+.nearby-item {
+    display: flex;
+    align-items: center;
+    padding: 14px;
+    background: var(--input-bg);
+    border-radius: 16px;
+    margin-bottom: 10px;
+    cursor: pointer;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    animation: slide-up-fade 0.4s ease-out;
+    border: 1px solid transparent;
+}
+
+.nearby-item:hover {
+    background: var(--card-bg);
+    border-color: var(--accent-color);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+@keyframes slide-up-fade {
+    from { opacity: 0; transform: translateY(15px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* Tiled Category Selection */
+.category-tile-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    margin: 20px 0;
+}
+
+.category-tile {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 20px 8px;
+    background: var(--card-bg);
+    border: 1.5px solid var(--border-color);
+    border-radius: 20px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.category-tile:hover {
+    border-color: var(--accent-color);
+    background: rgba(0, 122, 255, 0.05);
+    transform: scale(1.05);
+}
+
+.category-tile-icon {
+    font-size: 32px;
+    margin-bottom: 10px;
+}
+
+.category-tile-label {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--text-color);
+    text-align: center;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
 }

@@ -109,6 +109,58 @@ public class EnergyController {
         return response;
     }
 
+    @GetMapping("/history/custom")
+    public Map<String, Object> getCustomEnergyHistory(
+            @org.springframework.web.bind.annotation.RequestParam @org.springframework.format.annotation.DateTimeFormat(iso = org.springframework.format.annotation.DateTimeFormat.ISO.DATE_TIME) LocalDateTime start,
+            @org.springframework.web.bind.annotation.RequestParam @org.springframework.format.annotation.DateTimeFormat(iso = org.springframework.format.annotation.DateTimeFormat.ISO.DATE_TIME) LocalDateTime end,
+            org.springframework.security.core.Authentication authentication) {
+
+        String userEmail = authentication.getName();
+
+        // Calculate days between
+        long days = java.time.temporal.ChronoUnit.DAYS.between(start.toLocalDate(), end.toLocalDate()) + 1;
+        if (days <= 0)
+            days = 1;
+        if (days > 31)
+            days = 31; // Limit to 31 days for performance
+
+        String[] labels = new String[(int) days];
+        double[] data = new double[(int) days];
+        double[] costData = new double[(int) days];
+
+        LocalDate startDate = start.toLocalDate();
+        for (int i = 0; i < days; i++) {
+            LocalDate date = startDate.plusDays(i);
+            labels[i] = date.getMonthValue() + "/" + date.getDayOfMonth();
+
+            LocalDateTime dayStart = LocalDateTime.of(date, LocalTime.MIN);
+            LocalDateTime dayEnd = LocalDateTime.of(date, LocalTime.MAX);
+
+            Double dailySum = usageLogService.getDailyUsage(userEmail, dayStart, dayEnd);
+            double val = dailySum != null ? Math.round(dailySum * 100.0) / 100.0 : 0.0;
+            data[i] = val;
+            costData[i] = Math.round(usageLogService.calculateCost(val) * 100.0) / 100.0;
+        }
+
+        double totalUsage = 0;
+        for (double d : data)
+            totalUsage += d;
+
+        double totalCost = usageLogService.calculateCost(totalUsage);
+        double avgUsage = totalUsage / (double) days;
+        double avgCost = totalCost / (double) days;
+
+        Map<String, Object> response = new HashMap<>();
+        response.put("labels", labels);
+        response.put("data", data);
+        response.put("costData", costData);
+        response.put("totalUsage", Math.round(totalUsage * 100.0) / 100.0);
+        response.put("totalCost", Math.round(totalCost * 100.0) / 100.0);
+        response.put("avgUsage", Math.round(avgUsage * 100.0) / 100.0);
+        response.put("avgCost", Math.round(avgCost * 100.0) / 100.0);
+        return response;
+    }
+
     @GetMapping("/device/{id}/summary")
     public Map<String, Object> getDeviceUsageSummary(
             @org.springframework.web.bind.annotation.PathVariable Long id) {
@@ -145,5 +197,38 @@ public class EnergyController {
                     return map;
                 })
                 .collect(java.util.stream.Collectors.toList());
+    }
+
+    @GetMapping("/device-usage")
+    public List<Map<String, Object>> getDeviceEnergyUsage(
+            @org.springframework.web.bind.annotation.RequestParam(required = false) @org.springframework.format.annotation.DateTimeFormat(iso = org.springframework.format.annotation.DateTimeFormat.ISO.DATE_TIME) LocalDateTime start,
+            @org.springframework.web.bind.annotation.RequestParam(required = false) @org.springframework.format.annotation.DateTimeFormat(iso = org.springframework.format.annotation.DateTimeFormat.ISO.DATE_TIME) LocalDateTime end,
+            org.springframework.security.core.Authentication authentication) {
+        String userEmail = authentication.getName();
+
+        if (start == null) {
+            start = LocalDateTime.of(LocalDate.now(), LocalTime.MIN);
+        }
+        if (end == null) {
+            end = LocalDateTime.now();
+        }
+
+        return usageLogService.getUsagePerDevice(userEmail, start, end).stream()
+                .map(obj -> {
+                    Map<String, Object> map = new HashMap<>();
+                    map.put("name", obj[0]);
+                    map.put("usage", obj[1] != null ? Math.round((Double) obj[1] * 1000.0) / 1000.0 : 0.0);
+                    return map;
+                })
+                .collect(java.util.stream.Collectors.toList());
+    }
+
+    @GetMapping("/hourly")
+    public java.util.Map<Integer, Double> getHourlyUsage(
+            org.springframework.security.core.Authentication authentication) {
+        String userEmail = authentication.getName();
+        LocalDateTime start = LocalDateTime.of(LocalDate.now(), LocalTime.MIN);
+        LocalDateTime end = LocalDateTime.now();
+        return usageLogService.getHourlyUsageForUser(userEmail, start, end);
     }
 }

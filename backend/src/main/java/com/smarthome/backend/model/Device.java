@@ -47,6 +47,9 @@ public class Device {
     @Column(name = "health_status")
     private String healthStatus = "EXCELLENT";
 
+    @Column(name = "custom_icon", columnDefinition = "TEXT")
+    private String customIcon;
+
     public enum Priority {
         HIGH,
         MEDIUM,
