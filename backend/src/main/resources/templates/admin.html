@@ -19,6 +19,34 @@
             color: var(--text-color);
             margin: 0;
             transition: background-color 0.3s;
+            animation: scale-up 0.5s cubic-bezier(0.2, 0.8, 0.2, 1);
+        }
+
+        @keyframes scale-up {
+            from {
+                opacity: 0;
+                transform: scale(1.02);
+                filter: blur(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: scale(1);
+                filter: blur(0);
+            }
+        }
+
+        .glass-morphism-premium {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(30px) saturate(200%);
+            -webkit-backdrop-filter: blur(30px) saturate(200%);
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.05);
+        }
+
+        [data-theme="dark"] .glass-morphism-premium {
+            background: rgba(28, 28, 30, 0.75);
+            border: 1px solid rgba(255, 255, 255, 0.1);
         }
 
         .header-ios {
@@ -72,6 +100,23 @@
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             position: relative;
             overflow: hidden;
+            animation: slide-up-premium 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) backwards;
+        }
+
+        .metric-card:nth-child(2) {
+            animation-delay: 0.1s;
+        }
+
+        .metric-card:nth-child(3) {
+            animation-delay: 0.2s;
+        }
+
+        .metric-card:nth-child(4) {
+            animation-delay: 0.3s;
+        }
+
+        .metric-card:nth-child(5) {
+            animation-delay: 0.4s;
         }
 
         .metric-card::before {
@@ -119,13 +164,11 @@
         }
 
         .tech-list {
-            background: rgba(255, 255, 255, 0.5);
-            backdrop-filter: blur(15px);
-            -webkit-backdrop-filter: blur(15px);
-            border-radius: 24px;
-            border: 1px solid rgba(255, 255, 255, 0.3);
+            background: var(--card-bg);
+            border-radius: 20px;
+            border: 1px solid var(--divider-color);
             overflow: hidden;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
         }
 
         .tech-item {
@@ -305,13 +348,13 @@
         }
 
         .modal-content {
-            background: var(--admin-card);
+            background: var(--card-bg);
             padding: 32px;
-            border-radius: 32px;
+            border-radius: 24px;
             width: 90%;
             max-width: 450px;
-            border: 1px solid var(--divider);
-            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.5);
+            border: 1px solid var(--divider-color);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
         }
 
         .form-group {
@@ -321,46 +364,42 @@
         .form-group label {
             display: block;
             margin-bottom: 8px;
-            font-size: 12px;
-            font-weight: 700;
-            color: #888;
-            text-transform: uppercase;
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-color);
         }
 
         .form-group input {
             width: 100%;
             padding: 14px;
-            background: rgba(255, 255, 255, 0.03);
-            border: 1px solid var(--divider);
+            background: var(--bg-color);
+            border: 1px solid var(--divider-color);
             border-radius: 12px;
-            color: #fff;
-            font-size: 14px;
+            color: var(--text-color);
+            font-size: 15px;
             box-sizing: border-box;
-            transition: 0.3s;
+            transition: border-color 0.2s;
         }
 
         .form-group input:focus {
             outline: none;
-            border-color: var(--admin-neon);
-            background: rgba(0, 224, 255, 0.05);
+            border-color: var(--ios-blue);
         }
 
         .btn-action {
-            background: var(--admin-neon);
-            color: #000;
+            background: var(--ios-blue);
+            color: white;
             border: none;
             padding: 12px 24px;
             border-radius: 12px;
-            font-weight: 800;
+            font-weight: 600;
+            font-size: 15px;
             cursor: pointer;
-            transition: 0.3s;
-            text-transform: uppercase;
-            letter-spacing: 1px;
+            transition: opacity 0.2s;
         }
 
         .btn-action:hover {
-            box-shadow: 0 0 20px rgba(0, 224, 255, 0.4);
-            transform: translateY(-2px);
+            opacity: 0.9;
         }
     </style>
 </head>
@@ -368,224 +407,142 @@
 <body>
     <header class="header-ios">
         <div class="admin-logo">
-            SMART ENERGY <span>ADMIN</span>
+            <span
+                style="font-size: 24px; background: none; color: var(--ios-orange); padding: 0; margin-right: 8px;">⚡</span>
+            <div style="font-size: 24px; font-weight: 800; letter-spacing: -0.5px; color: var(--text-color);">SMART
+                ENERGY</div>
         </div>
-        <div style="display: flex; align-items: center; gap: 24px;">
+        <div style="display: flex; align-items: center; gap: 32px; font-weight: 600; font-size: 14px;">
+            <a href="/admin" style="color: var(--ios-blue); text-decoration: none;">DASHBOARD</a>
+            <a href="#" style="color: var(--text-muted); text-decoration: none; transition: 0.3s;"
+                onmouseover="this.style.color='var(--text-color)'"
+                onmouseout="this.style.color='var(--text-muted)'">PROFILE</a>
+            <form th:action="@{/logout}" method="post" style="margin: 0;">
+                <button type="submit"
+                    style="background: none; border: none; color: var(--ios-red); font-weight: 600; cursor: pointer; transition: 0.3s; font-size: 14px;"
+                    onmouseover="this.style.opacity='0.8'" onmouseout="this.style.opacity='1'">LOGOUT</button>
+            </form>
+            <div style="display: flex; align-items: center; gap: 8px; color: var(--text-color);">
+                <span style="font-size: 18px;">👤</span> ADMIN_USER
+            </div>
             <div id="dev-toggle-container" class="dev-toggle-container" style="margin: 0;">
-                <span class="dev-label">DIAGNOSTICS</span>
+                <span class="dev-label">SYS</span>
                 <label class="toggle-switch">
                     <input type="checkbox" id="devModeToggle" onchange="toggleDevMode()">
                     <span class="slider"></span>
                 </label>
             </div>
-            <form th:action="@{/logout}" method="post">
-                <button type="submit"
-                    style="background: transparent; border: 1px solid var(--ios-red); color: var(--ios-red); padding: 8px 20px; border-radius: 10px; font-weight: 600; cursor: pointer; transition: 0.2s; font-size: 13px;">Logout</button>
-            </form>
         </div>
     </header>
 
-    <div class="metrics-grid">
-        <div class="stat-card" style="grid-column: span 2; position: relative; overflow: hidden;">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
-                <div>
-                    <div class="stat-label" style="text-transform: uppercase; letter-spacing: 0.5px;">Global System Load
-                    </div>
-                    <div style="display: flex; align-items: baseline; gap: 4px;">
-                        <span id="statCurrentLoad"
-                            style="font-size: 32px; font-weight: 800; letter-spacing: -1px;">0</span>
-                        <span style="font-size: 14px; font-weight: 600; color: var(--text-muted);">W</span>
-                    </div>
-                </div>
-                <div style="text-align: right;">
-                    <div class="stat-label">Capacity</div>
-                    <div style="font-weight: 700; color: var(--text-color);"><span id="statMaxLoad">0</span>W</div>
-                </div>
-            </div>
-            <div
-                style="width: 100%; height: 12px; background: rgba(120, 120, 128, 0.1); border-radius: 6px; position: relative; overflow: hidden;">
-                <div id="globalLoadBar"
-                    style="width: 0%; height: 100%; background: var(--ios-green); transition: width 1s cubic-bezier(0.4, 0, 0.2, 1); border-radius: 6px;">
-                </div>
-            </div>
-        </div>
-
-        <div class="metric-card">
-            <div class="metric-label">Total Users</div>
-            <div id="statTotalUsers" class="metric-value">--</div>
-        </div>
-        <div class="metric-card">
-            <div class="metric-label">Active Systems</div>
-            <div id="statActiveSystems" class="metric-value">--</div>
-        </div>
-        <div class="metric-card">
-            <div class="metric-label">System Health</div>
-            <div id="statSystemHealth" class="metric-value" style="color: var(--ios-green);">--</div>
-        </div>
-        <div class="metric-card">
-            <div class="metric-label">Energy Throttled</div>
-            <div id="statEnergyThrottled" class="metric-value" style="color: var(--ios-orange);">--</div>
-        </div>
-    </div>
-
     <div class="admin-container">
+        <div
+            style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; margin-top: 24px;">
+            <div>
+                <h1
+                    style="margin: 0; font-size: 32px; font-weight: 800; letter-spacing: -1px; color: var(--text-color);">
+                    Admin Panel</h1>
+                <p style="margin: 4px 0 0 0; color: var(--text-muted); font-size: 15px;">Complete system oversight and
+                    management</p>
+            </div>
+        </div>
+
+        <!-- Dashboard Metrics (Top Row) -->
+        <div class="metrics-grid">
+            <div class="metric-card">
+                <div class="metric-label" style="text-align: left;">TOTAL USERS</div>
+                <div id="statTotalUsers" class="metric-value" style="color: var(--ios-blue); text-align: left;">--</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-label" style="text-align: left;">ACTIVE SYSTEMS</div>
+                <div id="statActiveSystems" class="metric-value" style="color: var(--ios-green); text-align: left;">--
+                </div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-label" style="text-align: left;">UPTIME (%)</div>
+                <div id="statUptime" class="metric-value" style="color: var(--text-color); text-align: left;">99.9</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-label" style="text-align: left;">KWH MONITORED</div>
+                <div id="statKwhMonitored" class="metric-value" style="color: var(--ios-orange); text-align: left;">
+                    5,200</div>
+            </div>
+
+            <!-- Resource Monitor (New Section) -->
+            <div class="metric-card technical-feature" style="grid-column: span 2;">
+                <div class="metric-label">Server Resources</div>
+                <div class="resource-gauge-container">
+                    <div class="gauge-item">
+                        <div class="gauge-label">CPU Usage</div>
+                        <div id="resCpu" class="gauge-value" style="color: var(--vibrant-blue);">--%</div>
+                    </div>
+                    <div class="gauge-item">
+                        <div class="gauge-label">RAM Usage</div>
+                        <div id="resMem" class="gauge-value" style="color: var(--vibrant-purple);">--%</div>
+                    </div>
+                    <div class="gauge-item">
+                        <div class="gauge-label">Threads</div>
+                        <div id="resThreads" class="gauge-value">--</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Energy Analytics Section -->
+        <div class="section-header">
+            <h3>Energy Analytics</h3>
+        </div>
 
         <div style="display: flex; gap: 20px; margin-bottom: 20px;">
-            <!-- Security Overview -->
-            <div style="flex: 1;" class="tech-list">
-                <div style="padding: 24px;">
-                    <h3
-                        style="margin-top: 0; margin-bottom: 20px; font-size: 15px; color: var(--text-color); font-weight: 600;">
-                        Security Overview</h3>
-                    <div
-                        style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; padding: 12px; background: var(--bg-color); border-radius: 12px;">
-                        <span style="color: var(--text-muted); font-size: 13px;">Failed Logins (24h)</span>
-                        <span id="statFailedLogins" style="font-weight: 600; color: var(--ios-red);">--</span>
-                    </div>
-                    <div
-                        style="display: flex; justify-content: space-between; align-items: center; padding: 12px; background: var(--bg-color); border-radius: 12px;">
-                        <span style="color: var(--text-muted); font-size: 13px;">Active Sessions</span>
-                        <span id="statActiveSessions" style="font-weight: 600; color: var(--ios-blue);">--</span>
-                    </div>
-                </div>
-            </div>
-
-            <!-- System Health -->
-            <div style="flex: 1;" class="tech-list technical-feature">
-                <div style="padding: 24px;">
-                    <h3 style="margin: 0 0 20px 0; font-size: 15px; color: var(--text-color); font-weight: 600;">Network
-                        Status</h3>
-                    <div style="margin-bottom: 20px;">
-                        <div
-                            style="display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 6px; font-weight: 500; color: var(--text-muted);">
-                            <span>Database</span>
-                            <span id="healthDbStatus" style="color: var(--ios-green);">--</span>
-                        </div>
-                        <div style="height: 6px; background: var(--bg-color); border-radius: 3px; overflow: hidden;">
-                            <div id="healthDbBar"
-                                style="width: 0%; height: 100%; background: var(--ios-blue); transition: width 0.5s;">
-                            </div>
-                        </div>
-                    </div>
-                    <div style="margin-bottom: 20px;">
-                        <div
-                            style="display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 6px; font-weight: 500; color: var(--text-muted);">
-                            <span>API Gateway</span>
-                            <span id="healthApiStatus" style="color: var(--ios-green);">--</span>
-                        </div>
-                        <div style="height: 6px; background: var(--bg-color); border-radius: 3px; overflow: hidden;">
-                            <div id="healthApiBar"
-                                style="width: 0%; height: 100%; background: var(--ios-blue); opacity: 0.8; transition: width 0.5s;">
-                            </div>
+            <div style="flex: 1; display: flex; flex-direction: column; gap: 16px;">
+                <div
+                    style="padding: 24px; display: flex; justify-content: space-between; align-items: center; background: var(--card-bg); border: 1px solid var(--divider-color); border-radius: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.05);">
+                    <div>
+                        <div class="summary-label"
+                            style="font-size: 14px; color: var(--text-muted); margin-bottom: 4px;">Today's Usage</div>
+                        <div class="summary-value" style="font-size: 32px; font-weight: 700; color: var(--text-color);">
+                            <span id="energyUsage">--</span> <span
+                                style="font-size: 16px; color: var(--text-muted);">kWh</span>
                         </div>
                     </div>
                     <div>
-                        <div
-                            style="display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 6px; font-weight: 500; color: var(--text-muted);">
-                            <span>MQTT Broker</span>
-                            <span id="healthMqttStatus" style="color: var(--ios-green);">--</span>
-                        </div>
-                        <div style="height: 6px; background: var(--bg-color); border-radius: 3px; overflow: hidden;">
-                            <div id="healthMqttBar"
-                                style="width: 0%; height: 100%; background: var(--ios-blue); opacity: 0.6; transition: width 0.5s;">
-                            </div>
+                        <div class="summary-label"
+                            style="font-size: 14px; color: var(--text-muted); margin-bottom: 4px;">Estimated Cost</div>
+                        <div class="summary-value" style="font-size: 32px; font-weight: 700; color: var(--ios-orange);">
+                            <span id="costValue">--</span>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <!-- Technician Status -->
-            <div style="flex: 1;" class="tech-list">
-                <div style="padding: 24px;">
-                    <div
-                        style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-                        <h3 style="margin: 0; font-size: 15px; color: var(--text-color); font-weight: 600;">
-                            Technician Visits (Live)</h3>
-                        <div style="display: flex; gap: 8px;">
-                            <input type="date" id="techVisitStart" class="input-field"
-                                style="padding: 4px 8px; font-size: 11px; width: auto; background: var(--bg-color);">
-                            <button onclick="exportTechVisits()" class="btn-primary"
-                                style="padding: 4px 8px; font-size: 11px; width: auto; margin:0;">Export CSV</button>
-                        </div>
-                    </div>
-                    <div id="techVisitList"
-                        style="display: flex; flex-direction: column; gap: 12px; max-height: 200px; overflow-y: auto;">
-                        <div style="text-align: center; color: var(--text-muted); font-size: 12px;">Loading visits...
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Recent Activity & Simulation Control -->
-        <div style="display: flex; gap: 20px; margin-bottom: 20px;">
-            <div class="tech-list" style="flex: 1.5;">
-                <div style="padding: 24px;">
-                    <h3 style="margin: 0 0 20px 0; font-size: 15px; font-weight: 600;">System Events</h3>
-                    <div id="systemEventTimeline" style="display: flex; flex-direction: column; gap: 16px;">
-                        <div style="text-align: center; color: var(--text-muted); font-size: 13px;">Loading events...
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Simulation Control -->
-            <div class="tech-list technical-feature" style="flex: 1;">
-                <div style="padding: 24px;">
-                    <h3 style="margin: 0 0 20px 0; font-size: 15px; color: var(--text-color); font-weight: 600;">
-                        Simulation Control</h3>
-                    <div style="display: flex; flex-direction: column; gap: 12px;">
-                        <div
-                            style="display: flex; justify-content: space-between; align-items: center; background: var(--bg-color); padding: 12px; border-radius: 12px; border: 1px solid var(--divider-color);">
-                            <div>
-                                <div style="font-size: 13px; font-weight: 600; color: var(--text-color);">Blockchain
-                                    Sync</div>
-                                <div style="font-size: 11px; color: var(--text-muted);">Verify node transparency</div>
-                            </div>
-                            <button class="btn-primary"
-                                style="padding: 6px 16px; font-size: 11px; width: auto; margin: 0; border-radius: 8px;"
-                                onclick="adminLog('Simulation: Blockchain sync initiated.')">Start</button>
-                        </div>
-                        <div
-                            style="display: flex; justify-content: space-between; align-items: center; background: var(--bg-color); padding: 12px; border-radius: 12px; border: 1px solid var(--divider-color);">
-                            <div>
-                                <div style="font-size: 13px; font-weight: 600; color: var(--text-color);">Grid Load Test
-                                </div>
-                                <div style="font-size: 11px; color: var(--text-muted);">Stress test system endurance
-                                </div>
-                            </div>
-                            <button class="btn-primary"
-                                style="padding: 6px 16px; font-size: 11px; width: auto; margin: 0; border-radius: 8px; background-color: var(--ios-orange);"
-                                onclick="adminLog('Simulation: Load test active.')">Run</button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Charts & Advanced Export -->
-        <div style="display: flex; gap: 20px; margin-bottom: 20px;">
-            <!-- Charts -->
-            <div style="flex: 1; display: flex; flex-direction: column; gap: 16px;">
-                <div class="tech-list" style="padding: 20px; height: 200px;">
-                    <h4 style="margin: 0 0 10px 0;">Live Power (kW)</h4>
+            <div style="flex: 2; display: flex; gap: 16px;">
+                <div
+                    style="flex: 1; padding: 24px; height: 200px; background: var(--card-bg); border: 1px solid var(--divider-color); border-radius: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.05);">
+                    <h4 style="margin: 0 0 16px 0; font-size: 16px; font-weight: 600;">Live Power (kW)</h4>
                     <canvas id="livePowerChart"></canvas>
                 </div>
-                <div class="tech-list technical-feature" style="padding: 20px; height: 200px;">
-                    <h4 style="margin: 0 0 10px 0;">Weekly History</h4>
+                <div class="technical-feature"
+                    style="flex: 1; padding: 24px; height: 200px; background: var(--card-bg); border: 1px solid var(--divider-color); border-radius: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.05);">
+                    <h4 style="margin: 0 0 16px 0; font-size: 16px; font-weight: 600;">Weekly History</h4>
                     <canvas id="energyChart"></canvas>
                 </div>
             </div>
+        </div>
 
+        <!-- Advanced Data Export & Simulation Control -->
+        <div style="display: flex; gap: 20px; margin-bottom: 40px;">
             <!-- Advanced Data Export -->
-            <div style="flex: 1;" class="tech-list technical-feature">
-                <div style="padding: 20px;">
-                    <h3 style="margin-top: 0; margin-bottom: 16px;">Advanced Data Export</h3>
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+            <div style="flex: 2;" class="technical-feature">
+                <div
+                    style="padding: 24px; background: var(--card-bg); border: 1px solid var(--divider-color); border-radius: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.05);">
+                    <h3 style="margin-top: 0; margin-bottom: 20px; font-size: 18px; font-weight: 600;">Advanced Data
+                        Export</h3>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
                         <div>
                             <label
-                                style="font-size: 12px; color: #888; display: block; margin-bottom: 4px;">Category</label>
-                            <select id="exportCategory" class="input-field" style="width: 100%;"
+                                style="font-size: 13px; color: var(--text-muted); display: block; margin-bottom: 6px;">Category</label>
+                            <select id="exportCategory" class="input-field"
+                                style="width: 100%; border-radius: 12px; border: 1px solid var(--divider-color); padding: 10px; background: var(--bg-color);"
                                 onchange="filterDevicesByCategory()">
                                 <option value="">All Categories</option>
                                 <option value="AC">AC</option>
@@ -599,83 +556,227 @@
                         </div>
                         <div>
                             <label
-                                style="font-size: 12px; color: #888; display: block; margin-bottom: 4px;">Device</label>
-                            <select id="exportDevice" class="input-field" style="width: 100%;">
+                                style="font-size: 13px; color: var(--text-muted); display: block; margin-bottom: 6px;">Device</label>
+                            <select id="exportDevice" class="input-field"
+                                style="width: 100%; border-radius: 12px; border: 1px solid var(--divider-color); padding: 10px; background: var(--bg-color);">
                                 <option value="">All Devices</option>
                             </select>
                         </div>
                         <div>
-                            <label style="font-size: 12px; color: #888; display: block; margin-bottom: 4px;">Start
+                            <label
+                                style="font-size: 13px; color: var(--text-muted); display: block; margin-bottom: 6px;">Start
                                 Time</label>
-                            <input type="datetime-local" id="exportStart" class="input-field" style="width: 100%;">
+                            <input type="datetime-local" id="exportStart" class="input-field"
+                                style="width: 100%; border-radius: 12px; border: 1px solid var(--divider-color); padding: 10px; background: var(--bg-color);">
                         </div>
                         <div>
-                            <label style="font-size: 12px; color: #888; display: block; margin-bottom: 4px;">End
+                            <label
+                                style="font-size: 13px; color: var(--text-muted); display: block; margin-bottom: 6px;">End
                                 Time</label>
-                            <input type="datetime-local" id="exportEnd" class="input-field" style="width: 100%;">
+                            <input type="datetime-local" id="exportEnd" class="input-field"
+                                style="width: 100%; border-radius: 12px; border: 1px solid var(--divider-color); padding: 10px; background: var(--bg-color);">
                         </div>
                     </div>
                     <button onclick="downloadCustomReport()" class="btn-primary"
-                        style="width: 100%; margin-top: 16px; justify-content: center; padding: 12px;">
+                        style="width: 100%; margin-top: 20px; justify-content: center; padding: 14px; border-radius: 12px; font-weight: 600; font-size: 15px;">
                         Download Usage Report (CSV)
                     </button>
                 </div>
             </div>
+
+            <!-- Simulation Control -->
+            <div class="technical-feature" style="flex: 1;">
+                <div
+                    style="padding: 24px; background: var(--card-bg); border: 1px solid var(--divider-color); border-radius: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.05);">
+                    <h3 style="margin: 0 0 20px 0; font-size: 18px; font-weight: 600; color: var(--text-color);">
+                        Simulation Control</h3>
+                    <div style="display: flex; flex-direction: column; gap: 12px;">
+                        <div class="ios-list-item"
+                            style="border: 1px solid var(--divider-color); border-radius: 12px; padding: 12px; background: var(--bg-color);">
+                            <div>
+                                <div style="font-size: 14px; font-weight: 600; color: var(--text-color);">Blockchain
+                                    Sync</div>
+                                <div style="font-size: 12px; color: var(--text-muted);">Verify node transparency</div>
+                            </div>
+                            <button onclick="adminLog('Simulation: Blockchain sync initiated.')"
+                                style="background: var(--ios-blue); color: white; border: none; padding: 6px 16px; border-radius: 16px; font-size: 12px; font-weight: 600; cursor: pointer;">
+                                Start
+                            </button>
+                        </div>
+                        <div class="ios-list-item"
+                            style="border: 1px solid var(--divider-color); border-radius: 12px; padding: 12px; background: var(--bg-color);">
+                            <div>
+                                <div style="font-size: 14px; font-weight: 600; color: var(--text-color);">Grid Load Test
+                                </div>
+                                <div style="font-size: 12px; color: var(--text-muted);">Stress test system endurance
+                                </div>
+                            </div>
+                            <button onclick="adminLog('Simulation: Load test active.')"
+                                style="background: var(--ios-orange); color: white; border: none; padding: 6px 16px; border-radius: 16px; font-size: 12px; font-weight: 600; cursor: pointer;">
+                                Run
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
 
-        <!-- Existing Content Below -->
-        <div style="display: flex; gap: 20px; margin-bottom: 20px;">
-            <!-- Summary Cards -->
-            <div style="flex: 1; display: flex; flex-direction: column; gap: 16px;">
-                <div class="tech-list"
-                    style="padding: 20px; display: flex; justify-content: space-between; align-items: center;">
-                    <div>
-                        <div class="summary-label">Today's Usage</div>
-                        <div class="summary-value" style="font-size: 24px; font-weight: bold;"><span
-                                id="energyUsage">--</span> <span style="font-size: 14px; color: #888;">kWh</span>
+
+        <!-- Quick Actions Section -->
+        <div class="technical-feature" style="margin-top: 24px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+                <h3 style="margin: 0; font-size: 20px; font-weight: 700;">Quick Actions</h3>
+            </div>
+            <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px;">
+                <button onclick="openAddTechModal()"
+                    style="background: var(--ios-blue); border: none; padding: 16px; border-radius: 16px; color: white; font-weight: 600; font-size: 15px; cursor: pointer; box-shadow: 0 4px 12px rgba(0, 122, 255, 0.3);">
+                    Manage Users
+                </button>
+                <button onclick="window.location.hash='#adminLogs'"
+                    style="background: var(--card-bg); border: 1px solid var(--divider-color); padding: 16px; border-radius: 16px; color: var(--ios-blue); font-weight: 600; font-size: 15px; cursor: pointer; box-shadow: 0 2px 8px rgba(0,0,0,0.05);">
+                    View Logs
+                </button>
+                <button onclick="triggerQuickAction('report')"
+                    style="background: var(--card-bg); border: 1px solid var(--divider-color); padding: 16px; border-radius: 16px; color: var(--ios-blue); font-weight: 600; font-size: 15px; cursor: pointer; box-shadow: 0 2px 8px rgba(0,0,0,0.05);">
+                    Generate Report
+                </button>
+                <button onclick="triggerQuickAction('backup')"
+                    style="background: var(--card-bg); border: 1px solid var(--divider-color); padding: 16px; border-radius: 16px; color: var(--ios-blue); font-weight: 600; font-size: 15px; cursor: pointer; box-shadow: 0 2px 8px rgba(0,0,0,0.05);">
+                    Backup Data
+                </button>
+            </div>
+        </div>
+
+        <!-- System Settings Section -->
+        <div class="technical-feature" style="margin-top: 32px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+                <h3 style="margin: 0; font-size: 20px; font-weight: 700;">System Settings</h3>
+                <button onclick="saveSystemSettings()"
+                    style="background: var(--ios-blue); border: none; padding: 8px 16px; border-radius: 20px; color: white; font-weight: 600; cursor: pointer;">
+                    Save
+                </button>
+            </div>
+
+            <div class="ios-list-group">
+                <div class="ios-list-item">
+                    <span class="ios-list-label">Max Devices Per User</span>
+                    <input type="number" id="settingMaxDevices" value="50"
+                        style="width: 100px; text-align: right; background: transparent; border: none; color: var(--text-muted); font-size: 16px; outline: none; font-family: inherit;">
+                </div>
+                <div class="ios-list-item">
+                    <span class="ios-list-label">Energy Cost (₹/kWh)</span>
+                    <input type="number" step="0.01" id="settingEnergyCost" value="0.12"
+                        style="width: 100px; text-align: right; background: transparent; border: none; color: var(--text-muted); font-size: 16px; outline: none; font-family: inherit;">
+                </div>
+                <div class="ios-list-item">
+                    <span class="ios-list-label">Maintenance Mode</span>
+                    <select id="settingMaintenanceMode"
+                        style="border: none; background: transparent; color: var(--text-muted); font-size: 16px; outline: none; text-align: right; direction: rtl; cursor: pointer; font-family: inherit;">
+                        <option value="Off">Off</option>
+                        <option value="On">On</option>
+                    </select>
+                </div>
+                <div class="ios-list-item">
+                    <span class="ios-list-label">Data Retention (Days)</span>
+                    <input type="number" id="settingDataRetention" value="365"
+                        style="width: 100px; text-align: right; background: transparent; border: none; color: var(--text-muted); font-size: 16px; outline: none; font-family: inherit;">
+                </div>
+            </div>
+        </div>
+
+        <div style="display: flex; gap: 20px; margin-top: 30px;">
+            <!-- Security Overview -->
+            <div
+                style="flex: 1; background: var(--card-bg); border: 1px solid var(--divider-color); border-radius: 20px; padding: 32px; box-shadow: 0 4px 12px rgba(0,0,0,0.05);">
+                <h2
+                    style="font-size: 20px; margin-bottom: 24px; font-weight: 700; display: flex; align-items: center; gap: 12px; color: var(--text-color);">
+                    <span style="color: var(--ios-orange);">🔒</span> Security Overview
+                </h2>
+
+                <div class="ios-list-group" style="margin-bottom: 0;">
+                    <div class="ios-list-item">
+                        <span class="ios-list-label">Failed Login Attempts (24h)</span>
+                        <span id="statFailedLogins" class="ios-list-value bold" style="color: var(--ios-red);">0</span>
+                    </div>
+                    <div class="ios-list-item">
+                        <span class="ios-list-label">Active Sessions</span>
+                        <span id="statActiveSessions" class="ios-list-value bold"
+                            style="color: var(--ios-blue);">--</span>
+                    </div>
+                    <div class="ios-list-item">
+                        <span class="ios-list-label">API Requests (1h)</span>
+                        <span class="ios-list-value bold">15,847</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- System Health -->
+            <div
+                style="flex: 1; background: var(--card-bg); border: 1px solid var(--divider-color); border-radius: 20px; padding: 32px; box-shadow: 0 4px 12px rgba(0,0,0,0.05);">
+                <h2
+                    style="font-size: 20px; margin-bottom: 24px; font-weight: 700; display: flex; align-items: center; gap: 12px; color: var(--text-color);">
+                    <span style="color: var(--ios-blue);">📡</span> System Health
+                </h2>
+                <div class="ios-list-group" style="margin-bottom: 0; padding: 16px;">
+                    <div style="margin-bottom: 20px;">
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                            <span class="ios-list-label" style="font-size: 13px;">Database</span>
+                            <span id="healthDbTxt"
+                                style="color: var(--ios-green); font-weight: 600; font-size: 13px;">Healthy</span>
+                        </div>
+                        <div
+                            style="width: 100%; height: 6px; background: rgba(120, 120, 128, 0.2); border-radius: 4px; overflow: hidden;">
+                            <div id="healthDbBar"
+                                style="width: 100%; height: 100%; background: var(--ios-green); border-radius: 4px;">
+                            </div>
+                        </div>
+                    </div>
+                    <div style="margin-bottom: 20px;">
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                            <span class="ios-list-label" style="font-size: 13px;">API Server</span>
+                            <span id="healthApiTxt"
+                                style="color: var(--ios-green); font-weight: 600; font-size: 13px;">Healthy</span>
+                        </div>
+                        <div
+                            style="width: 100%; height: 6px; background: rgba(120, 120, 128, 0.2); border-radius: 4px; overflow: hidden;">
+                            <div id="healthApiBar"
+                                style="width: 100%; height: 100%; background: var(--ios-green); border-radius: 4px;">
+                            </div>
                         </div>
                     </div>
                     <div>
-                        <div class="summary-label">Estimated Cost</div>
-                        <div class="summary-value" style="font-size: 24px; font-weight: bold; color: #FF9500;"><span
-                                id="costValue">--</span></div>
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                            <span class="ios-list-label" style="font-size: 13px;">Cache System</span>
+                            <span id="healthMqttTxt"
+                                style="color: var(--ios-blue); font-weight: 600; font-size: 13px;">Warning</span>
+                        </div>
+                        <div
+                            style="width: 100%; height: 6px; background: rgba(120, 120, 128, 0.2); border-radius: 4px; overflow: hidden;">
+                            <div id="healthMqttBar"
+                                style="width: 95%; height: 100%; background: var(--ios-blue); border-radius: 4px;">
+                            </div>
+                        </div>
                     </div>
                 </div>
-                <!-- Advanced Data Export (Moved or kept) -->
             </div>
         </div>
 
-        <!-- Device List (Filtered) -->
-        <div class="section-header">
-            <h3>Devices</h3>
-            <span id="deviceFilterLabel" class="badge"
-                style="background: var(--divider-color); color: var(--text-color); font-weight: 600;">All
-                Categories</span>
-        </div>
-        <div class="tech-list" id="deviceList" style="margin-bottom: 20px;">
-            <div style="padding: 20px; text-align: center; color: var(--text-muted);">Loading devices...</div>
-        </div>
-
-        <!-- Technicians Section -->
-        <div class="section-header">
-            <h3>Technicians</h3>
-            <button onclick="openAddTechModal()" class="btn-primary"
-                style="padding: 8px 16px; display: flex; align-items: center; gap: 8px;">
-                <span>+ Add Technician</span>
-            </button>
-        </div>
-        <div class="tech-list" id="techList">
-            <div style="padding: 20px; text-align: center; color: var(--text-muted);">Loading...</div>
-        </div>
-
-        <!-- System Diagnostics (Dev Mode Only) -->
-        <div class="technical-feature" style="flex-direction: column; margin-top: 30px;">
-            <div class="section-header">
-                <h3>System Diagnostics <span
-                        style="font-size: 10px; padding: 2px 8px; background: var(--ios-orange); color: #fff; border-radius: 4px; margin-left: 10px;">PRO</span>
-                </h3>
+        <!-- Terminal and Events -->
+        <div style="display: flex; gap: 20px; margin-bottom: 40px;">
+            <div
+                style="flex: 1; background: var(--card-bg); border: 1px solid var(--divider-color); border-radius: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.05);">
+                <div style="padding: 24px;">
+                    <h3 style="margin: 0 0 20px 0; font-size: 18px; font-weight: 700;">System Events</h3>
+                    <div id="systemEventTimeline"
+                        style="display: flex; flex-direction: column; gap: 16px; height: 310px; overflow-y: auto;">
+                        <div style="text-align: center; color: var(--text-muted); font-size: 13px;">Loading
+                            events...
+                        </div>
+                    </div>
+                </div>
             </div>
-            <div class="diagnostic-grid">
+
+            <div style="flex: 1; margin-top: 0;" class="diagnostic-grid">
                 <div class="log-terminal" id="adminLogs">
                     <div class="log-entry"><span style="color: var(--text-muted);">[System]</span> Diagnostics
                         Initialized...
@@ -688,32 +789,65 @@
             </div>
         </div>
     </div>
+
+    <!-- Devices Section -->
+    <div
+        style="background: var(--card-bg); border: 1px solid var(--divider-color); border-radius: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); margin-bottom: 40px; padding: 24px;">
+        <div class="section-header" style="margin-top: 0; padding: 0;">
+            <h3 style="font-size: 20px; font-weight: 700; margin: 0;">Devices</h3>
+            <span id="deviceFilterLabel" class="badge"
+                style="background: var(--bg-color); color: var(--text-color); font-weight: 600; border: 1px solid var(--divider-color);">All
+                Categories</span>
+        </div>
+        <div id="deviceList" style="margin-top: 20px;">
+            <div style="padding: 20px; text-align: center; color: var(--text-muted);">Loading devices...</div>
+        </div>
     </div>
 
-    <!-- Command Center Navigation -->
-    <div class="dock-container">
-        <a href="/admin" class="dock-item active">
-            <svg class="dock-icon" viewBox="0 0 24 24" fill="currentColor">
-                <path
-                    d="M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2M12,20C7.59,20 4,16.41 4,12C4,7.59 7.59,4 12,4C16.41,4 20,7.59 20,12C20,16.41 16.41,20 12,20Z" />
-            </svg>
-            <span class="dock-label">Overview</span>
-        </a>
-        <a href="/admin/control-panel" class="dock-item">
-            <svg class="dock-icon" viewBox="0 0 24 24" fill="currentColor">
-                <path
-                    d="M12,15V17H18V15H12M12,11V13H18V11H12M12,7V9H18V7H12M6,16H9C9.55,16 10,15.55 10,15V9C10,8.45 9.55,8 9,8H6C5.45,8 5,8.45 5,9V15C5,15.55 5.45,16 6,16Z" />
-            </svg>
-            <span class="dock-label">Control</span>
-        </a>
-        <a href="/settings" class="dock-item">
-            <svg class="dock-icon" viewBox="0 0 24 24" fill="currentColor">
-                <path
-                    d="M12,15.5A3.5,3.5 0 0,1 8.5,12A3.5,3.5 0 0,1 12,8.5A3.5,3.5 0 0,1 15.5,12A3.5,3.5 0 0,1 12,15.5M19.43,12.97C19.47,12.65 19.5,12.33 19.5,12C19.5,11.67 19.47,11.34 19.43,11L21.54,9.37C21.73,9.22 21.78,8.95 21.66,8.73L19.66,5.27C19.54,5.05 19.27,4.97 19.05,5.05L16.56,6.05C16.04,5.66 15.5,5.32 14.87,5.07L14.5,2.42C14.46,2.18 14.25,2 14,2H10C9.75,2 9.54,2.18 9.5,2.42L9.13,5.07C8.5,5.32 7.96,5.66 7.44,6.05L4.95,5.05C4.73,4.97 4.46,5.05 4.34,5.27L2.34,8.73C2.21,8.95 2.27,9.22 2.46,9.37L4.57,11C4.53,11.34 4.5,11.67 4.5,12C4.5,12.33 4.53,12.65 4.57,12.97L2.46,14.63C2.27,14.78 2.21,15.05 2.34,15.27L4.34,18.73C4.46,18.95 4.73,19.03 4.95,18.95L7.44,17.94C7.96,18.34 8.5,18.68 9.13,18.93L9.5,21.58C9.54,21.82 9.75,22 10,22H14C14.25,22 14.46,21.82 14.5,21.58L14.87,18.93C15.5,18.67 16.04,18.34 16.56,17.94L19.05,18.95C19.27,19.03 19.54,18.95 19.66,18.73L21.66,15.27C21.78,15.05 21.73,14.78 21.54,14.63L19.43,12.97Z" />
-            </svg>
-            <span class="dock-label">Settings</span>
-        </a>
+    <!-- Technicians Section -->
+    <div style="display: flex; gap: 20px; margin-bottom: 40px;">
+        <!-- Main Tech List -->
+        <div
+            style="flex: 2; background: var(--card-bg); border: 1px solid var(--divider-color); border-radius: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); padding: 24px;">
+            <div class="section-header" style="margin-top: 0; padding: 0; margin-bottom: 20px;">
+                <h3 style="font-size: 20px; font-weight: 700; margin: 0;">Technicians</h3>
+                <button onclick="openAddTechModal()" class="btn-primary"
+                    style="padding: 8px 16px; display: flex; align-items: center; gap: 8px;">
+                    <span>+ Add Technician</span>
+                </button>
+            </div>
+            <div id="techList">
+                <div style="padding: 20px; text-align: center; color: var(--text-muted);">Loading...</div>
+            </div>
+        </div>
+
+        <!-- Live Visits -->
+        <div
+            style="flex: 1; background: var(--card-bg); border: 1px solid var(--divider-color); border-radius: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.05);">
+            <div style="padding: 24px;">
+                <div style="display: flex; flex-direction: column; gap: 12px; margin-bottom: 20px;">
+                    <h3 style="margin: 0; font-size: 18px; color: var(--text-color); font-weight: 700;">
+                        Technician Visits (Live)</h3>
+                    <div style="display: flex; gap: 8px;">
+                        <input type="date" id="techVisitStart" class="input-field"
+                            style="padding: 8px 12px; font-size: 13px; width: 100%; border-radius: 12px; border: 1px solid var(--divider-color); background: var(--bg-color);">
+                        <button onclick="exportTechVisits()" class="btn-primary"
+                            style="padding: 8px 12px; font-size: 13px; width: auto; margin:0; white-space: nowrap;">Export
+                            CSV</button>
+                    </div>
+                </div>
+                <div id="techVisitList"
+                    style="display: flex; flex-direction: column; gap: 12px; max-height: 400px; overflow-y: auto;">
+                    <div style="text-align: center; color: var(--text-muted); font-size: 13px;">Loading visits...
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
+    </div>
+    </div>
+
+
 
     <!-- Add Technician Modal -->
     <div id="addTechModal" class="modal">
@@ -840,14 +974,112 @@
                 const res = await fetch('/api/admin/health');
                 if (res.ok) {
                     const health = await res.json();
-                    document.getElementById('healthDbStatus').innerText = health.database;
-                    document.getElementById('healthApiStatus').innerText = health.apiGateway;
-                    document.getElementById('healthMqttStatus').innerText = health.mqttBroker;
-                    document.getElementById('healthDbBar').style.width = health.dbLoad + '%';
-                    document.getElementById('healthApiBar').style.width = health.apiLoad + '%';
-                    document.getElementById('healthMqttBar').style.width = health.mqttLoad + '%';
+
+                    // Update Health Bars
+                    const updateBar = (id, percent) => {
+                        const bar = document.getElementById(id + 'Bar');
+                        const txt = document.getElementById(id + 'Txt');
+                        if (bar && txt) {
+                            bar.style.width = Math.min(percent, 100) + '%';
+                            if (percent > 95) {
+                                bar.style.background = 'var(--ios-red)';
+                                txt.style.color = 'var(--ios-red)';
+                                txt.innerText = 'Critical';
+                            } else if (percent > 85) {
+                                bar.style.background = 'var(--ios-orange)';
+                                txt.style.color = 'var(--ios-orange)';
+                                txt.innerText = 'Warning';
+                            } else {
+                                bar.style.background = 'var(--ios-green)';
+                                txt.style.color = 'var(--ios-green)';
+                                txt.innerText = 'Healthy';
+                            }
+                        }
+                    };
+
+                    updateBar('healthDb', health.dbLoad);
+                    updateBar('healthApi', health.apiLoad);
+                    updateBar('healthMqtt', health.mqttLoad);
                 }
             } catch (e) { }
+        }
+
+        async function refreshResources() {
+            try {
+                const res = await fetch('/api/admin/resources');
+                if (res.ok) {
+                    const data = await res.json();
+                    document.getElementById('resCpu').innerText = data.cpu + '%';
+                    document.getElementById('resMem').innerText = data.memory + '%';
+                    document.getElementById('resThreads').innerText = data.threads;
+
+                    if (data.cpu > 80) document.getElementById('resCpu').style.color = 'var(--ios-red)';
+                    else document.getElementById('resCpu').style.color = 'var(--ios-blue)';
+                }
+            } catch (e) { }
+        }
+
+        async function fetchSystemConfig() {
+            try {
+                const res = await fetch('/api/admin/config');
+                if (res.ok) {
+                    const config = await res.json();
+                    adminLog(`System Hub: ${config.region} | v${config.version}`);
+                    if (document.getElementById('settingMaxDevices')) {
+                        document.getElementById('settingMaxDevices').value = config.maxWattageThreshold;
+                    }
+                    if (document.getElementById('settingEnergyCost')) {
+                        document.getElementById('settingEnergyCost').value = config.energyCost || 0.12;
+                    }
+                    if (document.getElementById('settingMaintenanceMode')) {
+                        document.getElementById('settingMaintenanceMode').value = config.maintenanceMode || 'Off';
+                    }
+                    if (document.getElementById('settingDataRetention')) {
+                        document.getElementById('settingDataRetention').value = config.dataRetention || 365;
+                    }
+                }
+            } catch (e) { }
+        }
+
+        async function saveSystemSettings() {
+            try {
+                const payload = {
+                    maxWattageThreshold: parseFloat(document.getElementById('settingMaxDevices').value),
+                    energyCost: parseFloat(document.getElementById('settingEnergyCost').value),
+                    maintenanceMode: document.getElementById('settingMaintenanceMode').value,
+                    dataRetention: parseInt(document.getElementById('settingDataRetention').value)
+                };
+                const res = await fetch('/api/admin/config', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                if (res.ok) {
+                    adminLog('Settings Updated Successfully');
+                    fetchSystemConfig();
+                } else {
+                    adminLog('Failed to update Settings', 'ERROR');
+                }
+            } catch (e) {
+                adminLog('Network Error updating Settings', 'ERROR');
+            }
+        }
+
+        async function triggerQuickAction(action) {
+            try {
+                const res = await fetch(`/api/admin/quick-action/${action}`, { method: 'POST' });
+                if (res.ok) {
+                    const data = await res.json();
+                    adminLog(data.message, 'SUCCESS');
+                    if (action === 'backup') {
+                        adminLog(`Backup Size: ${data.size}`, 'INFO');
+                    }
+                } else {
+                    adminLog(`Quick Action Failed: ${action}`, 'ERROR');
+                }
+            } catch (e) {
+                adminLog(`Network Error during Quick Action: ${action}`, 'ERROR');
+            }
         }
 
         async function refreshSystemEvents() {
@@ -887,11 +1119,14 @@
         refreshAdminStats();
         refreshSystemEvents();
         refreshHealth();
+        refreshResources();
+        fetchSystemConfig();
         fetchTechnicians(); fetchEnergyData(); fetchDevices(); fetchTechnicianVisits();
 
         setInterval(refreshAdminStats, 10000);
         setInterval(refreshSystemEvents, 15000);
         setInterval(refreshHealth, 5000);
+        setInterval(refreshResources, 3000);
         let allDevices = [];
 
         async function fetchEnergyData() {
@@ -1023,7 +1258,7 @@
             const params = new URLSearchParams({ start, end });
             if (deviceId) params.append('deviceId', deviceId);
             if (category) params.append('category', category);
-            window.location.href = `/api/energy/export/custom?${params.toString()}`;
+            window.location.href = `/api/devices/energy/export/custom?${params.toString()}`;
         }
 
         async function fetchTechnicians() {

@@ -790,11 +790,7 @@
                     iconContent = `<div style="width: 24px; height: 24px; display: flex; align-items: center; justify-content: center;">${svgIcon}</div>`;
                 }
 
-                // GUEST Check: If Guest, no delete button, no click toggle
-                const deleteBtn = !isGuest ?
-                    `<div style="position: absolute; top: 10px; right: 10px; color: #FF3B30; cursor: pointer; padding: 5px; z-index: 5;" onclick="deleteDevice(event, ${device.id})">✕</div>`
-                    : '';
-
+                // GUEST Check: If Guest, no click toggle
                 // Toggle Switch HTML
                 const toggleSwitch = !isGuest ? `
                     <label class="toggle-switch" onclick="event.stopPropagation()" style="margin-top: auto;">
@@ -806,18 +802,21 @@
                 const priorityBadge = device.priority ? `<div class="priority-badge priority-${device.priority}">${device.priority}</div>` : '';
 
                 const card = document.createElement('div');
-                card.className = 'card';
-                card.style = `position: relative; cursor: pointer;`;
+                card.className = 'card ' + (device.status ? 'active-card' : 'inactive-card');
                 card.onclick = () => openDeviceModal(device.id);
                 card.innerHTML = `
-                        ${deleteBtn}
-                        <div style="height: 100%; display: flex; flex-direction: column; justify-content: flex-start;">
-                            <div class="icon-container ${device.status ? 'on' : 'off'}" style="margin-bottom: 12px; overflow: hidden; display: flex; align-items: center; justify-content: center;">
+                        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px;">
+                            <div class="icon-container ${device.status ? 'on' : 'off'}">
                                 ${iconContent}
                             </div>
-                            <h3 style="margin-bottom: 8px;">${device.name}</h3>
-                            ${toggleSwitch}
-                            ${priorityBadge}
+                            <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 8px;">
+                                ${toggleSwitch}
+                                ${priorityBadge}
+                            </div>
+                        </div>
+                        <div style="margin-top: auto;">
+                            <h3 class="device-title">${device.name}</h3>
+                            <div class="${device.status ? 'status-on' : 'status-off'}">${device.status ? 'On' : 'Off'}</div>
                         </div>
                      `;
                 grid.appendChild(card);
