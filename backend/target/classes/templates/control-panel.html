@@ -412,7 +412,7 @@
                 <div class="health-item" style="justify-content: space-between; padding: 16px; background: rgba(0,0,0,0.02); border-radius: 12px; margin-bottom: 8px;">
                     <div>
                         <div style="font-weight: 600; font-size: 15px; margin-bottom: 4px;">\${d.name} <span style="font-size: 11px; padding: 2px 6px; background: var(--ios-blue); color: white; border-radius: 4px; margin-left: 8px;">ID: \${d.id}</span></div>
-                        <div style="font-size: 12px; color: var(--text-muted);">\${d.type} • Target Power: \${d.powerRating}W • Priority: \${d.priority}</div>
+                        <div style="font-size: 12px; color: var(--text-muted);">\${d.type} • Target Power: \${(d.powerRating/1000).toFixed(2)}kW • Priority: \${d.priority}</div>
                     </div>
                     <div style="display: flex; gap: 8px;">
                         <button onclick="promptEditDevice(\${d.id}, '\${d.name.replace(/'/g, "\\\\'")}', \${d.powerRating})" class="btn-ios btn-secondary-ios" style="padding: 6px 12px; font-size: 12px;">Edit</button>
@@ -425,7 +425,7 @@
         async function promptEditDevice(id, currentName, currentRating) {
             const newName = prompt("Enter new device name:", currentName);
             if (!newName) return;
-            const newRating = prompt("Enter new power rating (W):", currentRating);
+            const newRating = prompt("Enter new power rating (Watts):", currentRating);
             if (!newRating || isNaN(newRating)) return;
 
             try {

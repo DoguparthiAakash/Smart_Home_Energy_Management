@@ -261,9 +261,9 @@
                     <div
                         style="display: flex; justify-content: space-between; align-items: baseline; font-size: 12px; color: var(--text-muted); margin-bottom: 6px; font-weight: 500; letter-spacing: -0.2px;">
                         <span>System Load: <b id="currentLoad"
-                                style="color: var(--text-color); font-weight: 600;">0</b>W <span
+                                style="color: var(--text-color); font-weight: 600;">0</b>kW <span
                                 style="opacity: 0.6; font-size: 10px;">/ <span id="maxLoad"
-                                    th:text="${maxWattage}">3000</span>W</span></span>
+                                    th:text="${maxWattage/1000.0}">3.0</span>kW</span></span>
                         <span th:if="${!userRole.contains('GUEST')}" onclick="editMaxWattage()"
                             style="color: #007AFF; cursor: pointer; font-weight: 600; font-size: 11px;">Edit</span>
                     </div>
@@ -683,7 +683,7 @@
                     });
                     if (res.ok) {
                         maxWattage = newMax;
-                        document.getElementById('maxLoad').innerText = maxWattage;
+                        document.getElementById('maxLoad').innerText = (maxWattage / 1000).toFixed(1);
                         fetchDevices(); // Re-render bar
                         alert("Max Wattage Updated!");
                     } else {
@@ -706,7 +706,7 @@
 
                 // Calc Load
                 const currentLoad = devices.filter(d => d.status).reduce((acc, d) => acc + d.powerRating, 0);
-                document.getElementById('currentLoad').innerText = currentLoad;
+                document.getElementById('currentLoad').innerText = (currentLoad / 1000).toFixed(1);
 
                 // Update Progress Bar
                 // Ensure maxWattage is valid
@@ -1056,7 +1056,7 @@
                 sub.innerText = "Estimate the power consumption.";
                 content.innerHTML = `
                     <div style="text-align: left; margin-bottom: 20px;">
-                        <label style="font-size: 12px; font-weight: 600; color: #8E8E93; margin-left:12px; margin-bottom:4px; display:block;">WATTS (W)</label>
+                        <label style="font-size: 12px; font-weight: 600; color: #8E8E93; margin-left:12px; margin-bottom:4px; display:block;">POWER RATING (Watts)</label>
                         <input type="number" id="wizPower" class="input-field" value="${wizardDraft.powerRating}">
                         <p style="font-size: 12px; color: #8E8E93; margin-top: 8px; padding: 0 12px;">We've suggested a default for ${wizardDraft.type}. Adjust if needed.</p>
                     </div>
@@ -1207,7 +1207,7 @@
             document.getElementById('dmToggle').checked = !!dev.status;
 
             // Info tab
-            document.getElementById('dmPower').innerText = (dev.powerRating || 0) + ' W';
+            document.getElementById('dmPower').innerText = ((dev.powerRating || 0) / 1000).toFixed(2) + ' kW';
             document.getElementById('dmPriority').value = dev.priority || 'MEDIUM';
             document.getElementById('dmNameDisplay').innerText = dev.name;
             document.getElementById('dmHealth').innerText = dev.healthStatus || 'EXCELLENT';
@@ -1305,7 +1305,7 @@
                 if (res.ok) {
                     const updated = await res.json();
                     dmCurrentDevice.powerRating = updated.powerRating;
-                    document.getElementById('dmPower').innerText = updated.powerRating + ' W';
+                    document.getElementById('dmPower').innerText = (updated.powerRating / 1000).toFixed(2) + ' kW';
                     fetchDevices();
                 }
             } catch (e) { console.error(e); }
