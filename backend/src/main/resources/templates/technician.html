@@ -40,6 +40,29 @@
                 SMART ENERGY <span>TECH</span>
             </a>
             <div style="display: flex; align-items: center; gap: 16px;">
+                <div
+                    style="display: flex; align-items: center; gap: 8px; background: rgba(120, 120, 128, 0.12); padding: 4px 8px; border-radius: 20px;">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round" style="color: var(--text-muted);">
+                        <circle cx="12" cy="12" r="5"></circle>
+                        <line x1="12" y1="1" x2="12" y2="3"></line>
+                        <line x1="12" y1="21" x2="12" y2="23"></line>
+                        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                        <line x1="1" y1="12" x2="3" y2="12"></line>
+                        <line x1="21" y1="12" x2="23" y2="12"></line>
+                        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                    </svg>
+                    <label class="toggle-switch" style="width: 30px; height: 18px;">
+                        <input type="checkbox" id="themeToggle" onchange="toggleTheme()">
+                        <span class="slider" style="border-radius: 18px;"></span>
+                    </label>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round" style="color: var(--text-muted);">
+                        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                    </svg>
+                </div>
                 <span id="techUserName"
                     style="font-weight: 600; font-size: 14px; color: var(--text-muted);">Technician</span>
                 <form th:action="@{/logout}" method="post">
@@ -53,7 +76,7 @@
             body {
                 background-color: var(--bg-color);
                 margin: 0;
-                padding-bottom: 120px;
+                padding-bottom: 40px;
             }
 
             .header-ios {
@@ -279,23 +302,24 @@
                 display.style.color = "#FF3B30";
             }
         }
+
+        // Theme Toggle Logic
+        function toggleTheme() {
+            const toggle = document.getElementById('themeToggle');
+            if (toggle.checked) {
+                document.documentElement.setAttribute('data-theme', 'dark');
+                localStorage.setItem('theme', 'dark');
+            } else {
+                document.documentElement.removeAttribute('data-theme');
+                localStorage.setItem('theme', 'light');
+            }
+        }
+
+        // Init Theme Toggle State
+        if (localStorage.getItem('theme') === 'dark') {
+            document.getElementById('themeToggle').checked = true;
+        }
     </script>
-    <!-- Navigation Dock -->
-    <div class="dock-container">
-        <a href="/technician" class="dock-item active">
-            <svg class="dock-icon" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M10,20V14H14V20H19V12H22L12,3L2,12H5V20H10Z" />
-            </svg>
-            <span class="dock-label">Dashboard</span>
-        </a>
-        <a href="/settings" class="dock-item">
-            <svg class="dock-icon" viewBox="0 0 24 24" fill="currentColor">
-                <path
-                    d="M12,15.5A3.5,3.5 0 0,1 8.5,12A3.5,3.5 0 0,1 12,8.5A3.5,3.5 0 0,1 15.5,12A3.5,3.5 0 0,1 12,15.5M19.43,12.97C19.47,12.65 19.5,12.33 19.5,12C19.5,11.67 19.47,11.34 19.43,11L21.54,9.37C21.73,9.22 21.78,8.95 21.66,8.73L19.66,5.27C19.54,5.05 19.27,4.97 19.05,5.05L16.56,6.05C16.04,5.66 15.5,5.32 14.87,5.07L14.5,2.42C14.46,2.18 14.25,2 14,2H10C9.75,2 9.54,2.18 9.5,2.42L9.13,5.07C8.5,5.32 7.96,5.66 7.44,6.05L4.95,5.05C4.73,4.97 4.46,5.05 4.34,5.27L2.34,8.73C2.21,8.95 2.27,9.22 2.46,9.37L4.57,11C4.53,11.34 4.5,11.67 4.5,12C4.5,12.33 4.53,12.65 4.57,12.97L2.46,14.63C2.27,14.78 2.21,15.05 2.34,15.27L4.34,18.73C4.46,18.95 4.73,19.03 4.95,18.95L7.44,17.94C7.96,18.34 8.5,18.68 9.13,18.93L9.5,21.58C9.54,21.82 9.75,22 10,22H14C14.25,22 14.46,21.82 14.5,21.58L14.87,18.93C15.5,18.67 16.04,18.34 16.56,17.94L19.05,18.95C19.27,19.03 19.54,18.95 19.66,18.73L21.66,15.27C21.78,15.05 21.73,14.78 21.54,14.63L19.43,12.97Z" />
-            </svg>
-            <span class="dock-label">Settings</span>
-        </a>
-    </div>
 </body>
 
 </html>

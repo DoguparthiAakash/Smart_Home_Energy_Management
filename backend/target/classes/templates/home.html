@@ -230,6 +230,25 @@
             background: rgba(255, 255, 255, 0.02);
             border: 1px solid rgba(255, 255, 255, 0.1);
         }
+
+        /* Guest Mode Card Neutralization */
+        .guest-card {
+            cursor: default !important;
+        }
+
+        .guest-card:hover {
+            transform: none !important;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04) !important;
+        }
+
+        .guest-card:active {
+            transform: none !important;
+        }
+
+        [data-theme='dark'] .guest-card:hover {
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2) !important;
+            border: 1px solid rgba(255, 255, 255, 0.05) !important;
+        }
     </style>
 </head>
 
@@ -803,7 +822,11 @@
 
                 const card = document.createElement('div');
                 card.className = 'card ' + (device.status ? 'active-card' : 'inactive-card');
-                card.onclick = () => openDeviceModal(device.id);
+                if (isGuest) {
+                    card.classList.add('guest-card');
+                } else {
+                    card.onclick = () => openDeviceModal(device.id);
+                }
                 card.innerHTML = `
                         <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px;">
                             <div class="icon-container ${device.status ? 'on' : 'off'}">
@@ -1181,9 +1204,7 @@
         const dmSchedules = {}; // local cache: deviceId -> {onTime, onEnabled, offTime, offEnabled}
 
         async function openDeviceModal(id) {
-            if (isGuest) {
-                // Guests can view details, but some fields will be read-only based on the detail view itself
-            }
+            if (isGuest) return;
             dmCurrentDevice = currentDevices.find(d => d.id === id);
             if (!dmCurrentDevice) return;
             const dev = dmCurrentDevice;

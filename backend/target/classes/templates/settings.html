@@ -220,6 +220,33 @@
             Guest Mode - Read Only Access
         </div>
 
+        <!-- System Configuration (Admin Only) -->
+        <div th:if="${isAdmin}">
+            <h3 class="settings-section-title">System Configuration</h3>
+            <div class="ios-group no-icons">
+                <div class="ios-row">
+                    <span class="ios-row-label">Max Devices Per User</span>
+                    <input type="number" id="settingMaxDevices" class="ios-input" value="50">
+                </div>
+                <div class="ios-row">
+                    <span class="ios-row-label">Energy Cost (₹/kWh)</span>
+                    <input type="number" step="0.01" id="settingEnergyCost" class="ios-input" value="0.12">
+                </div>
+                <div class="ios-row">
+                    <span class="ios-row-label">Maintenance Mode</span>
+                    <select id="settingMaintenanceMode" class="ios-input" style="direction: rtl; cursor: pointer;">
+                        <option value="Off">Off</option>
+                        <option value="On">On</option>
+                    </select>
+                </div>
+                <div class="ios-row">
+                    <span class="ios-row-label">Data Retention (Days)</span>
+                    <input type="number" id="settingDataRetention" class="ios-input" value="365">
+                </div>
+            </div>
+            <button onclick="saveSystemSettings()" class="ios-btn-block">Save System Configuration</button>
+        </div>
+
         <!-- System Section -->
         <h3 class="settings-section-title">System</h3>
         <div class="ios-group">
@@ -335,18 +362,20 @@
             <button id="disableBtn" onclick="disable2FA()" class="ios-btn-block ios-btn-destructive"
                 style="display: none;">Disable Two-Factor Authentication</button>
 
-            <h3 class="settings-section-title">Recovery</h3>
-            <div class="ios-group no-icons">
-                <div class="ios-row">
-                    <span class="ios-row-label">Mobile</span>
-                    <input type="tel" id="recoveryMobile" placeholder="+91 99999 99999" class="ios-input">
+            <div th:if="${!userRole.contains('GUEST')}">
+                <h3 class="settings-section-title">Recovery</h3>
+                <div class="ios-group no-icons">
+                    <div class="ios-row">
+                        <span class="ios-row-label">Mobile</span>
+                        <input type="tel" id="recoveryMobile" placeholder="+91 99999 99999" class="ios-input">
+                    </div>
+                    <div class="ios-row">
+                        <span class="ios-row-label">Email</span>
+                        <input type="email" id="recoveryEmail" placeholder="backup@example.com" class="ios-input">
+                    </div>
                 </div>
-                <div class="ios-row">
-                    <span class="ios-row-label">Email</span>
-                    <input type="email" id="recoveryEmail" placeholder="backup@example.com" class="ios-input">
-                </div>
+                <button onclick="saveRecoveryOptions()" class="ios-btn-block">Save Recovery Options</button>
             </div>
-            <button onclick="saveRecoveryOptions()" class="ios-btn-block">Save Recovery Options</button>
         </div>
     </div>
 
@@ -397,7 +426,9 @@
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-    <script>
+    <script th:inline="javascript">
+        const isGuest = /*[[${userRole.contains('GUEST')}]]*/ false;
+        const isAdmin = /*[[${isAdmin}]]*/ false;
         let secretKey = '';
 
         async function checkStatus() {
@@ -460,6 +491,7 @@
         }
 
         async function enable2FA() {
+            if (isGuest) return;
             const code = document.getElementById('verifyCode').value.trim();
 
             if (!code || code.length < 6) {
@@ -483,6 +515,7 @@
         }
 
         async function disable2FA() {
+            if (isGuest) return;
             if (!confirm('Disable 2FA?')) return;
             const res = await fetch('/api/auth/2fa/disable', { method: 'POST' });
             if (res.ok) {
@@ -491,6 +524,7 @@
         }
 
         async function saveRecoveryOptions() {
+            if (isGuest) return;
             const mobile = document.getElementById('recoveryMobile').value;
             const email = document.getElementById('recoveryEmail').value;
 
@@ -520,8 +554,56 @@
             } catch (e) { console.error(e); }
         }
 
+        // --- System Configuration (Admin Only) ---
+        async function fetchSystemConfig() {
+            if (!isAdmin) return;
+            try {
+                const res = await fetch('/api/admin/config');
+                if (res.ok) {
+                    const config = await res.json();
+                    if (document.getElementById('settingMaxDevices')) {
+                        document.getElementById('settingMaxDevices').value = config.maxWattageThreshold;
+                    }
+                    if (document.getElementById('settingEnergyCost')) {
+                        document.getElementById('settingEnergyCost').value = config.energyCost || 0.12;
+                    }
+                    if (document.getElementById('settingMaintenanceMode')) {
+                        document.getElementById('settingMaintenanceMode').value = config.maintenanceMode || 'Off';
+                    }
+                    if (document.getElementById('settingDataRetention')) {
+                        document.getElementById('settingDataRetention').value = config.dataRetention || 365;
+                    }
+                }
+            } catch (e) { console.error("Error fetching system config:", e); }
+        }
+
+        async function saveSystemSettings() {
+            if (!isAdmin) return;
+            try {
+                const payload = {
+                    maxWattageThreshold: parseFloat(document.getElementById('settingMaxDevices').value),
+                    energyCost: parseFloat(document.getElementById('settingEnergyCost').value),
+                    maintenanceMode: document.getElementById('settingMaintenanceMode').value,
+                    dataRetention: parseInt(document.getElementById('settingDataRetention').value)
+                };
+                const res = await fetch('/api/admin/config', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                if (res.ok) {
+                    alert('System Settings Updated Successfully');
+                } else {
+                    alert('Failed to update System Settings');
+                }
+            } catch (e) {
+                alert('Network Error updating System Settings');
+            }
+        }
+
         checkStatus();
         loadRecoveryOptions();
+        if (isAdmin) fetchSystemConfig();
 
         // Theme persistence is handled by the immediate script above
         if (localStorage.getItem('theme') === 'dark') {

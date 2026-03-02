@@ -25,6 +25,8 @@ public class TechnicianVisit {
 
     private LocalDateTime endTime;
 
+    private String activity;
+
     @Column(nullable = false)
     private String status; // ACTIVE, LOGGED_OUT
 }

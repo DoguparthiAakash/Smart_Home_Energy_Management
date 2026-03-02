@@ -15,4 +15,7 @@ public interface TechnicianVisitRepository extends JpaRepository<TechnicianVisit
     long countByTechnicianId(Long technicianId);
 
     long countByTechnicianIdAndStatus(Long technicianId, String status);
+
+    @org.springframework.transaction.annotation.Transactional
+    void deleteByTechnicianId(Long technicianId);
 }

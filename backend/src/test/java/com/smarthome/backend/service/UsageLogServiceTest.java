@@ -18,29 +18,31 @@ public class UsageLogServiceTest {
     private UsageLogService usageLogService;
 
     @Test
-    public void testCalculateCost_Tier1_Free() {
-        // 50 units (<= 100) should be free
+    public void testCalculateCost_Tier1() {
+        // 50 units @ 5.0 = 250.0
         Double cost = usageLogService.calculateCost(50.0);
-        assertEquals(0.0, cost, 0.001);
+        assertEquals(250.0, cost, 0.001);
     }
 
     @Test
     public void testCalculateCost_Tier2() {
-        // 150 units: First 100 free, next 50 @ 4.80
-        // Expected: 50 * 4.80 = 240.0
+        // 150 units:
+        // 50 @ 5.0 = 250
+        // 100 @ 7.0 = 700
+        // Total = 950.0
         Double cost = usageLogService.calculateCost(150.0);
-        assertEquals(240.0, cost, 0.001);
+        assertEquals(950.0, cost, 0.001);
     }
 
     @Test
     public void testCalculateCost_Tier3() {
         // 450 units:
-        // 100 Free
-        // 300 @ 4.80 = 1440
-        // 50 @ 6.45 = 322.5
-        // Total = 1762.5
+        // 50 @ 5.0 = 250
+        // 150 @ 7.0 = 1050
+        // 250 @ 9.0 = 2250
+        // Total = 3550.0
         Double cost = usageLogService.calculateCost(450.0);
-        assertEquals(1762.5, cost, 0.001);
+        assertEquals(3550.0, cost, 0.001);
     }
 
     @Test
@@ -52,16 +54,17 @@ public class UsageLogServiceTest {
     @Test
     public void testCalculateTotalCost() {
         UsageLog log1 = new UsageLog();
-        log1.setEnergyKwh(50.0); // Free
+        log1.setEnergyKwh(50.0);
         UsageLog log2 = new UsageLog();
-        log2.setEnergyKwh(100.0); // 50 Free, 50 @ 4.80
-        
+        log2.setEnergyKwh(100.0);
+
         // Total = 150.0
-        // First 100 Free
-        // Next 50 @ 4.80 = 240.0
+        // 50 @ 5.0 = 250
+        // 100 @ 7.0 = 700
+        // Total = 950.0
         List<UsageLog> logs = Arrays.asList(log1, log2);
-        
+
         Double totalCost = usageLogService.calculateTotalCost(logs);
-        assertEquals(240.0, totalCost, 0.001);
+        assertEquals(950.0, totalCost, 0.001);
     }
 }

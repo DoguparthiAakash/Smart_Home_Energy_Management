@@ -4,6 +4,7 @@
 <head>
     <title>Admin Portal</title>
     <link rel="stylesheet" href="/css/style.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         :root {
             --ios-blue: #007AFF;
@@ -11,7 +12,50 @@
             --ios-red: #FF3B30;
             --ios-orange: #FF9500;
             --bg-glass: rgba(255, 255, 255, 0.7);
+            --bg-glass: rgba(255, 255, 255, 0.7);
             --border-glass: rgba(255, 255, 255, 0.3);
+        }
+
+        /* iOS-inspired Segmented Control */
+        .segmented-control {
+            display: flex;
+            position: relative;
+            background: rgba(120, 120, 128, 0.12);
+            border-radius: 8px;
+            padding: 2px;
+            user-select: none;
+            width: fit-content;
+        }
+
+        .segmented-control button {
+            border: none;
+            background: none;
+            padding: 4px 12px;
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--text-color);
+            cursor: pointer;
+            z-index: 1;
+            transition: color 0.15s;
+            border-radius: 6px;
+        }
+
+        .segmented-control button.active {
+            background: var(--card-bg);
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        .charts-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        @media (max-width: 1024px) {
+            .charts-row {
+                grid-template-columns: 1fr;
+            }
         }
 
         body.admin-mode {
@@ -413,10 +457,6 @@
                 ENERGY</div>
         </div>
         <div style="display: flex; align-items: center; gap: 32px; font-weight: 600; font-size: 14px;">
-            <a href="/admin" style="color: var(--ios-blue); text-decoration: none;">DASHBOARD</a>
-            <a href="#" style="color: var(--text-muted); text-decoration: none; transition: 0.3s;"
-                onmouseover="this.style.color='var(--text-color)'"
-                onmouseout="this.style.color='var(--text-muted)'">PROFILE</a>
             <form th:action="@{/logout}" method="post" style="margin: 0;">
                 <button type="submit"
                     style="background: none; border: none; color: var(--ios-red); font-weight: 600; cursor: pointer; transition: 0.3s; font-size: 14px;"
@@ -435,7 +475,8 @@
         </div>
     </header>
 
-    <div class="admin-container">
+    <div class="admin-container" id="overview-section"
+        style="max-width: 1200px !important; margin: 0 auto !important; width: 100% !important; padding: 0 32px 140px 32px; box-sizing: border-box;">
         <div
             style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; margin-top: 24px;">
             <div>
@@ -448,7 +489,8 @@
         </div>
 
         <!-- Dashboard Metrics (Redesigned) -->
-        <div style="display: grid; grid-template-columns: 1.5fr 1fr 1fr; gap: 20px; margin: 24px 0;">
+        <div
+            style="display: grid; grid-template-columns: 1.5fr 1fr 1fr; gap: 20px; margin: 24px auto; max-width: 100%; box-sizing: border-box;">
             <!-- Global System Load -->
             <div class="metric-card"
                 style="display: flex; flex-direction: column; justify-content: center; padding: 24px;">
@@ -512,13 +554,109 @@
 
         <!-- Energy Analytics Section -->
         <div class="section-header">
-            <h3>Energy Analytics</h3>
+            <h3>Global Energy Analytics</h3>
+        </div>
+
+        <!-- Date Range Filter + Summary -->
+        <div
+            style="margin-bottom: 24px; background: var(--card-bg); border: 1px solid var(--divider-color); border-radius: 20px; padding: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.05);">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+                <h4
+                    style="margin: 0; font-size: 15px; font-weight: 600; color: var(--text-muted); text-transform: uppercase;">
+                    Usage Filter & Summary</h4>
+                <div style="font-size: 11px; opacity: 0.6;" id="chartUpdatedAt"></div>
+            </div>
+            <div style="display: flex; gap: 12px; align-items: flex-end; flex-wrap: wrap; margin-bottom: 24px;">
+                <div style="flex: 1; min-width: 140px;">
+                    <label
+                        style="font-size: 11px; color: var(--text-muted); display: block; margin-bottom: 4px;">From</label>
+                    <input type="date" id="filterFrom" class="input-field"
+                        style="width: 100%; border-radius: 10px; padding: 8px;">
+                </div>
+                <div style="flex: 1; min-width: 140px;">
+                    <label
+                        style="font-size: 11px; color: var(--text-muted); display: block; margin-bottom: 4px;">To</label>
+                    <input type="date" id="filterTo" class="input-field"
+                        style="width: 100%; border-radius: 10px; padding: 8px;">
+                </div>
+                <button onclick="applyDateFilter()" class="btn-primary"
+                    style="padding: 10px 20px; border-radius: 12px; font-weight: 600;">Apply Filter</button>
+                <button onclick="resetDateFilter()"
+                    style="padding: 10px 20px; background: rgba(142,142,147,0.1); color: var(--text-color); border: none; border-radius: 12px; font-weight: 600; cursor: pointer;">Reset</button>
+            </div>
+
+            <div class="summary-container" style="gap: 12px; flex-wrap: wrap;">
+                <div class="metric-card" style="flex: 1; min-width: 140px; border-radius: 16px; padding: 16px;">
+                    <div class="metric-label" style="font-size: 10px;">PERIOD TOTAL</div>
+                    <div class="metric-value" style="font-size: 20px;"><span id="totalUsage">--</span> kWh</div>
+                    <div style="font-size: 11px; color: var(--text-muted); margin-top: 4px;">Cost: ₹<span
+                            id="totalCost">--</span></div>
+                </div>
+                <div class="metric-card" style="flex: 1; min-width: 140px; border-radius: 16px; padding: 16px;">
+                    <div class="metric-label" style="font-size: 10px;">DAILY AVG</div>
+                    <div class="metric-value" style="font-size: 20px;"><span id="avgUsage">--</span> kWh</div>
+                    <div style="font-size: 11px; color: var(--text-muted); margin-top: 4px;">Cost: ₹<span
+                            id="avgCost">--</span></div>
+                </div>
+                <div class="metric-card" style="flex: 2; min-width: 280px; border-radius: 16px; padding: 16px;">
+                    <div class="metric-label" style="font-size: 10px;">PRICING SLABS</div>
+                    <div
+                        style="display: grid; grid-template-columns: 1fr 1fr; gap: 4px; width: 100%; font-size: 10px; font-weight: 600;">
+                        <div style="color: var(--ios-green);">● 0–50 kWh: ₹5.00</div>
+                        <div style="color: var(--ios-blue);">● 51–200 kWh: ₹7.00</div>
+                        <div style="color: var(--ios-orange);">● 201–500 kWh: ₹9.00</div>
+                        <div style="color: var(--ios-red);">● 500+ kWh: ₹12.00</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="charts-row">
+            <!-- Hourly Consumption -->
+            <div
+                style="background: var(--card-bg); padding: 24px; border-radius: 20px; border: 1px solid var(--divider-color); box-shadow: 0 4px 12px rgba(0,0,0,0.05);">
+                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px;">
+                    <h4
+                        style="margin: 0; font-size: 15px; font-weight: 600; color: var(--text-muted); text-transform: uppercase;">
+                        Hourly Global Usage</h4>
+                    <div class="segmented-control">
+                        <button onclick="setHourlyFormat('24h')" id="btn24h" class="active">24h</button>
+                        <button onclick="setHourlyFormat('ampm')" id="btnAMPM">AM/PM</button>
+                    </div>
+                </div>
+                <div id="peakWindowText"
+                    style="font-size: 12px; color: var(--text-muted); margin-bottom: 16px; font-weight: 500;">Peak
+                    window: Calculating...</div>
+                <div style="height: 180px;">
+                    <canvas id="hourlyConsumptionChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Energy per Device Pie Chart -->
+            <div
+                style="background: var(--card-bg); padding: 24px; border-radius: 20px; border: 1px solid var(--divider-color); box-shadow: 0 4px 12px rgba(0,0,0,0.05);">
+                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px;">
+                    <h4
+                        style="margin: 0; font-size: 15px; font-weight: 600; color: var(--text-muted); text-transform: uppercase;">
+                        Usage per Device</h4>
+                    <div class="segmented-control">
+                        <button onclick="setDeviceUsagePhase('today')" id="btnPhaseToday" class="active">Today</button>
+                        <button onclick="setDeviceUsagePhase('total')" id="btnPhaseTotal">Total</button>
+                    </div>
+                </div>
+                <div id="deviceUsageSubtitle"
+                    style="font-size: 12px; color: var(--text-muted); margin-bottom: 16px; font-weight: 500;">Today
+                    (00:00 - 23:59)</div>
+                <div style="height: 180px; display: flex; justify-content: center;">
+                    <canvas id="deviceEnergyChart"></canvas>
+                </div>
+            </div>
         </div>
 
         <div style="display: flex; gap: 20px; margin-bottom: 20px;">
-            <div style="flex: 1; display: flex; flex-direction: column; gap: 16px;">
+            <div style="flex: 1; display: flex; flex-direction: column;">
                 <div
-                    style="padding: 24px; display: flex; justify-content: space-between; align-items: center; background: var(--card-bg); border: 1px solid var(--divider-color); border-radius: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.05);">
+                    style="height: 100%; padding: 24px; display: flex; justify-content: space-between; align-items: center; background: var(--card-bg); border: 1px solid var(--divider-color); border-radius: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.05);">
                     <div>
                         <div class="summary-label"
                             style="font-size: 14px; color: var(--text-muted); margin-bottom: 4px;">Today's Usage</div>
@@ -537,15 +675,26 @@
                 </div>
             </div>
 
-            <div style="flex: 2; display: flex; gap: 16px;">
+            <div style="flex: 2;">
                 <div
-                    style="flex: 1; padding: 24px; height: 200px; background: var(--card-bg); border: 1px solid var(--divider-color); border-radius: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.05);">
-                    <h4 style="margin: 0 0 16px 0; font-size: 16px; font-weight: 600;">Live Power (kW)</h4>
-                    <canvas id="livePowerChart"></canvas>
+                    style="padding: 24px; height: 160px; background: var(--card-bg); border: 1px solid var(--divider-color); border-radius: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); position: relative;">
+                    <h4
+                        style="margin: 0 0 16px 0; font-size: 15px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px;">
+                        Live Power (kW)</h4>
+                    <div style="height: calc(100% - 32px);">
+                        <canvas id="livePowerChart"></canvas>
+                    </div>
                 </div>
-                <div class="technical-feature"
-                    style="flex: 1; padding: 24px; height: 200px; background: var(--card-bg); border: 1px solid var(--divider-color); border-radius: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.05);">
-                    <h4 style="margin: 0 0 16px 0; font-size: 16px; font-weight: 600;">Weekly History</h4>
+            </div>
+        </div>
+
+        <div style="margin-bottom: 40px;">
+            <div
+                style="padding: 24px; height: 180px; background: var(--card-bg); border: 1px solid var(--divider-color); border-radius: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.05);">
+                <h4
+                    style="margin: 0 0 20px 0; font-size: 15px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px;">
+                    Weekly Usage History</h4>
+                <div style="height: calc(100% - 40px);">
                     <canvas id="energyChart"></canvas>
                 </div>
             </div>
@@ -669,42 +818,6 @@
             </div>
         </div>
 
-        <!-- System Settings Section -->
-        <div class="technical-feature" style="margin-top: 32px;">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
-                <h3 style="margin: 0; font-size: 20px; font-weight: 700;">System Settings</h3>
-                <button onclick="saveSystemSettings()"
-                    style="background: var(--ios-blue); border: none; padding: 8px 16px; border-radius: 20px; color: white; font-weight: 600; cursor: pointer;">
-                    Save
-                </button>
-            </div>
-
-            <div class="ios-list-group">
-                <div class="ios-list-item">
-                    <span class="ios-list-label">Max Devices Per User</span>
-                    <input type="number" id="settingMaxDevices" value="50"
-                        style="width: 100px; text-align: right; background: transparent; border: none; color: var(--text-muted); font-size: 16px; outline: none; font-family: inherit;">
-                </div>
-                <div class="ios-list-item">
-                    <span class="ios-list-label">Energy Cost (₹/kWh)</span>
-                    <input type="number" step="0.01" id="settingEnergyCost" value="0.12"
-                        style="width: 100px; text-align: right; background: transparent; border: none; color: var(--text-muted); font-size: 16px; outline: none; font-family: inherit;">
-                </div>
-                <div class="ios-list-item">
-                    <span class="ios-list-label">Maintenance Mode</span>
-                    <select id="settingMaintenanceMode"
-                        style="border: none; background: transparent; color: var(--text-muted); font-size: 16px; outline: none; text-align: right; direction: rtl; cursor: pointer; font-family: inherit;">
-                        <option value="Off">Off</option>
-                        <option value="On">On</option>
-                    </select>
-                </div>
-                <div class="ios-list-item">
-                    <span class="ios-list-label">Data Retention (Days)</span>
-                    <input type="number" id="settingDataRetention" value="365"
-                        style="width: 100px; text-align: right; background: transparent; border: none; color: var(--text-muted); font-size: 16px; outline: none; font-family: inherit;">
-                </div>
-            </div>
-        </div>
 
         <div style="display: flex; gap: 20px; margin-top: 30px;">
             <!-- Security Overview -->
@@ -900,6 +1013,24 @@
                 </button>
             </form>
         </div>
+    </div> <!-- Closing .admin-container -->
+
+    <div class="dock-container">
+        <a href="#overview-section" class="dock-item active"
+            onclick="document.querySelectorAll('.dock-item').forEach(i=>i.classList.remove('active')); this.classList.add('active');">
+            <svg class="dock-icon" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M10,20V14H14V20H19V12H22L12,3L2,12H5V20H10Z" />
+            </svg>
+            <span class="dock-label">Overview</span>
+        </a>
+
+        <a href="/settings" class="dock-item">
+            <svg class="dock-icon" viewBox="0 0 24 24" fill="currentColor">
+                <path
+                    d="M19.14,12.94c0.04-0.3,0.06-0.61,0.06-0.94c0-0.32-0.02-0.64-0.07-0.94l2.03-1.58c0.18-0.14,0.23-0.41,0.12-0.61 l-1.92-3.32c-0.12-0.22-0.37-0.29-0.59-0.22l-2.39,0.96c-0.5-0.38-1.03-0.7-1.62-0.94L14.4,2.81c-0.04-0.24-0.24-0.41-0.48-0.41 h-3.84c-0.24,0-0.43,0.17-0.47,0.41L9.25,5.35C8.66,5.59,8.12,5.92,7.63,6.29L5.24,5.33c-0.22-0.08-0.47,0-0.59,0.22L2.74,8.87 C2.62,9.08,2.66,9.34,2.86,9.48l2.03,1.58C4.84,11.36,4.8,11.69,4.8,12s0.02,0.64,0.07,0.94l-2.03,1.58 c-0.18,0.14-0.23,0.41-0.12,0.61l1.92,3.32c0.12,0.22,0.37,0.29,0.59,0.22l2.39-0.96c0.5,0.38,1.03,0.7,1.62,0.94l0.36,2.54 c0.05,0.24,0.24,0.41,0.48,0.41h3.84c0.24,0,0.44-0.17,0.47-0.41l0.36-2.54c0.59-0.24,1.13-0.56,1.62-0.94l2.39,0.96 c0.22,0.08,0.47,0,0.59-0.22l1.92-3.32c0.12-0.22,0.07-0.47-0.12-0.61L19.14,12.94z M12,15.6c-1.98,0-3.6-1.62-3.6-3.6 s1.62-3.6,3.6-3.6s3.6,1.62,3.6,3.6S13.98,15.6,12,15.6z" />
+            </svg>
+            <span class="dock-label">Settings</span>
+        </a>
     </div>
 
     <script th:inline="javascript">
@@ -1039,51 +1170,7 @@
             } catch (e) { }
         }
 
-        async function fetchSystemConfig() {
-            try {
-                const res = await fetch('/api/admin/config');
-                if (res.ok) {
-                    const config = await res.json();
-                    adminLog(`System Hub: ${config.region} | v${config.version}`);
-                    if (document.getElementById('settingMaxDevices')) {
-                        document.getElementById('settingMaxDevices').value = config.maxWattageThreshold;
-                    }
-                    if (document.getElementById('settingEnergyCost')) {
-                        document.getElementById('settingEnergyCost').value = config.energyCost || 0.12;
-                    }
-                    if (document.getElementById('settingMaintenanceMode')) {
-                        document.getElementById('settingMaintenanceMode').value = config.maintenanceMode || 'Off';
-                    }
-                    if (document.getElementById('settingDataRetention')) {
-                        document.getElementById('settingDataRetention').value = config.dataRetention || 365;
-                    }
-                }
-            } catch (e) { }
-        }
 
-        async function saveSystemSettings() {
-            try {
-                const payload = {
-                    maxWattageThreshold: parseFloat(document.getElementById('settingMaxDevices').value),
-                    energyCost: parseFloat(document.getElementById('settingEnergyCost').value),
-                    maintenanceMode: document.getElementById('settingMaintenanceMode').value,
-                    dataRetention: parseInt(document.getElementById('settingDataRetention').value)
-                };
-                const res = await fetch('/api/admin/config', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload)
-                });
-                if (res.ok) {
-                    adminLog('Settings Updated Successfully');
-                    fetchSystemConfig();
-                } else {
-                    adminLog('Failed to update Settings', 'ERROR');
-                }
-            } catch (e) {
-                adminLog('Network Error updating Settings', 'ERROR');
-            }
-        }
 
         async function triggerQuickAction(action) {
             try {
@@ -1133,41 +1220,324 @@
             adminLog(`Inspecting Device ID: ${id}`);
         }
 
-        // Initialize Dev Mode
-        toggleDevMode(false);
-
-        refreshAdminStats();
-        refreshSystemEvents();
-        refreshHealth();
-        refreshResources();
-        fetchSystemConfig();
-        fetchTechnicians(); fetchEnergyData(); fetchDevices(); fetchTechnicianVisits();
-
-        setInterval(refreshAdminStats, 10000);
-        setInterval(refreshSystemEvents, 15000);
-        setInterval(refreshHealth, 5000);
-        setInterval(refreshResources, 3000);
-        let allDevices = [];
-
-        async function fetchEnergyData() {
+        // Initialize Dashboard
+        async function initializeAdmin() {
             try {
-                const summaryRes = await fetch('/api/energy/summary');
-                if (summaryRes.ok) {
-                    const summary = await summaryRes.json();
-                    document.getElementById('energyUsage').innerText = summary.usage;
-                    document.getElementById('costValue').innerText = summary.currency + summary.cost;
-                }
-                const historyRes = await fetch('/api/energy/history');
-                if (historyRes.ok) {
-                    const history = await historyRes.json();
-                    updateHistoryChart(history.labels, history.data, history.costData);
-                }
-            } catch (e) { console.error("Energy Fetch Error", e); }
+                toggleDevMode(false);
+                await refreshAdminStats();
+                await refreshSystemEvents();
+                await refreshHealth();
+                await refreshResources();
+                await fetchTechnicians();
+                await refreshSummary(); // Unified with fetchEnergyData replacement
+                await refreshWeekly();
+                await refreshHourlyChart();
+                await fetchDevices();
+                await fetchTechnicianVisits();
+
+                setInterval(refreshAdminStats, 10000);
+                setInterval(refreshSystemEvents, 15000);
+                setInterval(refreshHealth, 5000);
+                setInterval(refreshResources, 3000);
+                setInterval(refreshSummary, 30000);
+                setInterval(refreshWeekly, 30000);
+                setInterval(refreshHourlyChart, 30000);
+
+                adminLog("Admin Dashboard Initialized Successfully.");
+            } catch (e) {
+                console.error("Initialization Error", e);
+                adminLog("Dashboard Init Error: " + e.message, "ERROR");
+            }
+        }
+
+        window.addEventListener('DOMContentLoaded', initializeAdmin);
+
+        let allDevices = [];
+        let currentFilter = null;
+        let deviceEnergyChart = null;
+        let deviceUsagePhase = 'today';
+        let energyChart = null; // Weekly/History chart
+        let hourlyChart = null;
+        let hourlyTimeFormat = localStorage.getItem('preferredTimeFormat') || '24h';
+
+        // Refresh Today's Usage + Estimated Cost
+        async function refreshSummary() {
+            try {
+                const res = await fetch('/api/energy/summary');
+                if (!res.ok) return;
+                const summary = await res.json();
+                document.getElementById('energyUsage').innerText = summary.usage;
+                document.getElementById('costValue').innerText = summary.currency + summary.cost;
+
+                // Also refresh device usage pie chart
+                refreshDeviceUsage();
+            } catch (e) { console.error("Summary Refresh Error", e); }
             initLiveGraph();
         }
 
+        function setDeviceUsagePhase(phase) {
+            deviceUsagePhase = phase;
+            document.getElementById('btnPhaseToday').classList.toggle('active', phase === 'today');
+            document.getElementById('btnPhaseTotal').classList.toggle('active', phase === 'total');
+            refreshDeviceUsage();
+        }
+
+        async function refreshDeviceUsage() {
+            try {
+                let url = '/api/energy/device-usage';
+                const subtitle = document.getElementById('deviceUsageSubtitle');
+                const now = new Date();
+                const offset = now.getTimezoneOffset();
+                const localNow = new Date(now.getTime() - (offset * 60 * 1000));
+                const todayStr = localNow.toISOString().split('T')[0];
+
+                if (deviceUsagePhase === 'today') {
+                    const start = todayStr + 'T00:00:00';
+                    const end = localNow.toISOString().split('.')[0];
+                    url += `?start=${start}&end=${end}`;
+                    subtitle.innerText = 'Today (00:00 - 23:59)';
+                } else {
+                    if (currentFilter) {
+                        url += `?start=${currentFilter.start}&end=${currentFilter.end}`;
+                        subtitle.innerText = `Filtered Range (Total)`;
+                    } else {
+                        const sevenDaysAgo = new Date(now.getTime() - (offset * 60 * 1000));
+                        sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 6);
+                        const start = sevenDaysAgo.toISOString().split('T')[0] + 'T00:00:00';
+                        const end = todayStr + 'T23:59:59';
+                        url += `?start=${start}&end=${end}`;
+                        subtitle.innerText = 'Last 7 Days (Total)';
+                    }
+                }
+
+                const res = await fetch(url);
+                if (!res.ok) return;
+                const data = await res.json();
+                const chartContainer = document.getElementById('deviceEnergyChart').parentElement;
+
+                if (data.length === 0) {
+                    if (deviceEnergyChart) { deviceEnergyChart.destroy(); deviceEnergyChart = null; }
+                    if (!document.getElementById('chartNoData')) {
+                        const div = document.createElement('div');
+                        div.id = 'chartNoData';
+                        div.style.cssText = 'position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);color:var(--text-muted);font-size:12px;font-weight:500;';
+                        div.innerText = 'No usage recorded.';
+                        chartContainer.style.position = 'relative';
+                        chartContainer.appendChild(div);
+                    }
+                    return;
+                } else {
+                    const noData = document.getElementById('chartNoData');
+                    if (noData) noData.remove();
+                }
+
+                const ctx = document.getElementById('deviceEnergyChart').getContext('2d');
+                const labels = data.map(d => d.name);
+                const values = data.map(d => d.usage);
+
+                if (deviceEnergyChart) {
+                    deviceEnergyChart.data.labels = labels;
+                    deviceEnergyChart.data.datasets[0].data = values;
+                    deviceEnergyChart.update();
+                } else {
+                    deviceEnergyChart = new Chart(ctx, {
+                        type: 'doughnut',
+                        data: {
+                            labels: labels,
+                            datasets: [{
+                                data: values,
+                                backgroundColor: ['#FF3B30', '#FF9500', '#FFCC00', '#34C759', '#007AFF', '#5856D6', '#AF52DE'],
+                                borderWidth: 0,
+                                hoverOffset: 10
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            cutout: '70%',
+                            plugins: {
+                                legend: {
+                                    display: true,
+                                    position: 'right',
+                                    labels: { color: 'var(--text-color)', font: { size: 9, weight: '500' }, usePointStyle: true, pointStyle: 'circle', padding: 8 }
+                                }
+                            }
+                        }
+                    });
+                }
+            } catch (e) { console.error("Device Usage Error", e); }
+        }
+
+        async function refreshWeekly() {
+            try {
+                let url = '/api/energy/history';
+                if (currentFilter) {
+                    url = `/api/energy/history/custom?start=${currentFilter.start}&end=${currentFilter.end}`;
+                }
+                const res = await fetch(url);
+                if (!res.ok) return;
+                const history = await res.json();
+
+                if (energyChart) {
+                    energyChart.data.labels = history.labels;
+                    energyChart.data.datasets[0].data = history.data;
+                    energyChart.data.datasets[1].data = history.costData;
+                    const maxUsage = Math.max(...history.data, 0.1);
+                    energyChart.data.datasets[0].backgroundColor = history.data.map(v =>
+                        v === 0 ? 'rgba(52,199,89,0.15)' :
+                            v < maxUsage * 0.4 ? 'rgba(52,199,89,0.7)' :
+                                v < maxUsage * 0.8 ? 'rgba(255,149,0,0.7)' :
+                                    'rgba(255,59,48,0.7)'
+                    );
+                    energyChart.update('active');
+                } else {
+                    updateHistoryChart(history.labels, history.data, history.costData);
+                }
+
+                document.getElementById('totalUsage').innerText = history.totalUsage;
+                document.getElementById('totalCost').innerText = history.totalCost;
+                document.getElementById('avgUsage').innerText = history.avgUsage;
+                document.getElementById('avgCost').innerText = history.avgCost;
+                document.getElementById('chartUpdatedAt').innerText = 'Updated ' + new Date().toLocaleTimeString();
+            } catch (e) { console.error('Weekly refresh error', e); }
+        }
+
+        function updateHistoryChart(labels, usageData, costData) {
+            const ctx = document.getElementById('energyChart').getContext('2d');
+            if (energyChart) energyChart.destroy();
+            const maxUsage = Math.max(...usageData, 0.1);
+
+            energyChart = new Chart(ctx, {
+                data: {
+                    labels: labels,
+                    datasets: [
+                        {
+                            type: 'bar',
+                            label: 'Energy (kWh)',
+                            data: usageData,
+                            backgroundColor: usageData.map(v =>
+                                v === 0 ? 'rgba(52,199,89,0.15)' :
+                                    v < maxUsage * 0.4 ? 'rgba(52,199,89,0.7)' :
+                                        v < maxUsage * 0.8 ? 'rgba(255,149,0,0.7)' :
+                                            'rgba(255,59,48,0.7)'
+                            ),
+                            borderRadius: 8,
+                            yAxisID: 'yUsage',
+                            order: 2
+                        },
+                        {
+                            type: 'line',
+                            label: 'Cost (\u20b9)',
+                            data: costData || usageData.map(() => 0),
+                            borderColor: '#FF9500',
+                            borderWidth: 2,
+                            pointBackgroundColor: '#FF9500',
+                            pointRadius: 4,
+                            tension: 0.3,
+                            fill: false,
+                            yAxisID: 'yCost',
+                            order: 1
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    interaction: { mode: 'index', intersect: false },
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        x: { grid: { display: false }, ticks: { color: 'var(--text-muted)', font: { size: 10 } } },
+                        yUsage: { position: 'left', beginAtZero: true, ticks: { color: '#34C759', font: { size: 10 } }, grid: { color: 'rgba(128,128,128,0.08)' } },
+                        yCost: { position: 'right', beginAtZero: true, grid: { drawOnChartArea: false }, ticks: { color: '#FF9500', font: { size: 10 } } }
+                    }
+                }
+            });
+        }
+
+        function setHourlyFormat(format) {
+            hourlyTimeFormat = format;
+            localStorage.setItem('preferredTimeFormat', format);
+            document.getElementById('btn24h').classList.toggle('active', format === '24h');
+            document.getElementById('btnAMPM').classList.toggle('active', format === 'ampm');
+            refreshHourlyChart();
+        }
+
+        async function refreshHourlyChart() {
+            try {
+                const res = await fetch('/api/energy/hourly');
+                if (!res.ok) return;
+                const data = await res.json();
+                const labels = [];
+                const values = [];
+                let maxVal = -1;
+                let peakHour = 0;
+
+                for (let i = 0; i < 24; i++) {
+                    const val = data[i] || 0;
+                    if (hourlyTimeFormat === '24h') labels.push((i < 10 ? '0' + i : i) + ':00');
+                    else labels.push(((i % 12 || 12) + (i >= 12 ? ' PM' : ' AM')));
+                    values.push(Math.round(val * 100.0) / 100.0);
+                    if (val > maxVal) { maxVal = val; peakHour = i; }
+                }
+
+                document.getElementById('peakWindowText').innerText = `Peak window: ${hourlyTimeFormat === '24h' ? (peakHour < 10 ? '0' + peakHour : peakHour) + ':00' : (peakHour % 12 || 12) + (peakHour >= 12 ? ' PM' : ' AM')} - ${hourlyTimeFormat === '24h' ? ((peakHour + 1) % 24 < 10 ? '0' + (peakHour + 1) % 24 : (peakHour + 1) % 24) + ':00' : ((peakHour + 1) % 12 || 12) + ((peakHour + 1) % 24 >= 12 ? ' PM' : ' AM')}`;
+
+                const ctx = document.getElementById('hourlyConsumptionChart').getContext('2d');
+                if (hourlyChart) {
+                    hourlyChart.data.labels = labels;
+                    hourlyChart.data.datasets[0].data = values;
+                    hourlyChart.update();
+                } else {
+                    hourlyChart = new Chart(ctx, {
+                        type: 'line',
+                        data: {
+                            labels: labels,
+                            datasets: [{
+                                label: 'Energy (kWh)',
+                                data: values,
+                                borderColor: '#5856D6',
+                                backgroundColor: 'rgba(88, 86, 214, 0.1)',
+                                tension: 0.4,
+                                fill: true,
+                                pointRadius: 2
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: { legend: { display: false } },
+                            scales: {
+                                y: { beginAtZero: true, grid: { color: 'rgba(0,0,0,0.04)' }, ticks: { color: 'var(--text-muted)', font: { size: 9 } } },
+                                x: { grid: { display: false }, ticks: { color: 'var(--text-muted)', font: { size: 9 }, autoSkip: true, maxTicksLimit: 8 } }
+                            }
+                        }
+                    });
+                }
+            } catch (e) { console.error("Hourly Chart Error", e); }
+        }
+
+        async function applyDateFilter() {
+            const fromVal = document.getElementById('filterFrom').value;
+            const toVal = document.getElementById('filterTo').value;
+            if (!fromVal || !toVal) { alert('Select both dates'); return; }
+            currentFilter = { start: fromVal + 'T00:00:00', end: toVal + 'T23:59:59' };
+            await refreshWeekly();
+            refreshDeviceUsage();
+        }
+
+        function resetDateFilter() {
+            document.getElementById('filterFrom').value = '';
+            document.getElementById('filterTo').value = '';
+            currentFilter = null;
+            refreshWeekly();
+            refreshDeviceUsage();
+        }
+
         function initLiveGraph() {
-            const ctx = document.getElementById('livePowerChart').getContext('2d');
+            const canvas = document.getElementById('livePowerChart');
+            if (!canvas || canvas.dataset.initialized) return;
+            canvas.dataset.initialized = 'true';
+            const ctx = canvas.getContext('2d');
             const liveChart = new Chart(ctx, {
                 type: 'line',
                 data: { labels: Array(60).fill(''), datasets: [{ label: 'Live (kW)', data: Array(60).fill(null), borderColor: 'var(--ios-blue)', backgroundColor: 'rgba(0,122,255,0.1)', borderWidth: 2, pointRadius: 0, fill: true, tension: 0.4 }] },
@@ -1184,15 +1554,6 @@
                     }
                 } catch (e) { }
             }, 1000);
-        }
-
-        function updateHistoryChart(labels, usage, cost) {
-            const ctx = document.getElementById('energyChart').getContext('2d');
-            new Chart(ctx, {
-                type: 'bar',
-                data: { labels, datasets: [{ label: 'Usage (kWh)', data: usage, backgroundColor: '#34C759', yAxisID: 'y' }, { label: 'Cost', data: cost, type: 'line', borderColor: '#FF9500', yAxisID: 'y1' }] },
-                options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true, display: false }, y1: { beginAtZero: true, display: false, position: 'right' }, x: { display: false } }, plugins: { legend: { display: false } } }
-            });
         }
 
         async function fetchDevices() {
@@ -1342,9 +1703,29 @@
                         <span class="badge ${t.totalVisits > 0 ? 'badge-success' : 'badge-warning'}" style="height: fit-content; border-radius: 6px; font-size: 10px;">
                             ${t.totalVisits > 0 ? 'Active' : 'Idle'}
                         </span>
+                        <button onclick="removeTechnician(${t.id})" style="background:none; border:none; cursor:pointer; color:var(--ios-red); padding: 4px;" title="Remove Technician">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"></path><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
+                        </button>
                     </div>
                 </div>
             `).join('');
+        }
+
+        async function removeTechnician(id) {
+            if (!confirm("Are you sure you want to remove this technician? This will also delete all their visit records.")) return;
+            try {
+                const res = await fetch(`/api/admin/technicians/${id}`, { method: 'DELETE' });
+                if (res.ok) {
+                    adminLog("Technician removed successfully.");
+                    fetchTechnicians();
+                } else {
+                    const error = await res.text();
+                    alert("Error removing technician: " + error);
+                }
+            } catch (e) {
+                console.error(e);
+                alert("Connection error.");
+            }
         }
 
         function openAddTechModal() { document.getElementById('addTechModal').style.display = 'flex'; }
