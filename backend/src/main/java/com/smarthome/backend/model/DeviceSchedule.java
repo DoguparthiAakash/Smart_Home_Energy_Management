@@ -24,4 +24,7 @@ public class DeviceSchedule {
 
     @Column(nullable = false)
     private Boolean active = true;
+
+    @Column(name = "timezone")
+    private String timezone;
 }

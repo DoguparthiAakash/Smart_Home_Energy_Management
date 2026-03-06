@@ -10,6 +10,8 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalTime;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
 
@@ -32,10 +34,14 @@ public class DeviceScheduleService {
     public void processSchedules() {
         log.debug("Processing device schedules...");
         List<DeviceSchedule> activeSchedules = scheduleRepository.findByActiveTrue();
-        LocalTime now = LocalTime.now().truncatedTo(ChronoUnit.MINUTES);
-
         for (DeviceSchedule schedule : activeSchedules) {
             Device device = schedule.getDevice();
+
+            // Get current time in the device's specific timezone
+            ZoneId zoneId = (schedule.getTimezone() != null && !schedule.getTimezone().isEmpty())
+                    ? ZoneId.of(schedule.getTimezone())
+                    : ZoneId.systemDefault();
+            LocalTime now = ZonedDateTime.now(zoneId).toLocalTime().truncatedTo(ChronoUnit.MINUTES);
 
             // Check ON time
             if (schedule.getScheduledOnTime() != null) {

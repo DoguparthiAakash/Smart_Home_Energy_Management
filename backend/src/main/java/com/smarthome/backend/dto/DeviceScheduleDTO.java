@@ -12,4 +12,5 @@ public class DeviceScheduleDTO {
     private boolean onEnabled;
     private String offTime; // HH:mm format
     private boolean offEnabled;
+    private String timezone;
 }

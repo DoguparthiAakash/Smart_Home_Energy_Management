@@ -1426,7 +1426,8 @@
                 onTime: document.getElementById('dmOnTime').value,
                 onEnabled: document.getElementById('dmOnEnabled').checked,
                 offTime: document.getElementById('dmOffTime').value,
-                offEnabled: document.getElementById('dmOffEnabled').checked
+                offEnabled: document.getElementById('dmOffEnabled').checked,
+                timezone: Intl.DateTimeFormat().resolvedOptions().timeZone
             };
 
             try {
@@ -1540,6 +1541,22 @@
             if (userRole.includes('HOMEOWNER')) {
                 initHomeownerCharts();
             }
+
+            // Periodic Refresh (keep UI in sync with background scheduler)
+            setInterval(() => {
+                fetchDevices().then(() => {
+                    // If modal is open, sync its state
+                    if (dmCurrentDevice && document.getElementById('deviceDetailModal').style.display === 'flex') {
+                        const updated = currentDevices.find(d => d.id === dmCurrentDevice.id);
+                        if (updated) {
+                            dmCurrentDevice = updated;
+                            document.getElementById('dmToggle').checked = !!updated.status;
+                            document.getElementById('dmIcon').style.opacity = updated.status ? '1' : '0.6';
+                            document.getElementById('dmIcon').style.background = updated.status ? 'rgba(52,199,89,0.15)' : 'rgba(142,142,147,0.15)';
+                        }
+                    }
+                });
+            }, 10000); // 10 seconds
         };
 
         function initHomeownerCharts() {

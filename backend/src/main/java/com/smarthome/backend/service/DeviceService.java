@@ -255,14 +255,15 @@ public class DeviceService {
     public DeviceScheduleDTO getSchedule(Long deviceId) {
         List<DeviceSchedule> schedules = scheduleRepository.findByDeviceId(deviceId);
         if (schedules.isEmpty()) {
-            return new DeviceScheduleDTO("", false, "", false);
+            return new DeviceScheduleDTO("", false, "", false, null);
         }
         DeviceSchedule s = schedules.get(0);
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("HH:mm");
         String onTime = s.getScheduledOnTime() != null ? s.getScheduledOnTime().format(formatter) : "";
         String offTime = s.getScheduledOffTime() != null ? s.getScheduledOffTime().format(formatter) : "";
-        return new DeviceScheduleDTO(onTime, s.getActive(), offTime, s.getActive()); // Simplification: one active flag
-                                                                                     // for both
+        return new DeviceScheduleDTO(onTime, s.getActive(), offTime, s.getActive(), s.getTimezone()); // Simplification:
+                                                                                                      // one active flag
+        // for both
     }
 
     @Transactional
@@ -273,6 +274,7 @@ public class DeviceService {
         DeviceSchedule s = new DeviceSchedule();
         s.setDevice(device);
         s.setActive(dto.isOnEnabled() || dto.isOffEnabled());
+        s.setTimezone(dto.getTimezone());
 
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("HH:mm");
         if (dto.getOnTime() != null && !dto.getOnTime().isEmpty()) {
